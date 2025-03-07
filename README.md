@@ -73,3 +73,5 @@ récupération :
 - local : git branch -D "nom-branch"
 
 - distante : git branch -d "nom_remote" /*(souvent origin)*\ "nom_branch"
+
+  test github discord
