@@ -1,0 +1,126 @@
+Cahier de Test -
+
+1. Introduction
+
+1.1. Objectif du document
+
+Ce document a pour but de définir et détailler les tests à réaliser pour assurer la qualité et le bon fonctionnement de l'application web mobile-first. Il sert de référence pour l'équipe de test et garantit une validation rigoureuse des fonctionnalités, de l'ergonomie et des performances de l'application.
+
+1.2. Portée des tests
+
+Les tests couvriront les aspects suivants :
+
+Fonctionnalités principales
+
+Compatibilité et responsivité
+
+Expérience utilisateur (UX/UI)
+
+Sécurité
+
+Performances
+
+Accessibilité
+
+2. Stratégie de Test
+
+2.1. Types de tests
+
+Tests fonctionnels : Vérification du bon fonctionnement des fonctionnalités selon les spécifications.
+
+Tests d'interface utilisateur : Validation de l'affichage et de l'interaction avec l'utilisateur.
+
+Tests de compatibilité : Vérification du bon affichage sur différents navigateurs et appareils.
+
+Tests de performance : Analyse des temps de chargement et de la fluidité.
+
+Tests de sécurité : Détection de vulnérabilités et tests d'authentification.
+
+Tests d'accessibilité : Conformité aux normes WCAG pour garantir l'accès à tous les utilisateurs.
+
+2.2. Outils et environnements de test
+
+Outils de test : Selenium, Appium, Lighthouse, OWASP ZAP
+
+Environnements : Mobile (Android, iOS) et navigateurs (Chrome, Firefox, Safari, Edge)
+
+3. Cas de Test
+
+3.1. Identification des cas de test
+
+Chaque cas de test est défini par un identifiant unique, une description, des prérequis, des étapes de test et des résultats attendus.
+
+CT-001 : Création de compte
+
+Description : Vérifier la possibilité de créer un compte utilisateur.
+Pré-requis : Aucune connexion active.
+Étapes :
+
+Accéder à la page d'inscription.
+
+Renseigner un email et un mot de passe valides.
+
+Confirmer l'inscription via l'email reçu.
+
+Se connecter avec les identifiants créés.
+Résultat attendu : L'utilisateur est correctement inscrit et peut se connecter.
+
+CT-002 : Connexion utilisateur
+
+Description : Vérifier que l’utilisateur peut se connecter avec ses identifiants.
+Pré-requis : Un compte utilisateur valide.
+Étapes :
+
+Accéder à la page de connexion.
+
+Entrer des identifiants valides.
+
+Cliquer sur "Se connecter".
+Résultat attendu : L’utilisateur est redirigé vers son tableau de bord.
+
+CT-003 : Affichage mobile
+
+Description : Vérifier la responsivité de l’interface.
+Pré-requis : Accès à différents appareils mobiles.
+Étapes :
+
+Ouvrir l’application sur différents appareils (iPhone, Android, tablette).
+
+Vérifier l'affichage et l'interaction des éléments UI.
+Résultat attendu : L’interface s’adapte correctement à chaque écran.
+
+4. Plan d’Exécution des Tests
+
+4.1. Organisation des tests
+
+Phase 1 : Tests unitaires (par les développeurs)
+
+Phase 2 : Tests fonctionnels (par l’équipe de test)
+
+Phase 3 : Tests de performance et sécurité
+
+**Phase 4 : Recette utilisateur et corrections
+
+4.2. Critères d’acceptation
+
+Aucune anomalie bloquante ou critique
+
+Respect des délais de test
+
+Validation par les utilisateurs finaux
+
+5. Suivi et Reporting
+
+5.1. Suivi des anomalies
+
+Les anomalies détectées seront enregistrées dans un outil de gestion (Jira, Trello) avec un suivi des corrections.
+
+5.2. Rapports de test
+
+Un rapport détaillé sera fourni après chaque phase de test avec :
+
+Nombre de tests exécutés
+
+Nombre d’anomalies détectées et corrigées
+
+Statistiques de performance
