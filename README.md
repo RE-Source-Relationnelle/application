@@ -54,6 +54,12 @@ récupération :
   git pull ->
   git rebase ->
 
-  // pour spécifier une branche upstream(lien entre branche locale et distante)
+// pour spécifier une branche upstream(lien entre branche locale et distante)
 
   -u
+
+// après merge via github, suppression des branches, ne pas etre sur la branche que l'on veux supp
+
+- local : git branch -D "nom-branch"
+
+- distante : git branch -d "nom_remote" /*(souvent origin)*\ "nom_branch"
