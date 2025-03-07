@@ -53,3 +53,7 @@ récupération :
   git fetch --all ->
   git pull ->
   git rebase ->
+
+  // pour spécifier une branche upstream(lien entre branche locale et distante)
+
+  -u
