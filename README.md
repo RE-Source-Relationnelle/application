@@ -1,21 +1,5 @@
 # application
 
-- // préciser le commit dans le projet github
-
-message de commit :
-  feat(C:Users):create "list()"fuction
-  
-
-- // envoyer du code 
-
-commit :
-  git commit -m "
-  refs: #1 "
-  
-push : 
-  git push
-
-
 - // récurpérer le code 
 
 git pull
@@ -62,6 +46,20 @@ récupération :
   git pull ->
   git rebase 
 
+- // préciser le commit dans le projet github
+
+message de commit :
+  feat(C:Users):create "list()"fuction
+  
+
+- // envoyer du code 
+
+commit :
+  git commit -m "
+  refs: #1 "
+  
+push : 
+  git push
 
 - // pour spécifier une branche upstream(lien entre branche locale et distante)
 
