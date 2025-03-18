@@ -32,7 +32,7 @@ fetch :
   1 ticket = 1 branche
   
   branch :
-    git branch "nom_brache"
+    git branch "nom_branche"
     
   nom de la branche : "feature/22-create-authentification"
                       "chore/..."
