@@ -1,15 +1,20 @@
-export default function Navbar() {
-    return (
-      <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
+import { Link } from 'react-router-dom'
+
+const Navbar = () => {
+  return (
+    <nav className="bg-white shadow">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-3 justify-between h-16">
+          <div className="flex items-center">
             {/* Logo */}
-            <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-blue-600">(Re)Sources</h1>
-            </div>
-  
-            {/* Barre de recherche */}
-            <div className="hidden md:block flex-1 max-w-2xl mx-4">
+            <Link to="/" className="flex-shrink-0">
+              <img src="/img/logo-ressources-relationnelles.svg" alt="Logo" className="h-8 w-auto" />
+            </Link>
+          </div>
+
+          <div className="flex items-center justify-between flex-1 ml-8">
+            {/* Search Bar */}
+            <div className="max-w-lg w-full">
               <div className="relative">
                 <input
                   type="text"
@@ -18,19 +23,26 @@ export default function Navbar() {
                 />
               </div>
             </div>
-  
+          </div>
+          <div className="flex items-center justify-end">
             {/* Navigation */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-gray-100 rounded-full">
-                🔔
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-full">
-                💬
-              </button>
-              <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+              <Link to="/notifications">
+                <button className="p-2 hover:bg-gray-100 rounded-full">
+                  🔔
+                </button>
+              </Link>
+              <Link to="/messages">
+                <button className="p-2 hover:bg-gray-100 rounded-full">
+                  💬
+                </button>
+              </Link>
             </div>
           </div>
         </div>
-      </nav>
-    )
-  }
+      </div>
+    </nav>
+  )
+}
+
+export default Navbar
