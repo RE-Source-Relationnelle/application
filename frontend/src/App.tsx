@@ -6,15 +6,15 @@ import BaseLayout from './components/layout/BaseLayout'
 
 function App() {
   return (
-    <BaseLayout>
-      <Router>
+    <Router>
+      <BaseLayout>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Feed />} />
         </Routes>
-      </Router>
-    </BaseLayout>
+      </BaseLayout>
+    </Router>
   )
 }
 
