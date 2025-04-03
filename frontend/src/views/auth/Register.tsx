@@ -23,7 +23,7 @@ const Register = () => {
             <div className="max-w-3xl w-full space-y-8 bg-white">
                 <h1 className="text-2xl font-bold text-gray-900 font-marianne">Création de compte sur (Re)sources relationnelles</h1>
                 <p className="text-grayBold text-sm">Chapô — Lorem ipsum dolor sit amet, consectetur adipiscing elit. Platea ornare cras eget vitae volutpat in auctor turpis. Eget nibh risus ac orci sit elementum vitae, habitasse viverra.</p>
-                <div className='py-12 px-24 bg-[#F6F6F6]'>
+                <div className='p-6 md:py-12 md:px-24 bg-[#F6F6F6]'>
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 font-marianne">
                             Se créer un compte avec FranceConnect
