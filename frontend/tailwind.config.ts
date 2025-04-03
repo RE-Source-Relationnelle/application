@@ -5,19 +5,20 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  important: true,
   theme: {
-    fontFamily: {
-      marianne: ['Marianne', 'sans-serif']
-    },
     extend: {
+      fontFamily: {
+        marianne: ['Marianne', 'sans-serif']
+      },
       colors: {
         primary: '#000091',
         secondary: '#1212FF',
         tertiary: '#F5F5FE',
-        grey: '#F6F6F6',
+        light: '#E1010E',
         black: '#000000',
+        grayBold: '#3A3A3A',
         white: '#FFFFFF',
+        textLight: '#666666',
       }
     }
   },
