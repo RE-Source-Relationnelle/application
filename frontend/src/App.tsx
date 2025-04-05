@@ -9,8 +9,8 @@ function App() {
     <Router>
       <BaseLayout>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/connexion" element={<Login />} />
+          <Route path="/inscription" element={<Register />} />
           <Route path="/" element={<Feed />} />
         </Routes>
       </BaseLayout>
