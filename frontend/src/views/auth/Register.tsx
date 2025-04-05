@@ -120,13 +120,14 @@ const Register = () => {
                                 </div>
                             )}
 
-                            <div className='mt-6 flex items-center justify-end'>
+                            <div className='mt-6 flex flex-col items-end justify-center gap-2'>
                                 <button
                                     type="submit"
                                     className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary"
                                 >
                                     Créer son compte
                                 </button>
+                                <span className="text-sm text-grayBold font-marianne">Déjà un compte ? <a href="/connexion" className="text-primary underline">Se connecter</a></span>
                             </div>
                         </form>
                     </div>
