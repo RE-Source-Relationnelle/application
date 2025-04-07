@@ -19,7 +19,7 @@ const Register = () => {
     }
 
     return (
-        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-[calc(100vh-120px)] flex items-center justify-center py-12 px-6 sm:px-6 lg:px-8">
             <div className="max-w-3xl w-full space-y-8 bg-white">
                 <h1 className="text-2xl font-bold text-gray-900 font-marianne">Création de compte sur (Re)sources relationnelles</h1>
                 <p className="text-grayBold text-sm">Chapô — Lorem ipsum dolor sit amet, consectetur adipiscing elit. Platea ornare cras eget vitae volutpat in auctor turpis. Eget nibh risus ac orci sit elementum vitae, habitasse viverra.</p>
