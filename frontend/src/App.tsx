@@ -13,7 +13,7 @@ function App() {
           <Route path="/connexion" element={<Login />} />
           <Route path="/inscription" element={<Register />} />
           <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
-          <Route path="/" element={<Feed />} />
+          <Route path="/feed" element={<Feed />} />
         </Routes>
       </BaseLayout>
     </Router>

@@ -1,13 +1,15 @@
 import LeftSidebar from './LeftSidebar'
 import RightSidebar from './RightSidebar'
+import MobileNavigation from './MobileNavigation'
 
 interface MainLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
+  onOpenPostModal: () => void;
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({ children, onOpenPostModal }: MainLayoutProps) {
   return (
-    <div className="container mx-auto px-6 py-4">
+    <div className="container mx-auto px-6 py-4 pb-16 sm:pb-4">
       <div className="grid grid-cols-12 gap-4">
         <div className="hidden lg:block lg:col-span-3">
           <LeftSidebar />
@@ -19,6 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <RightSidebar />
         </div>
       </div>
+      <MobileNavigation onOpenPostModal={onOpenPostModal} />
     </div>
   )
 }

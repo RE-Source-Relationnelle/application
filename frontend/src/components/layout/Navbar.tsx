@@ -10,12 +10,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow relative z-10">
+    <nav className="bg-white shadow relative z-10 sticky top-0">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0">
+            <Link to="/feed" className="flex-shrink-0">
               <img src="/img/logo-ressources-relationnelles.svg" alt="Logo" className="h-8 w-auto" />
             </Link>
           </div>
