@@ -19,7 +19,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-120px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-120px)] flex items-center justify-center py-12 px-6 sm:px-6 lg:px-8">
             <div className="max-w-3xl w-full space-y-8 bg-white">
                 <div className='p-6 md:py-12 md:px-24 bg-[#F6F6F6]'>
                     <div>
