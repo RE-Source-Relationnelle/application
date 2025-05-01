@@ -1,20 +1,36 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import useAuthStore from '../../store/authStore'
 
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  
+  const { login, error, isAuthenticated, loading, clearError } = useAuthStore()
+  const navigate = useNavigate()
+  
+  // Rediriger si déjà authentifié
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/feed')
+    }
+    
+    // Nettoyer les erreurs lors du démontage du composant
+    return () => {
+      clearError()
+    }
+  }, [isAuthenticated, navigate, clearError])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setError('')
     
     try {
-      // TODO: Implémenter la logique de connexion avec l'API
-      console.log('Login attempt with:', { email, password })
+      // Appeler l'action de connexion du store avec email et password
+      await login(email, password)
     } catch (err) {
-      setError('Échec de la connexion. Veuillez réessayer.')
+      // L'erreur est déjà gérée dans le store
+      console.error('Login error:', err)
     }
   }
 
@@ -107,8 +123,9 @@ const Login = () => {
                                 <button
                                     type="submit"
                                     className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary"
+                                    disabled={loading}
                                 >
-                                    Se connecter
+                                    {loading ? 'Connexion en cours...' : 'Se connecter'}
                                 </button>
                                 <span className="text-sm text-grayBold font-marianne">Pas encore de compte ? <a href="/inscription" className="text-primary underline">S'inscrire</a></span>
                             </div>

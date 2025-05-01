@@ -1,12 +1,21 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Search, User, X } from 'lucide-react';
 import { useState } from 'react';
+import useAuthStore from '../../store/authStore';
+
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { logout, isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/connexion');
   };
 
   return (
@@ -30,12 +39,12 @@ const Navbar = () => {
                   className="w-full px-4 py-2 border-b-2 border-primary rounded-tl-[4px] bg-gray-100 focus:outline-none focus:ring-0 focus:ring-transparent sm:text-sm"
                   aria-label="Champ de recherche"
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="bg-primary hover:bg-secondary text-white px-3 py-2 rounded-tr-[4px] flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-transparent"
                   aria-label="Rechercher"
                 >
-                 <Search className="h-5 w-5" />
+                  <Search className="h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -44,23 +53,34 @@ const Navbar = () => {
           {/* User Actions */}
           <div className="flex items-center space-x-4">
             {/* Mobile Search Icon */}
-            <button 
+            <button
               onClick={toggleSearch}
               className="md:hidden p-2"
               aria-label="Ouvrir la recherche"
             >
               <Search className="h-5 w-5 text-gray-600" />
             </button>
-            
+
             {/* User Icon/Login Button */}
-            <div className="flex items-center">
-              <Link to="/connexion" className="hidden md:block py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
-                Se connecter →
-              </Link>
-              <Link to="/connexion" className="md:hidden p-2">
+            {isAuthenticated ? (
+              <div className="flex items-center">
+                <button
+                  onClick={handleLogout}
+                  className="py-2 px-4 bg-red-500 text-white rounded"
+                >
+                  Se déconnecter
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Link to="/connexion" className="hidden md:block py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
+                  Se connecter →
+                </Link>
+                <Link to="/connexion" className="md:hidden p-2">
                 <User className="h-5 w-5 text-gray-600" />
               </Link>
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -84,12 +104,12 @@ const Navbar = () => {
                   aria-label="Champ de recherche"
                   autoFocus
                 />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="bg-primary hover:bg-secondary text-white px-3 py-2 rounded-tr-[4px] flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-transparent"
                   aria-label="Rechercher"
                 >
-                 <Search className="h-5 w-5" />
+                  <Search className="h-5 w-5" />
                 </button>
               </div>
             </div>
