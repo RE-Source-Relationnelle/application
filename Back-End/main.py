@@ -6,7 +6,7 @@ from routes.auth import auth_bp
 from routes.resources import resources_bp
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
 print("Initializing database connection...")
 db = get_db()
