@@ -1,0 +1,16 @@
+# Backend Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.env
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.idea/
+.vscode/
