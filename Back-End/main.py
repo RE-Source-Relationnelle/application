@@ -16,4 +16,4 @@ app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(resources_bp, url_prefix='/api/resources')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0', port=8000)
