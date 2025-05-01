@@ -24,7 +24,7 @@ const Feed = () => {
     return (
         <>
             <MainLayout onOpenPostModal={openPostModal}>
-                <div className="max-w-2xl mx-auto space-y-4 px-2 sm:px-0">
+                <div className="w-full mx-auto space-y-4 sm:px-0">
                     {/* Création de post (visible uniquement sur desktop) */}
                     <div className="bg-white rounded-lg shadow p-3 sm:p-4 hidden sm:block">
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-3">
@@ -46,7 +46,7 @@ const Feed = () => {
                     </div>
 
                     {/* Example post */}
-                    <div className="bg-white rounded-lg shadow">
+                    <div className="bg-white rounded-lg shadow sm:rounded-lg w-full">
                         {/* En-tête du post */}
                         <div className="p-3 sm:p-4">
                             <div className="flex items-start">
