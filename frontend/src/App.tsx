@@ -4,6 +4,8 @@ import Register from './views/auth/Register'
 import Feed from './views/Feed'
 import BaseLayout from './components/layout/BaseLayout'
 import ForgotPassword from './views/auth/ForgotPassword'
+import Profile from './views/user/Profile'
+import ProtectedRoute from './components/features/auth/ProtectedRoute'
 
 function App() {
   return (
@@ -14,6 +16,7 @@ function App() {
           <Route path="/inscription" element={<Register />} />
           <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         </Routes>
       </BaseLayout>
     </Router>

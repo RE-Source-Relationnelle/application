@@ -5,22 +5,27 @@ import MobileNavigation from './MobileNavigation'
 interface MainLayoutProps {
   children: React.ReactNode;
   onOpenPostModal: () => void;
+  showSidebars?: boolean; 
 }
 
-export default function MainLayout({ children, onOpenPostModal }: MainLayoutProps) {
+export default function MainLayout({ children, onOpenPostModal, showSidebars = false }: MainLayoutProps) {
   return (
     <>
       <div className="container mx-auto px-0 sm:px-6 py-4 pb-16 sm:pb-4">
         <div className="grid grid-cols-12 gap-0 sm:gap-4">
-          <div className="hidden lg:block lg:col-span-3">
-            <LeftSidebar />
-          </div>
-          <main className="col-span-12 lg:col-span-6">
+          {showSidebars && (
+            <div className="hidden lg:block lg:col-span-3">
+              <LeftSidebar />
+            </div>
+          )}
+          <main className={`col-span-12 ${showSidebars ? 'lg:col-span-6' : 'lg:col-span-12'}`}>
             {children}
           </main>
-          <div className="hidden lg:block lg:col-span-3">
-            <RightSidebar />
-          </div>
+          {showSidebars && (
+            <div className="hidden lg:block lg:col-span-3">
+              <RightSidebar />
+            </div>
+          )}
         </div>
         <MobileNavigation onOpenPostModal={onOpenPostModal} />
       </div>
