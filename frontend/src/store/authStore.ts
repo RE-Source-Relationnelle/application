@@ -148,7 +148,13 @@ const useAuthStore = create<AuthState>()(
       updateProfile: async (userData: Partial<User>) => {
         set({ loading: true });
         try {
-          const response = await api.put('/auth/update_profile', userData);
+          // S'assurer que si email est fourni, il est également envoyé comme mail
+          const dataToSend = { ...userData };
+          if (userData.email && !userData.mail) {
+            dataToSend.mail = userData.email;
+          }
+          
+          const response = await api.put('/auth/update_profile', dataToSend);
           
           // Mettre à jour l'utilisateur dans le store avec les nouvelles données
           const currentUser = get().user;

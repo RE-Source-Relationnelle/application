@@ -6,6 +6,8 @@ import BaseLayout from './components/layout/BaseLayout'
 import ForgotPassword from './views/auth/ForgotPassword'
 import Profile from './views/user/Profile'
 import ProtectedRoute from './components/features/auth/ProtectedRoute'
+import AdminDashboard from './views/admin/AdminDashboard'
+import AdminRoute from './components/features/auth/AdminRoute'
 
 function App() {
   return (
@@ -17,6 +19,7 @@ function App() {
           <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </BaseLayout>
     </Router>

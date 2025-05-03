@@ -12,7 +12,7 @@ const Navbar = () => {
 
   // Simulation de la vérification du rôle admin
   // À remplacer par une vérification réelle basée sur les données de l'utilisateur
-  const isAdmin = user?.email === "emma.lefevre@example.com"; // Exemple temporaire
+  const isAdmin = user?.mail === "emma.lefevre@example.com"; // Exemple temporaire
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);

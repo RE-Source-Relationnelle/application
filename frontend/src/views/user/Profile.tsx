@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import useAuthStore from '../../store/authStore';
@@ -14,8 +14,8 @@ const Profile = () => {
         prenom: user?.prenom || '',
         nom: user?.nom || '',
         username: user?.username || '',
-        email: user?.email || '',
-        genre: ''
+        email: user?.email || user?.mail || '',
+        genre: user?.genre || ''
     });
 
     // États pour le formulaire de changement de mot de passe
@@ -32,6 +32,19 @@ const Profile = () => {
     // État pour la confirmation de suppression de compte
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+    // Mettre à jour le formulaire quand l'utilisateur change
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                prenom: user.prenom || '',
+                nom: user.nom || '',
+                username: user.username || '',
+                email: user.email || user.mail || '',
+                genre: user.genre || ''
+            });
+        }
+    }, [user]);
 
     const openPostModal = () => {
         setIsPostModalOpen(true);
