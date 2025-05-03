@@ -116,7 +116,7 @@ const Profile = () => {
             // TODO: Implémenter l'appel API pour supprimer le compte
             console.log('Suppression du compte');
             await logout();
-            navigate('/connexion');
+            navigate('/');
         } catch (error) {
             setErrorMessage('Une erreur est survenue lors de la suppression de votre compte.');
             console.error('Erreur de suppression de compte:', error);

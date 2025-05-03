@@ -24,7 +24,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/connexion');
+    navigate('/');
   };
 
   // Composant réutilisable pour la barre de recherche
@@ -149,7 +149,7 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="hidden md:block">
-                <Link to="/connexion" className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
+                <Link to="/" className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
                   Se connecter →
                 </Link>
               </div>

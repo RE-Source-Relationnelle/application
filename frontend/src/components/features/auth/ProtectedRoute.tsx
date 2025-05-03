@@ -13,7 +13,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // Rediriger vers la page de connexion si non authentifié
   if (!isAuthenticated) {
-    return <Navigate to="/connexion" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

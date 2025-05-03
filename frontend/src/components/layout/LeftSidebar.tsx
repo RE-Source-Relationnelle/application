@@ -37,7 +37,7 @@ export default function LeftSidebar() {
             <p className="text-gray-500 mb-4">Connectez-vous pour accéder à toutes les fonctionnalités</p>
             
             <div className="space-y-2">
-              <Link to="/connexion" className="block w-full text-center py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition">
+              <Link to="/" className="block w-full text-center py-2 px-4 bg-primary text-white rounded-md hover:bg-primary/90 transition">
                 Connexion
               </Link>
               <Link to="/inscription" className="block w-full text-center py-2 px-4 border border-primary text-primary rounded-md hover:bg-primary/10 transition">
