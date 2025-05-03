@@ -9,7 +9,7 @@ export default function BaseLayout({ children }: BaseLayoutProps) {
     return (
         <div className="min-h-screen">
             <Navbar />
-            <div className="min-h-[calc(100vh-120px)]">
+            <div className="min-h-[calc(100vh-120px)] bg-gray-50">
                 {children}
             </div>
             <Footer />
