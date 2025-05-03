@@ -5,7 +5,7 @@ export default function LeftSidebar() {
     const { user, isAuthenticated } = useAuthStore();
     
     return (
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-lg ring-gray-200 ring-1 p-4">
         {isAuthenticated && user ? (
           // Affichage pour utilisateur connecté
           <div>
@@ -28,11 +28,6 @@ export default function LeftSidebar() {
         ) : (
           // Affichage pour utilisateur non connecté
           <div className="text-center py-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-gray-200 flex items-center justify-center mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
             <h3 className="font-semibold text-lg mb-2">Bienvenue !</h3>
             <p className="text-gray-500 mb-4">Connectez-vous pour accéder à toutes les fonctionnalités</p>
             

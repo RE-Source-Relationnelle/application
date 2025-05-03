@@ -125,7 +125,7 @@ const Profile = () => {
 
     return (
         <MainLayout onOpenPostModal={openPostModal} showSidebars={false}>
-            <div className="bg-white shadow sm:rounded-lg overflow-hidden w-full">
+            <div className="bg-white ring-gray-200 ring-1 sm:rounded-lg overflow-hidden w-full">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres du compte</h1>
 
