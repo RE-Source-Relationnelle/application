@@ -7,9 +7,11 @@ export interface ProtectedRouteProps {
 export interface User {
     id: string;
     email: string;
+    mail?: string;
     nom?: string;
     prenom?: string;
     username?: string;
+    genre?: string;
 }
 
 export interface RegisterFormData {
@@ -18,5 +20,5 @@ export interface RegisterFormData {
     mail: string;
     password: string;
     username: string;
-    genre: string;
+    genre?: string;
 }

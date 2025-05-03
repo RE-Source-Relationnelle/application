@@ -5,7 +5,7 @@ import useAuthStore from '../../store/authStore';
 
 const Profile = () => {
     const navigate = useNavigate();
-    const { user, logout } = useAuthStore();
+    const { user, logout, updateProfile } = useAuthStore();
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('informations');
 
@@ -62,8 +62,13 @@ const Profile = () => {
     const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            // TODO: Implémenter l'appel API pour mettre à jour le profil
-            console.log('Mise à jour du profil avec:', formData);
+            await updateProfile({
+                prenom: formData.prenom,
+                nom: formData.nom,
+                username: formData.username,
+                email: formData.email,
+                genre: formData.genre
+            });
             setSuccessMessage('Vos informations ont été mises à jour avec succès.');
             setErrorMessage('');
         } catch (error) {
