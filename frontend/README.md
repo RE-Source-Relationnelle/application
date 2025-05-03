@@ -1,54 +1,60 @@
-# React + TypeScript + Vite
+# RE-Source-Relationnelle - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ce projet est la partie frontend de l'application RE-Source-Relationnelle, un réseau social axé sur la création de liens sociaux autour de thèmes comme la famille et la santé.
 
-Currently, two official plugins are available:
+## Stack Technique
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 18** avec **TypeScript**
+- **Vite** comme bundler
+- **Tailwind CSS** pour le styling
+- **React Router** pour la navigation
+- **Zustand** pour la gestion d'état
+- **Axios** pour les requêtes HTTP
+- **Heroicons** pour les icônes
 
-## Expanding the ESLint configuration
+## Structure du Projet
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```
+src/
+├── components/         # Composants réutilisables
+│   ├── features/       # Composants liés à des fonctionnalités spécifiques
+│   └── layout/         # Composants de mise en page (Navbar, Sidebar, etc.)
+├── store/              # Stores Zustand pour la gestion d'état
+├── types/              # Définitions de types TypeScript
+├── views/              # Composants de page
+│   ├── admin/          # Pages d'administration
+│   ├── auth/           # Pages d'authentification
+│   └── user/           # Pages liées à l'utilisateur
+└── App.tsx             # Point d'entrée de l'application
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Installer les dépendances
+npm install ou pnpm install
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+# Lancer le serveur de développement
+npm run dev ou pnpm run dev
+
+# Construire pour la production
+npm run build ou pnpm run build
 ```
+
+## Fonctionnalités
+
+- **Authentification** : Inscription, connexion, récupération de mot de passe
+- **Flux Social** : Affichage des posts avec possibilité de filtrer par catégorie
+- **Profil Utilisateur** : Gestion des informations personnelles
+- **Administration** : Tableau de bord pour les administrateurs avec statistiques, gestion des utilisateurs, des posts et des catégories
+
+## Configuration de l'API
+
+L'application se connecte par défaut à l'API backend à l'adresse `http://localhost:8000`. Cette configuration peut être modifiée dans le fichier `src/store/authStore.ts`.
+
+## Rôles Utilisateurs
+
+- **Utilisateur** : Accès aux fonctionnalités de base du réseau social
+- **Modérateur** : Capacités de modération des contenus
+- **Admin** : Accès au tableau de bord d'administration avec statistiques, gestion des utilisateurs, des posts et des catégories
+- **Super Admin** : Toutes les fonctionnalités admin + gestion des administrateurs

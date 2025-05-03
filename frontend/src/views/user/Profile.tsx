@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import useAuthStore from '../../store/authStore';
@@ -14,8 +14,8 @@ const Profile = () => {
         prenom: user?.prenom || '',
         nom: user?.nom || '',
         username: user?.username || '',
-        email: user?.email || '',
-        genre: ''
+        email: user?.email || user?.mail || '',
+        genre: user?.genre || ''
     });
 
     // États pour le formulaire de changement de mot de passe
@@ -32,6 +32,19 @@ const Profile = () => {
     // État pour la confirmation de suppression de compte
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
+    // Mettre à jour le formulaire quand l'utilisateur change
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                prenom: user.prenom || '',
+                nom: user.nom || '',
+                username: user.username || '',
+                email: user.email || user.mail || '',
+                genre: user.genre || ''
+            });
+        }
+    }, [user]);
 
     const openPostModal = () => {
         setIsPostModalOpen(true);
@@ -116,7 +129,7 @@ const Profile = () => {
             // TODO: Implémenter l'appel API pour supprimer le compte
             console.log('Suppression du compte');
             await logout();
-            navigate('/connexion');
+            navigate('/');
         } catch (error) {
             setErrorMessage('Une erreur est survenue lors de la suppression de votre compte.');
             console.error('Erreur de suppression de compte:', error);
@@ -125,7 +138,7 @@ const Profile = () => {
 
     return (
         <MainLayout onOpenPostModal={openPostModal} showSidebars={false}>
-            <div className="bg-white shadow sm:rounded-lg overflow-hidden w-full">
+            <div className="bg-white ring-gray-200 ring-1 sm:rounded-lg overflow-hidden w-full">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres du compte</h1>
 

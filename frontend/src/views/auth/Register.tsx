@@ -242,7 +242,7 @@ const Register = () => {
                                 >
                                     {loading ? 'Inscription en cours...' : 'S\'inscrire'}
                                 </button>
-                                <span className="text-sm text-grayBold font-marianne">Déjà un compte ? <a href="/connexion" className="text-primary underline">Se connecter</a></span>
+                                <span className="text-sm text-grayBold font-marianne">Déjà un compte ? <a href="/" className="text-primary underline">Se connecter</a></span>
                             </div>
                         </form>
                     </div>

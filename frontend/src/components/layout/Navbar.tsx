@@ -12,7 +12,7 @@ const Navbar = () => {
 
   // Simulation de la vérification du rôle admin
   // À remplacer par une vérification réelle basée sur les données de l'utilisateur
-  const isAdmin = user?.email === "emma.lefevre@example.com"; // Exemple temporaire
+  const isAdmin = user?.mail === "emma.lefevre@example.com"; // Exemple temporaire
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
@@ -24,7 +24,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/connexion');
+    navigate('/');
   };
 
   // Composant réutilisable pour la barre de recherche
@@ -49,7 +49,7 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="bg-white shadow relative z-10 sticky top-0">
+    <nav className="bg-white ring-gray-200 ring-1 relative z-10 sticky top-0">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -149,7 +149,7 @@ const Navbar = () => {
               </div>
             ) : (
               <div className="hidden md:block">
-                <Link to="/connexion" className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
+                <Link to="/" className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
                   Se connecter →
                 </Link>
               </div>
