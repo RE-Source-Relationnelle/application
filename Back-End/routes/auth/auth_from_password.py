@@ -68,7 +68,7 @@ def auth_from_password():
 
         # Mise à jour ou insertion du token dans la base de données
         print("Token data to be inserted:", token_data)
-        result = db.Token.insert_one(token_data)
+        result = db.token.insert_one(token_data)
         print("Token inserted with ID:", result.inserted_id)
 
         # Préparation de la réponse

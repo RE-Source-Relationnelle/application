@@ -6,7 +6,7 @@ from . import resources_bp
 import jwt
 import os
 
-@resources_bp.route('/resources/<resource_id>/favorite', methods=['POST'])
+@resources_bp.route('/<resource_id>/favorite', methods=['POST'])
 def add_favorite(resource_id):
     """
     Route pour ajouter une ressource aux favoris

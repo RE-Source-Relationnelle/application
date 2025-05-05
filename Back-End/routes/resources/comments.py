@@ -6,7 +6,7 @@ from . import resources_bp
 import jwt
 import os
 
-@resources_bp.route('/resources/<resource_id>/comments', methods=['POST'])
+@resources_bp.route('/<resource_id>/comments', methods=['POST'])
 def add_comment(resource_id):
     """
     Route pour ajouter un commentaire à une ressource

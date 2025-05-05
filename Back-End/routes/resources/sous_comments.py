@@ -6,7 +6,7 @@ from . import resources_bp
 import jwt
 import os
 
-@resources_bp.route('/resources/<resource_id>/comments/<comment_id>/replies', methods=['POST'])
+@resources_bp.route('/<resource_id>/comments/<comment_id>/replies', methods=['POST'])
 def add_sous_comment(resource_id, comment_id):
     """
     Route pour ajouter un sous-commentaire à un commentaire
