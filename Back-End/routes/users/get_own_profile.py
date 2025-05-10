@@ -5,9 +5,9 @@ from config.database import get_db
 from config.config import SECRET_KEY
 from . import users_bp
 
-@users_bp.route('/me', methods=['GET'])
-def get_user_info():
-    print("Received /me request")
+@users_bp.route('/get_own_profile', methods=['GET'])
+def get_own_profile():
+    print("Received /get_own_profile request")
     try:
         # Récupérer le token depuis les cookies
         token = request.cookies.get('access_token')
