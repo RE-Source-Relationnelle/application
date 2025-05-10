@@ -22,3 +22,4 @@ export interface RegisterFormData {
     username: string;
     genre?: string;
 }
+
