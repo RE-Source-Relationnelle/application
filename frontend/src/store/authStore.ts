@@ -41,7 +41,9 @@ const useAuthStore = create<AuthState>()(
         }
         
         try {
-          const response = await api.get('/auth/me');
+          console.log('Vérification de l\'authentification...');
+          const response = await api.get('/users/get_own_profile');
+          console.log('Réponse de get_own_profile:', response.data);
           set({ 
             user: response.data, 
             isAuthenticated: true,
@@ -49,6 +51,19 @@ const useAuthStore = create<AuthState>()(
             error: null
           });
         } catch (err: any) {
+          console.error('Erreur lors de la vérification d\'authentification:', err);
+          
+          // Si l'utilisateur est déjà authentifié selon le localStorage, 
+          // ne pas le déconnecter en cas d'erreur temporaire
+          const currentUser = get().user;
+          const isCurrentlyAuthenticated = get().isAuthenticated;
+          
+          if (currentUser && isCurrentlyAuthenticated && err?.response?.status === 401) {
+            console.log('Erreur 401 mais utilisateur déjà authentifié, conservation de l\'état');
+            set({ loading: false });
+            return; // Ne pas réinitialiser l'état
+          }
+          
           if (err?.response?.status !== 401) {
             console.error('Auth check failed:', err);
           }
@@ -154,7 +169,7 @@ const useAuthStore = create<AuthState>()(
             dataToSend.mail = userData.email;
           }
           
-          const response = await api.put('/auth/update_profile', dataToSend);
+          const response = await api.put('/users/update_profile', dataToSend);
           
           // Mettre à jour l'utilisateur dans le store avec les nouvelles données
           const currentUser = get().user;

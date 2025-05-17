@@ -4,6 +4,7 @@ from config.database import get_db
 
 from routes.auth import auth_bp
 from routes.resources import resources_bp
+from routes.users import users_bp
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
@@ -14,6 +15,7 @@ print("Database connection initialized")
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(resources_bp, url_prefix='/api/resources')
+app.register_blueprint(users_bp, url_prefix='/users')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
