@@ -1,17 +1,28 @@
 import random
-from flask import jsonify
+from flask import jsonify, request
 from bson import ObjectId
 from config.database import get_db
 from . import resources_bp
 from datetime import datetime
+from utils.auth import get_user_id_from_token
 
 
 @resources_bp.route('/randomressource', methods=['GET'])
 def get_random_resource():
     """
-    Route pour récupérer une ressource aléatoire
+    Route pour récupérer une ressource aléatoire non consultée
     """
     print("🎲 Début de la route get_random_resource")
+
+    # Vérification du token
+    token_header = request.headers.get('token')
+    if not token_header:
+        print("❌ Token manquant ou mal formé")
+        return jsonify({"error": "Token manquant ou invalide"}), 401
+
+    user_id = get_user_id_from_token(token_header)
+    if not user_id:
+        return jsonify({"error": "Token invalide"}), 401
 
     db = get_db()
     if db is None:
@@ -19,18 +30,35 @@ def get_random_resource():
         return jsonify({"error": "Erreur de connexion à la base de données"}), 500
 
     try:
-        # Compter le nombre total de documents
-        count = db.ressource.count_documents({})
+        # Récupérer toutes les ressources consultées par l'utilisateur
+        historique = list(db.historique.find({"user_id": ObjectId(user_id)}))
+        ressources_consultees = [str(h["resource_id"]) for h in historique]
+        
+        print(f"📚 Ressources déjà consultées: {ressources_consultees}")
 
-        if count == 0:
-            print("⚠️ Aucune ressource disponible")
-            return jsonify({"error": "Aucune ressource disponible"}), 404
+        # Trouver une ressource qui n'a pas été consultée
+        pipeline = [
+            {"$match": {"_id": {"$nin": [ObjectId(id) for id in ressources_consultees]}}},
+            {"$sample": {"size": 1}}
+        ]
+        
+        resource = list(db.ressource.aggregate(pipeline))
+        
+        if not resource:
+            print("ℹ️ Plus de nouvelles ressources disponibles")
+            return jsonify({"message": "plus de ressources"}), 200
 
-        # Prendre un index aléatoire
-        random_index = random.randint(0, count - 1)
+        resource = resource[0]  # Prendre la première (et seule) ressource du résultat
 
-        # Aller chercher la ressource avec skip
-        resource = db.ressource.find().skip(random_index).limit(1)[0]
+        # Ajouter la ressource à l'historique
+        historique_entry = {
+            "user_id": ObjectId(user_id),
+            "resource_id": resource["_id"],
+            "date_consultation": datetime.utcnow()
+        }
+        
+        db.historique.insert_one(historique_entry)
+        print(f"📝 Ressource {resource['_id']} ajoutée à l'historique de l'utilisateur {user_id}")
 
         # Sanitize les données
         def sanitize(document):

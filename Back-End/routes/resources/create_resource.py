@@ -59,7 +59,7 @@ def create_resource():
             }
         }
 
-        result = db.ressource.insert_one(resource)
+        result = db.ressources_en_attente.insert_one(resource)
         resource['_id'] = result.inserted_id
 
         # Sanitize
