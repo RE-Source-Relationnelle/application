@@ -88,18 +88,18 @@ def auth_from_password():
             'access_token', 
             access_token, 
             httponly=True, 
-            secure=False,  # Mettre à True en production avec HTTPS
+            secure=False,  
             samesite='Lax',
-            max_age=3600  # 1 heure
+            max_age=3600 
         )
         
         response.set_cookie(
             'refresh_token', 
             refresh_token, 
             httponly=True, 
-            secure=False,  # Mettre à True en production avec HTTPS
+            secure=False, 
             samesite='Lax',
-            max_age=604800  # 7 jours
+            max_age=604800 
         )
 
         print("Authentication successful")
