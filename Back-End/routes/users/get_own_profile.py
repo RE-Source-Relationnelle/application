@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import jwt
 from config.database import get_db
 from config.config import SECRET_KEY
+from routes.users import users_bp
 
 @users_bp.route('/get_own_profile', methods=['GET'])
 def get_own_profile():
