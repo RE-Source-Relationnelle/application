@@ -6,7 +6,7 @@ import { User, RegisterFormData } from '../types/types';
 // Configuration de axios
 const api = axios.create({
   baseURL: 'http://localhost:8000',
-  withCredentials: true // Important pour les cookies
+  withCredentials: true
 })
 
 interface AuthState {
