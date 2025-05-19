@@ -13,7 +13,6 @@ const api = axios.create({
 
 // Intercepteur pour ajouter le token à chaque requête
 api.interceptors.request.use(config => {
-  // Récupérer le token depuis les cookies
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
     acc[key] = value;
@@ -23,9 +22,7 @@ api.interceptors.request.use(config => {
   const token = cookies['access_token'];
   
   if (token && config.headers) {
-    // Ajouter le token dans l'en-tête Authorization
     config.headers['Authorization'] = `Bearer ${token}`;
-    // Ajouter aussi le token dans un en-tête 'token' pour compatibilité avec le backend
     config.headers['token'] = token;
   }
   
@@ -55,12 +52,7 @@ const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     set({ loading: true, error: null });
     try {
-      console.log('Tentative de récupération des catégories depuis l\'API...');
-      
-      // Utiliser la route correcte /resources/categories
       const response = await api.get('/categories');
-      console.log('Catégories récupérées avec succès:', response.data);
-      
       set({ 
         categories: response.data, 
         loading: false 
@@ -77,7 +69,6 @@ const useCategoryStore = create<CategoryState>((set) => ({
     }
   },
   
-  // Effacer les erreurs
   clearError: () => set({ error: null })
 }));
 
