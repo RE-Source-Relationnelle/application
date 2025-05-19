@@ -1,33 +1,34 @@
-import Navbar from './Navbar'
 import LeftSidebar from './LeftSidebar'
 import RightSidebar from './RightSidebar'
+import MobileNavigation from './MobileNavigation'
 
 interface MainLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
+  onOpenPostModal: () => void;
+  showSidebars?: boolean; 
 }
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({ children, onOpenPostModal, showSidebars = false }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Navbar />
-      <div className="container mx-auto px-4 py-4 pt-20">
-        <div className="grid grid-cols-12 gap-4">
-          {/* Sidebar Gauche */}
-          <div className="hidden lg:block lg:col-span-3">
-            <LeftSidebar />
-          </div>
-          
-          {/* Contenu Principal */}
-          <main className="col-span-12 lg:col-span-6">
+    <>
+      <div className="container mx-auto px-0 sm:px-6 py-4 pb-16 sm:pb-4">
+        <div className="grid grid-cols-12 gap-0 sm:gap-4">
+          {showSidebars && (
+            <div className="hidden lg:block lg:col-span-3">
+              <LeftSidebar />
+            </div>
+          )}
+          <main className={`col-span-12 ${showSidebars ? 'lg:col-span-6' : 'lg:col-span-12'}`}>
             {children}
           </main>
-          
-          {/* Sidebar Droite */}
-          <div className="hidden lg:block lg:col-span-3">
-            <RightSidebar />
-          </div>
+          {showSidebars && (
+            <div className="hidden lg:block lg:col-span-3">
+              <RightSidebar />
+            </div>
+          )}
         </div>
+        <MobileNavigation onOpenPostModal={onOpenPostModal} />
       </div>
-    </div>
+    </>
   )
 }

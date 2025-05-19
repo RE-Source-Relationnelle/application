@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from config.database import get_db
 from . import auth_bp
 
@@ -12,27 +12,30 @@ def logout():
             print("Database connection failed")
             return jsonify({'error': 'Database connection failed'}), 500
 
-        token = request.headers.get('Authorization')
-        print(f"Token reçu: {token}")
-
+        # Récupérer le token depuis les cookies
+        token = request.cookies.get('access_token')
+        
         if not token:
-            print("Missing token")
-            return jsonify({'error': 'Token manquant'}), 401
-
-        # Si jamais tu veux supporter les envois du style "Bearer <token>"
-        if token.startswith('Bearer '):
-            token = token.split(' ')[1]
-            print(f"Token nettoyé: {token}")
+            # Si pas de token dans les cookies, vérifier les en-têtes
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                token = auth_header.split(' ')[1]
+            else:
+                print("Missing token")
+                return jsonify({'error': 'Token manquant'}), 401
 
         # Suppression du document contenant le bon access_token
-        result = db.token.delete_one({'access_token': token})
+        result = db.Token.delete_one({'access_token': token})
         print(f"Nombre de documents supprimés: {result.deleted_count}")
 
-        if result.deleted_count == 0:
-            print("Aucun token trouvé à supprimer")
-            return jsonify({'error': 'Token invalide ou déjà déconnecté'}), 401
-
-        return jsonify({'message': 'Déconnexion réussie'}), 200
+        # Même si aucun token n'a été trouvé dans la base, on supprime les cookies
+        response = make_response(jsonify({'message': 'Déconnexion réussie'}), 200)
+        
+        # Suppression des cookies en les expirant
+        response.set_cookie('access_token', '', expires=0)
+        response.set_cookie('refresh_token', '', expires=0)
+        
+        return response
 
     except Exception as e:
         print(f"Erreur dans logout: {str(e)}")

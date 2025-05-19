@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, jsonify, make_response
 from datetime import datetime, timedelta
 import jwt
 from config.database import get_db
@@ -73,14 +73,37 @@ def auth_from_password():
 
         # Préparation de la réponse
         response_data = {
-            'access_token': access_token,
-            'expiration_access_token': access_token_expiration.isoformat(),
-            'refresh_token': refresh_token,
-            'expiration_refresh_token': refresh_token_expiration.isoformat()
+            'user_id': str(user['_id']),
+            'username': user.get('username', ''),
+            'mail': user.get('mail', ''),
+            'nom': user.get('nom', ''),
+            'prenom': user.get('prenom', '')
         }
 
+        # Création de la réponse avec cookies
+        response = make_response(jsonify(response_data), 200)
+        
+        # Définition des cookies sécurisés
+        response.set_cookie(
+            'access_token', 
+            access_token, 
+            httponly=True, 
+            secure=False,  
+            samesite='Lax',
+            max_age=3600 
+        )
+        
+        response.set_cookie(
+            'refresh_token', 
+            refresh_token, 
+            httponly=True, 
+            secure=False, 
+            samesite='Lax',
+            max_age=604800 
+        )
+
         print("Authentication successful")
-        return jsonify(response_data), 201
+        return response
 
     except Exception as e:
         print(f"Error in auth_from_password: {str(e)}")
