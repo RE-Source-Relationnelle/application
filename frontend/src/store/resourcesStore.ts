@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { Resource, Category } from '../types/types';
+import useCategoryStore from './categoryStore';
 
-// Réutiliser la même configuration axios que dans authStore
+// Configuration de l'API
 const api = axios.create({
   baseURL: 'http://localhost:8000',
   withCredentials: true,
@@ -11,7 +12,7 @@ const api = axios.create({
   }
 });
 
-// Intercepteur pour ajouter le token à chaque requête (comme dans authStore)
+// Intercepteur pour ajouter le token à chaque requête
 api.interceptors.request.use(config => {
   // Récupérer le token depuis les cookies
   const cookies = document.cookie.split(';').reduce((acc, cookie) => {
@@ -34,14 +35,6 @@ api.interceptors.request.use(config => {
   return Promise.reject(error);
 });
 
-// Catégories temporaires en attendant l'implémentation backend
-const defaultCategories: Category[] = [
-  { _id: 'cat_1', nom: 'Famille', description: 'Ressources liées à la famille', resourceCount: 0 },
-  { _id: 'cat_2', nom: 'Santé', description: 'Ressources liées à la santé et au bien-être', resourceCount: 0 },
-  { _id: 'cat_3', nom: 'Éducation', description: 'Ressources éducatives', resourceCount: 0 },
-  { _id: 'cat_4', nom: 'Environnement', description: 'Ressources liées à l\'environnement', resourceCount: 0 }
-];
-
 interface ResourcesState {
   // État
   resources: Resource[];
@@ -57,223 +50,273 @@ interface ResourcesState {
   approveResource: (id: string, comment?: string) => Promise<void>;
   updateResourceCategory: (id: string, categoryId: string) => Promise<void>;
   createCategory: (name: string, description?: string) => Promise<Category | undefined>;
+  updateCategory: (id: string, name: string, description?: string) => Promise<Category | undefined>;
   deleteCategory: (id: string) => Promise<void>;
   clearError: () => void;
 }
 
 const useResourcesStore = create<ResourcesState>((set, get) => ({
+  // État initial
   resources: [],
   loading: false,
   error: null,
-  categories: [...defaultCategories],
+  categories: [],
   loadingCategories: false,
 
+  // Récupérer les ressources
   fetchResources: async () => {
     set({ loading: true });
     try {
       const response = await api.get('/resources/');
-      
-      // Mettre à jour le compteur de ressources par catégorie
-      const resources = response.data;
-      const categoryCounts: Record<string, number> = {};
-      
-      resources.forEach((resource: Resource) => {
-        if (resource.id_categorie) {
-          categoryCounts[resource.id_categorie] = (categoryCounts[resource.id_categorie] || 0) + 1;
-        }
-      });
-      
-      // Mettre à jour les compteurs dans les catégories
-      set(state => ({
-        resources: resources,
-        categories: state.categories.map(cat => ({
-          ...cat,
-          resourceCount: categoryCounts[cat._id] || 0
-        })),
-        loading: false,
-        error: null
-      }));
-    } catch (error) {
-      console.error('Erreur lors de la récupération des ressources:', error);
+      set({ resources: response.data, loading: false });
+    } catch (err: any) {
+      console.error('Erreur lors de la récupération des ressources:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err.response?.data?.error || 'Erreur lors de la récupération des ressources', 
         loading: false 
       });
     }
   },
 
+  // Récupérer les catégories (utilise maintenant le categoryStore)
   fetchCategories: async () => {
     set({ loadingCategories: true });
     try {
-      // Temporairement, on utilise les catégories par défaut
-      // Dans le futur, quand l'API sera prête:
-      // const response = await api.get('/resources/categories');
-      // set({ categories: response.data, loadingCategories: false });
+      // Utiliser le categoryStore pour récupérer les catégories
+      const categoryStore = useCategoryStore.getState();
+      await categoryStore.fetchCategories();
       
-      // Pour l'instant, on simule un délai et on utilise les catégories par défaut
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Récupérer les catégories du categoryStore
+      const categories = categoryStore.categories;
       
-      // Ne pas écraser les catégories si elles existent déjà
-      set(state => ({
-        categories: state.categories.length > 0 ? state.categories : [...defaultCategories],
-        loadingCategories: false
-      }));
-    } catch (error) {
-      console.error('Erreur lors de la récupération des catégories:', error);
-      // En cas d'erreur, utiliser quand même les catégories par défaut
-      set(state => ({ 
-        categories: state.categories.length > 0 ? state.categories : [...defaultCategories],
+      // Calculer le nombre de ressources par catégorie
+      const resources = get().resources;
+      const categoriesWithCount = categories.map(category => {
+        const count = resources.filter(r => r.id_categorie === category._id).length;
+        return { ...category, resourceCount: count };
+      });
+      
+      set({ categories: categoriesWithCount, loadingCategories: false });
+    } catch (err: any) {
+      console.error('Erreur lors de la récupération des catégories:', err);
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la récupération des catégories', 
         loadingCategories: false 
-      }));
+      });
     }
   },
 
+  // Supprimer une ressource
   deleteResource: async (id: string) => {
     set({ loading: true });
     try {
       await api.delete(`/resources/${id}`);
-      set(state => ({
-        resources: state.resources.filter(resource => resource._id !== id),
-        loading: false,
-        error: null
-      }));
-    } catch (error) {
-      console.error(`Erreur lors de la suppression de la ressource ${id}:`, error);
+      
+      const updatedResources = get().resources.filter(resource => resource._id !== id);
+      set({ resources: updatedResources, loading: false });
+      
+      // Mettre à jour le comptage des ressources par catégorie
+      get().fetchCategories();
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression de la ressource:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err.response?.data?.error || 'Erreur lors de la suppression de la ressource', 
         loading: false 
       });
     }
   },
 
+  // Approuver une ressource
   approveResource: async (id: string, comment?: string) => {
     set({ loading: true });
     try {
-      const currentDate = new Date().toISOString();
-      await api.put(`/resources/${id}/approve`, { 
-        date_validation: currentDate,
-        commentaire_validation: comment || 'Approuvé par un administrateur'
+      await api.post(`/resources/approve/${id}`, { comment });
+      
+      const updatedResources = get().resources.map(resource => {
+        if (resource._id === id) {
+          return { 
+            ...resource, 
+            date_validation: new Date().toISOString(),
+            commentaire_validation: comment || null
+          };
+        }
+        return resource;
       });
       
-      set(state => ({
-        resources: state.resources.map(resource => 
-          resource._id === id 
-            ? { 
-                ...resource, 
-                date_validation: currentDate,
-                commentaire_validation: comment || 'Approuvé par un administrateur'
-              } 
-            : resource
-        ),
-        loading: false,
-        error: null
-      }));
-    } catch (error) {
-      console.error(`Erreur lors de l'approbation de la ressource ${id}:`, error);
+      set({ resources: updatedResources, loading: false });
+    } catch (err: any) {
+      console.error('Erreur lors de l\'approbation de la ressource:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err.response?.data?.error || 'Erreur lors de l\'approbation de la ressource', 
         loading: false 
       });
     }
   },
 
+  // Mettre à jour la catégorie d'une ressource
   updateResourceCategory: async (id: string, categoryId: string) => {
     set({ loading: true });
     try {
       await api.put(`/resources/${id}`, { id_categorie: categoryId });
       
-      // Mettre à jour la ressource localement
-      set(state => {
-        const updatedResources = state.resources.map(resource => 
-          resource._id === id 
-            ? { ...resource, id_categorie: categoryId } 
-            : resource
-        );
-        
-        // Recalculer les compteurs de ressources par catégorie
-        const categoryCounts: Record<string, number> = {};
-        updatedResources.forEach(resource => {
-          if (resource.id_categorie) {
-            categoryCounts[resource.id_categorie] = (categoryCounts[resource.id_categorie] || 0) + 1;
-          }
-        });
-        
-        // Mettre à jour les catégories avec les nouveaux compteurs
-        const updatedCategories = state.categories.map(cat => ({
-          ...cat,
-          resourceCount: categoryCounts[cat._id] || 0
-        }));
-        
-        return {
-          resources: updatedResources,
-          categories: updatedCategories,
-          loading: false,
-          error: null
-        };
+      const updatedResources = get().resources.map(resource => {
+        if (resource._id === id) {
+          return { ...resource, id_categorie: categoryId };
+        }
+        return resource;
       });
-    } catch (error) {
-      console.error(`Erreur lors de la mise à jour de la catégorie de la ressource ${id}:`, error);
+      
+      set({ resources: updatedResources, loading: false });
+      
+      // Mettre à jour le comptage des ressources par catégorie
+      await get().fetchCategories();
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour de la catégorie:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err.response?.data?.error || 'Erreur lors de la mise à jour de la catégorie', 
         loading: false 
       });
     }
   },
 
+  // Créer une nouvelle catégorie
   createCategory: async (name: string, description?: string) => {
     set({ loadingCategories: true });
     try {
-      // Temporairement, on simule la création d'une catégorie
-      // Dans le futur, quand l'API sera prête:
-      // const response = await api.post('/resources/categories', { nom: name, description: description || '' });
-      // const newCategory = response.data;
-      
-      // Pour l'instant, on crée une catégorie locale avec un ID généré
-      const newCategory: Category = {
-        _id: `cat_${Date.now()}`,
-        nom: name,
-        description: description || '',
-        resourceCount: 0
-      };
-      
-      set(state => ({
-        categories: [...state.categories, newCategory],
-        loadingCategories: false,
-        error: null
-      }));
-      
-      return newCategory;
-    } catch (error) {
-      console.error('Erreur lors de la création de la catégorie:', error);
+      try {
+        const response = await api.post('/resources/categories', { nom: name, description });
+        
+        const newCategory = { ...response.data, resourceCount: 0 };
+        set(state => ({ 
+          categories: [...state.categories, newCategory], 
+          loadingCategories: false 
+        }));
+        
+        // Mettre à jour les catégories dans le categoryStore
+        const categoryStore = useCategoryStore.getState();
+        categoryStore.fetchCategories();
+        
+        return newCategory;
+      } catch (apiErr: any) {
+        console.warn('API /resources/categories (POST) non disponible, simulation locale:', apiErr);
+        
+        const newId = `cat_${Date.now()}`;
+        const newCategory = { 
+          _id: newId, 
+          nom: name, 
+          description: description || '', 
+          resourceCount: 0 
+        };
+        
+        set(state => ({ 
+          categories: [...state.categories, newCategory], 
+          loadingCategories: false 
+        }));
+        
+        return newCategory;
+      }
+    } catch (err: any) {
+      console.error('Erreur lors de la création de la catégorie:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err.response?.data?.error || 'Erreur lors de la création de la catégorie', 
         loadingCategories: false 
       });
+      return undefined;
     }
   },
 
+  // Mettre à jour une catégorie
+  updateCategory: async (id: string, name: string, description?: string) => {
+    set({ loadingCategories: true });
+    try {
+      try {
+        const response = await api.put(`/resources/categories/${id}`, { 
+          nom: name, 
+          description 
+        });
+        
+        const updatedCategory = { ...response.data };
+        set(state => ({ 
+          categories: state.categories.map(cat => 
+            cat._id === id ? { ...updatedCategory, resourceCount: cat.resourceCount } : cat
+          ), 
+          loadingCategories: false 
+        }));
+        
+        // Mettre à jour les catégories dans le categoryStore
+        const categoryStore = useCategoryStore.getState();
+        categoryStore.fetchCategories();
+        
+        return updatedCategory;
+      } catch (apiErr: any) {
+        console.warn('API /resources/categories (PUT) non disponible, simulation locale:', apiErr);
+        
+        const updatedCategory = { 
+          _id: id, 
+          nom: name, 
+          description: description || '' 
+        };
+        
+        set(state => ({ 
+          categories: state.categories.map(cat => 
+            cat._id === id ? { ...cat, ...updatedCategory } : cat
+          ), 
+          loadingCategories: false 
+        }));
+        
+        return updatedCategory as Category;
+      }
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour de la catégorie:', err);
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la mise à jour de la catégorie', 
+        loadingCategories: false 
+      });
+      return undefined;
+    }
+  },
+
+  // Supprimer une catégorie
   deleteCategory: async (id: string) => {
     set({ loadingCategories: true });
     try {
-      // Temporairement, on simule la suppression d'une catégorie
-      // Dans le futur, quand l'API sera prête:
-      // await api.delete(`/resources/categories/${id}`);
+      const resources = get().resources;
+      const isUsed = resources.some(resource => resource.id_categorie === id);
       
-      // Pour l'instant, on supprime simplement la catégorie de l'état local
-      set(state => ({
-        categories: state.categories.filter(category => category._id !== id),
-        loadingCategories: false,
-        error: null
-      }));
-    } catch (error) {
-      console.error(`Erreur lors de la suppression de la catégorie ${id}:`, error);
+      if (isUsed) {
+        throw new Error('Cette catégorie est utilisée par des ressources et ne peut pas être supprimée.');
+      }
+      
+      try {
+        await api.delete(`/resources/categories/${id}`);
+        
+        set(state => ({ 
+          categories: state.categories.filter(cat => cat._id !== id), 
+          loadingCategories: false 
+        }));
+        
+        // Mettre à jour les catégories dans le categoryStore
+        const categoryStore = useCategoryStore.getState();
+        categoryStore.fetchCategories();
+      } catch (apiErr: any) {
+        console.warn('API /resources/categories (DELETE) non disponible, simulation locale:', apiErr);
+        
+        set(state => ({ 
+          categories: state.categories.filter(cat => cat._id !== id), 
+          loadingCategories: false 
+        }));
+      }
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression de la catégorie:', err);
       set({ 
-        error: error instanceof Error ? error.message : 'Erreur inconnue', 
+        error: err instanceof Error ? err.message : 
+              err.response?.data?.error || 'Erreur lors de la suppression de la catégorie', 
         loadingCategories: false 
       });
     }
   },
 
+  // Effacer les erreurs
   clearError: () => set({ error: null })
 }));
 
