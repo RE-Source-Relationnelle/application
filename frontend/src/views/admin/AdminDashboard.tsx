@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart3, Users, FileText, Tag, Shield } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useResourcesStore from '../../store/resourcesStore';
+import useCategoryStore from '../../store/categoryStore';
 import { Resource } from '../../types/types';
 
 // Composants fictifs pour la démonstration
@@ -288,10 +289,14 @@ const PostsPanel = () => {
 };
 
 const CategoriesPanel = () => {
-    const { categories, loadingCategories, error, fetchCategories, createCategory, deleteCategory } = useResourcesStore();
+    const { categories, loading: loadingCategories, error, fetchCategories } = useCategoryStore();
+    const { createCategory, deleteCategory, updateCategory } = useResourcesStore();
     const [newCategory, setNewCategory] = useState("");
     const [newCategoryDescription, setNewCategoryDescription] = useState("");
     const [showDescriptionField, setShowDescriptionField] = useState(false);
+    
+    // État pour la modification d'une catégorie
+    const [editingCategory, setEditingCategory] = useState<{id: string, nom: string, description: string} | null>(null);
 
     // Charger les catégories au montage du composant
     useEffect(() => {
@@ -304,6 +309,8 @@ const CategoriesPanel = () => {
             setNewCategory("");
             setNewCategoryDescription("");
             setShowDescriptionField(false);
+            // Rafraîchir les catégories après l'ajout
+            fetchCategories();
         }
     };
 
@@ -318,6 +325,33 @@ const CategoriesPanel = () => {
         
         if (confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
             await deleteCategory(id);
+            // Rafraîchir les catégories après la suppression
+            fetchCategories();
+        }
+    };
+    
+    const startEditing = (category: any) => {
+        setEditingCategory({
+            id: category._id,
+            nom: category.nom,
+            description: category.description || ""
+        });
+    };
+    
+    const cancelEditing = () => {
+        setEditingCategory(null);
+    };
+    
+    const saveCategory = async () => {
+        if (editingCategory && editingCategory.nom.trim()) {
+            await updateCategory(
+                editingCategory.id, 
+                editingCategory.nom, 
+                editingCategory.description
+            );
+            setEditingCategory(null);
+            // Rafraîchir les catégories après la modification
+            fetchCategories();
         }
     };
 
@@ -410,25 +444,69 @@ const CategoriesPanel = () => {
                                 categories.map((category) => (
                                     <tr key={category._id}>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{category.nom}</div>
+                                            {editingCategory && editingCategory.id === category._id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editingCategory.nom}
+                                                    onChange={(e) => setEditingCategory({...editingCategory, nom: e.target.value})}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                                />
+                                            ) : (
+                                                <div className="text-sm font-medium text-gray-900">{category.nom}</div>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-500 max-w-md truncate">
-                                                {category.description || <span className="text-gray-400 italic">Aucune description</span>}
-                                            </div>
+                                            {editingCategory && editingCategory.id === category._id ? (
+                                                <textarea
+                                                    value={editingCategory.description}
+                                                    onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                                    rows={2}
+                                                />
+                                            ) : (
+                                                <div className="text-sm text-gray-500 max-w-md truncate">
+                                                    {category.description || <span className="text-gray-400 italic">Aucune description</span>}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-500">{category.resourceCount || 0}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <button
-                                                onClick={() => handleDeleteCategory(category._id)}
-                                                className="text-red-600 hover:text-red-800"
-                                                disabled={!!(category.resourceCount && category.resourceCount > 0)}
-                                                title={category.resourceCount && category.resourceCount > 0 ? "Impossible de supprimer une catégorie utilisée par des ressources" : ""}
-                                            >
-                                                Supprimer
-                                            </button>
+                                            {editingCategory && editingCategory.id === category._id ? (
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={saveCategory}
+                                                        className="text-green-600 hover:text-green-800"
+                                                        disabled={!editingCategory.nom.trim()}
+                                                    >
+                                                        Enregistrer
+                                                    </button>
+                                                    <button
+                                                        onClick={cancelEditing}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex space-x-3">
+                                                    <button
+                                                        onClick={() => startEditing(category)}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCategory(category._id)}
+                                                        className="text-red-600 hover:text-red-800"
+                                                        disabled={!!(category.resourceCount && category.resourceCount > 0)}
+                                                        title={category.resourceCount && category.resourceCount > 0 ? "Impossible de supprimer une catégorie utilisée par des ressources" : ""}
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

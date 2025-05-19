@@ -1,13 +1,70 @@
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import axios from 'axios'
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import axios from 'axios';
 import { User, RegisterFormData } from '../types/types';
 
-// Configuration de axios
+// Configuration de base pour axios
+const API_URL = 'http://localhost:8000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  withCredentials: true
-})
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Fonction pour récupérer le token depuis les cookies
+const getTokenFromCookies = (): string | null => {
+  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, value] = cookie.trim().split('=');
+    acc[key] = value;
+    return acc;
+  }, {} as Record<string, string>);
+  
+  return cookies['access_token'] || null;
+};
+
+// Fonction pour définir un cookie
+const setCookie = (name: string, value: string, options: Record<string, any> = {}) => {
+  const optionsWithDefaults = {
+    path: '/',
+    ...options
+  };
+  
+  let cookieString = `${name}=${value}`;
+  
+  Object.entries(optionsWithDefaults).forEach(([key, value]) => {
+    cookieString += `; ${key}`;
+    if (typeof value !== 'boolean' || value === false) {
+      cookieString += `=${value}`;
+    }
+  });
+  
+  document.cookie = cookieString;
+};
+
+const deleteCookie = (name: string) => {
+  setCookie(name, '', { 'max-age': -1 });
+};
+
+// Intercepteur pour ajouter le token à chaque requête
+api.interceptors.request.use(
+  (config) => {
+    const token = getTokenFromCookies();
+    
+    if (token && config.headers) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+      // Ajouter aussi le token dans l'en-tête 'token' pour compatibilité avec le backend
+      config.headers['token'] = token;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 interface AuthState {
   // État
@@ -17,33 +74,39 @@ interface AuthState {
   error: string | null;
 
   // Actions
-  login: (email: string, password: string) => Promise<void>;
-  register: (formData: RegisterFormData) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
+  register: (formData: RegisterFormData) => Promise<any>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
 }
 
+// Création du store avec persistance
 const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      loading: false, // Commencer avec loading à false pour éviter le flash
+      loading: false,
       error: null,
 
       // Vérifier l'état d'authentification actuel
       checkAuth: async () => {
-        // Ne pas mettre loading à true si déjà authentifié
-        if (!get().isAuthenticated) {
-          set({ loading: true });
+        if (get().loading) return;
+        
+        const token = getTokenFromCookies();
+        if (!token && !get().isAuthenticated) {
+          return;
         }
+        
+        set({ loading: true });
         
         try {
           console.log('Vérification de l\'authentification...');
           const response = await api.get('/users/get_own_profile');
           console.log('Réponse de get_own_profile:', response.data);
+          
           set({ 
             user: response.data, 
             isAuthenticated: true,
@@ -53,44 +116,43 @@ const useAuthStore = create<AuthState>()(
         } catch (err: any) {
           console.error('Erreur lors de la vérification d\'authentification:', err);
           
-          // Si l'utilisateur est déjà authentifié selon le localStorage, 
-          // ne pas le déconnecter en cas d'erreur temporaire
-          const currentUser = get().user;
-          const isCurrentlyAuthenticated = get().isAuthenticated;
-          
-          if (currentUser && isCurrentlyAuthenticated && err?.response?.status === 401) {
-            console.log('Erreur 401 mais utilisateur déjà authentifié, conservation de l\'état');
-            set({ loading: false });
-            return; // Ne pas réinitialiser l'état
-          }
-          
-          if (err?.response?.status !== 401) {
-            console.error('Auth check failed:', err);
-          }
           set({ 
             user: null, 
             isAuthenticated: false,
-            loading: false 
+            loading: false,
+            error: err?.response?.data?.error || 'Erreur lors de la vérification d\'authentification'
           });
         }
       },
 
-      // Connexion - adaptée pour utiliser auth_from_password
+      // Connexion
       login: async (email, password) => {
-        set({ loading: true });
+        set({ loading: true, error: null });
+        
         try {
+          console.log('Tentative de connexion...');
           const response = await api.post('/auth/auth_from_password', { 
             mail: email,
             password 
           });
           
-          // Extraire les données pertinentes de la réponse
-          const userData = {
+          console.log('Réponse de connexion:', response.data);
+          
+          // Stocker le token dans un cookie
+          if (response.data.access_token) {
+            setCookie('access_token', response.data.access_token, {
+              'max-age': 3600, // 1 heure
+              'SameSite': 'Lax'
+            });
+          }
+          
+          const userData: User = {
             id: response.data.user_id || '',
             email: email,
-            nom: response.data.nom,
-            prenom: response.data.prenom,
-            username: response.data.username
+            mail: email,
+            nom: response.data.nom || '',
+            prenom: response.data.prenom || '',
+            username: response.data.username || ''
           };
           
           set({ 
@@ -102,25 +164,38 @@ const useAuthStore = create<AuthState>()(
           
           return response.data;
         } catch (err: any) {
+          console.error('Erreur lors de la connexion:', err);
+          
           set({ 
-            error: err.response?.data?.error || 'Échec de la connexion. Veuillez réessayer.',
-            isAuthenticated: false,
-            loading: false
+            loading: false, 
+            error: err?.response?.data?.error || 'Erreur lors de la connexion'
           });
+          
           throw err;
         }
       },
 
       // Inscription
-      register: async (formData: RegisterFormData) => {
-        set({ loading: true });
+      register: async (formData) => {
+        set({ loading: true, error: null });
+        
         try {
+          console.log('Tentative d\'inscription...', formData);
           const response = await api.post('/auth/register', formData);
           
-          // Extraire les données pertinentes de la réponse
-          const userData = {
+          console.log('Réponse d\'inscription:', response.data);
+          
+          if (response.data.access_token) {
+            setCookie('access_token', response.data.access_token, {
+              'max-age': 3600, // 1 heure
+              'SameSite': 'Lax'
+            });
+          }
+          
+          const userData: User = {
             id: response.data.user_id || '',
             email: formData.mail,
+            mail: formData.mail,
             nom: formData.nom,
             prenom: formData.prenom,
             username: formData.username
@@ -135,11 +210,13 @@ const useAuthStore = create<AuthState>()(
           
           return response.data;
         } catch (err: any) {
+          console.error('Erreur lors de l\'inscription:', err);
+          
           set({ 
-            error: err.response?.data?.error || "Erreur lors de l'inscription",
-            isAuthenticated: false,
-            loading: false
+            loading: false, 
+            error: err?.response?.data?.error || 'Erreur lors de l\'inscription'
           });
+          
           throw err;
         }
       },
@@ -147,58 +224,56 @@ const useAuthStore = create<AuthState>()(
       // Déconnexion
       logout: async () => {
         try {
-          await api.post('/auth/logout');
-          set({ user: null, isAuthenticated: false });
-        } catch (err: any) {
-          console.error('Logout error:', err);
-          // Même en cas d'erreur, on réinitialise l'état côté client
-          set({ user: null, isAuthenticated: false });
+          deleteCookie('access_token');
+          
+          // Réinitialiser l'état
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            error: null
+          });
+        } catch (err) {
+          console.error('Erreur lors de la déconnexion:', err);
         }
       },
 
-      // Effacer les erreurs
       clearError: () => set({ error: null }),
-      
+
       // Mettre à jour le profil utilisateur
-      updateProfile: async (userData: Partial<User>) => {
-        set({ loading: true });
+      updateProfile: async (userData) => {
+        set({ loading: true, error: null });
+        
         try {
-          // S'assurer que si email est fourni, il est également envoyé comme mail
-          const dataToSend = { ...userData };
-          if (userData.email && !userData.mail) {
-            dataToSend.mail = userData.email;
-          }
+          const response = await api.put('/users/update_profile', userData);
           
-          const response = await api.put('/users/update_profile', dataToSend);
-          
-          // Mettre à jour l'utilisateur dans le store avec les nouvelles données
-          const currentUser = get().user;
-          if (currentUser) {
-            set({ 
-              user: { ...currentUser, ...userData },
-              loading: false,
-              error: null 
-            });
-          }
+          set(state => ({ 
+            user: state.user ? { ...state.user, ...userData } : null,
+            loading: false,
+            error: null
+          }));
           
           return response.data;
         } catch (err: any) {
+          console.error('Erreur lors de la mise à jour du profil:', err);
+          
           set({ 
-            error: err.response?.data?.error || "Erreur lors de la mise à jour du profil",
-            loading: false
+            loading: false, 
+            error: err?.response?.data?.error || 'Erreur lors de la mise à jour du profil'
           });
+          
           throw err;
         }
       }
     }),
     {
-      name: 'auth-store', // Nom du store pour la persistance
-      storage: createJSONStorage(() => localStorage), // Utiliser localStorage pour la persistance
+      name: 'auth-store', 
+      storage: createJSONStorage(() => localStorage), 
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated 
+      })
     }
   )
 );
-
-// Vérifier l'auth au démarrage
-useAuthStore.getState().checkAuth();
 
 export default useAuthStore;
