@@ -23,3 +23,21 @@ export interface RegisterFormData {
     genre?: string;
 }
 
+export interface Resource {
+    _id: string;
+    titre: string;
+    contenu: string;
+    id_publieur: string;
+    id_categorie?: string;
+    createdAt: string;
+    id_validateur?: string;
+    date_validation?: string | null;
+    commentaire_validation?: string | null;
+}
+
+export interface Category {
+    _id: string;
+    nom: string;
+    description?: string;
+    resourceCount?: number;
+}
