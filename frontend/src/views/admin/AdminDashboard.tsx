@@ -294,6 +294,7 @@ const CategoriesPanel = () => {
     const [newCategory, setNewCategory] = useState("");
     const [newCategoryDescription, setNewCategoryDescription] = useState("");
     const [showDescriptionField, setShowDescriptionField] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
     
     // État pour la modification d'une catégorie
     const [editingCategory, setEditingCategory] = useState<{id: string, nom: string, description: string} | null>(null);
@@ -309,6 +310,7 @@ const CategoriesPanel = () => {
             setNewCategory("");
             setNewCategoryDescription("");
             setShowDescriptionField(false);
+            setShowAddForm(false); // Fermer le formulaire après ajout
             // Rafraîchir les catégories après l'ajout
             fetchCategories();
         }
@@ -355,6 +357,14 @@ const CategoriesPanel = () => {
         }
     };
 
+    // Réinitialiser le formulaire d'ajout
+    const cancelAddForm = () => {
+        setShowAddForm(false);
+        setNewCategory("");
+        setNewCategoryDescription("");
+        setShowDescriptionField(false);
+    };
+
     if (loadingCategories) {
         return <div className="flex justify-center p-8"><p>Chargement des catégories...</p></div>;
     }
@@ -375,53 +385,86 @@ const CategoriesPanel = () => {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Gestion des catégories</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Gestion des catégories</h2>
+                {!showAddForm && (
+                    <button
+                        onClick={() => setShowAddForm(true)}
+                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                        Ajouter une catégorie
+                    </button>
+                )}
+            </div>
 
             <div className="bg-white p-4 rounded-lg ring-1 ring-gray-200">
-                <div className="mb-4">
-                    <div className="flex mb-2">
-                        <input
-                            type="text"
-                            value={newCategory}
-                            onChange={(e) => setNewCategory(e.target.value)}
-                            placeholder="Nom de la catégorie"
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-primary focus:border-primary"
-                        />
-                        {!showDescriptionField ? (
+                {showAddForm && (
+                    <div className="mb-4 p-4 border border-gray-200 rounded-md bg-gray-50">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="font-medium">Nouvelle catégorie</h3>
                             <button
-                                onClick={() => setShowDescriptionField(true)}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none"
+                                onClick={cancelAddForm}
+                                className="text-gray-500 hover:text-gray-700"
                             >
-                                + Description
-                            </button>
-                        ) : null}
-                        <button
-                            onClick={handleAddCategory}
-                            className="px-4 py-2 bg-primary text-white rounded-r-md hover:bg-secondary focus:outline-none"
-                            disabled={!newCategory.trim()}
-                        >
-                            Ajouter
-                        </button>
-                    </div>
-                    
-                    {showDescriptionField && (
-                        <div className="mt-2">
-                            <textarea
-                                value={newCategoryDescription}
-                                onChange={(e) => setNewCategoryDescription(e.target.value)}
-                                placeholder="Description (optionnelle)"
-                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                                rows={3}
-                            />
-                            <button
-                                onClick={() => setShowDescriptionField(false)}
-                                className="mt-1 text-sm text-gray-500 hover:text-gray-700"
-                            >
-                                Masquer la description
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
                             </button>
                         </div>
-                    )}
-                </div>
+                        <div className="mb-3">
+                            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                            <input
+                                id="category-name"
+                                type="text"
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                placeholder="Nom de la catégorie"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                        
+                        <div className="mb-3">
+                            <div className="flex justify-between items-center mb-1">
+                                <label htmlFor="category-description" className="block text-sm font-medium text-gray-700">Description (optionnelle)</label>
+                                <button
+                                    onClick={() => setShowDescriptionField(!showDescriptionField)}
+                                    className="text-xs text-gray-500 hover:text-gray-700"
+                                >
+                                    {showDescriptionField ? "Masquer" : "Afficher"}
+                                </button>
+                            </div>
+                            {showDescriptionField && (
+                                <textarea
+                                    id="category-description"
+                                    value={newCategoryDescription}
+                                    onChange={(e) => setNewCategoryDescription(e.target.value)}
+                                    placeholder="Description de la catégorie"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                    rows={3}
+                                />
+                            )}
+                        </div>
+                        
+                        <div className="flex justify-end">
+                            <button
+                                onClick={cancelAddForm}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none mr-2"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleAddCategory}
+                                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary focus:outline-none"
+                                disabled={!newCategory.trim()}
+                            >
+                                Ajouter
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <div className="overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200">
