@@ -1,5 +1,3 @@
 from flask import Blueprint
 
 users_bp = Blueprint('users', __name__)
-
-from . import update_profile, get_own_profile

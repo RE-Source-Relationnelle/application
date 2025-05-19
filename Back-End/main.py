@@ -14,7 +14,6 @@ db = get_db()
 print("Database connection initialized")
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(resources_bp, url_prefix='/api/resources')
 app.register_blueprint(users_bp, url_prefix='/users')
 
 if __name__ == '__main__':

@@ -3,10 +3,9 @@ from datetime import datetime
 from bson import ObjectId
 from config.database import get_db
 from . import resources_bp
-import jwt
-import os
+from utils.auth import get_user_id_from_token
 
-@resources_bp.route('/resources/<resource_id>/comments', methods=['POST'])
+@resources_bp.route('/comments/<resource_id>', methods=['POST'])
 def add_comment(resource_id):
     """
     Route pour ajouter un commentaire à une ressource
@@ -14,15 +13,13 @@ def add_comment(resource_id):
     print("🔄 Début de la route add_comment")
     
     # Vérification du token
-    token = request.headers.get('Authorization')
-    if not token or not token.startswith('Bearer '):
+    token_header = request.headers.get('token')
+    if not token_header:
+        print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
-    
-    try:
-        token = token.split(' ')[1]
-        payload = jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256'])
-        user_id = payload['user_id']
-    except Exception as e:
+
+    user_id = get_user_id_from_token(token_header)
+    if not user_id:
         return jsonify({"error": "Token invalide"}), 401
     
     db = get_db()
@@ -39,8 +36,9 @@ def add_comment(resource_id):
 
     try:
         # Vérifier si la ressource existe
-        resource = db.Ressource.find_one({"_id": ObjectId(resource_id)})
+        resource = db.ressource.find_one({"_id": ObjectId(resource_id)})
         if not resource:
+            print(f"❌ Ressource non trouvée pour l'ID: {resource_id}")
             return jsonify({"error": "Ressource non trouvée"}), 404
 
         # Créer le commentaire
@@ -52,10 +50,13 @@ def add_comment(resource_id):
         }
 
         # Insérer dans la base de données
-        result = db.Commentaire.insert_one(comment)
+        result = db.commentaire.insert_one(comment)
+        
+        # Préparer la réponse
         comment['_id'] = str(result.inserted_id)
         comment['user_id'] = str(comment['user_id'])
         comment['resource_id'] = str(comment['resource_id'])
+        comment['created_at'] = comment['created_at'].isoformat()
         
         print(f"✅ Commentaire créé avec l'ID: {comment['_id']}")
         return jsonify(comment), 201
