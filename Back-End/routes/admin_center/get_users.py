@@ -11,9 +11,11 @@ def get_users():
     Accessible uniquement aux administrateurs et super-administrateurs
     """
     print("🔄 Début de la route get_users")
+    print(f"Cookies reçus: {request.cookies}")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
+    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('access_token'))
+    print(f"Résultat de check_admin_permissions: user_id={user_id}, error_response={error_response}, status_code={status_code}")
     if error_response:
         return error_response, status_code
 
@@ -46,11 +48,22 @@ def get_users():
 
         # Sanitize la réponse
         def sanitize(doc):
-            for key, value in doc.items():
-                if isinstance(value, ObjectId):
-                    doc[key] = str(value)
-                elif isinstance(value, datetime):
-                    doc[key] = value.isoformat()
+            if isinstance(doc, dict):
+                for key, value in list(doc.items()):
+                    if isinstance(value, ObjectId):
+                        doc[key] = str(value)
+                    elif isinstance(value, datetime):
+                        doc[key] = value.isoformat()
+                    elif isinstance(value, dict):
+                        sanitize(value)
+                    elif isinstance(value, list):
+                        for item in value:
+                            if isinstance(item, (dict, ObjectId, datetime)):
+                                sanitize(item)
+            elif isinstance(doc, list):
+                for item in doc:
+                    if isinstance(item, (dict, ObjectId, datetime)):
+                        sanitize(item)
             return doc
 
         # Nettoyage des documents
@@ -63,4 +76,4 @@ def get_users():
         print(f"❌ Erreur lors de la récupération des utilisateurs: {str(e)}")
         import traceback
         print(f"Stack trace: {traceback.format_exc()}")
-        return jsonify({"error": f"Erreur lors de la récupération des utilisateurs: {str(e)}"}), 500 
+        return jsonify({"error": f"Erreur lors de la récupération des utilisateurs: {str(e)}"}), 500

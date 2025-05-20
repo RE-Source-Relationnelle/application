@@ -1,9 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MainLayout from '../components/layout/MainLayout'
 import PostModal from '../components/features/PostModal'
+import useAuthStore from '../store/authStore'
 
 const Feed = () => {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false)
+    const { user, fetchUserRole } = useAuthStore()
+
+    useEffect(() => {
+        // Récupérer le rôle de l'utilisateur si nécessaire
+        if (!user?.role) {
+            fetchUserRole().then(() => {
+                console.log('Rôle récupéré dans Feed')
+            })
+        }
+        
+        // Afficher les informations de l'utilisateur
+        console.log('Utilisateur connecté:', user)
+        console.log('Rôle de l\'utilisateur:', user?.role)
+        console.log('Nom du rôle:', user?.role?.nom_role)
+    }, [user, fetchUserRole])
 
     const handlePostSubmit = (content: string) => {
         if (content.trim()) {
