@@ -65,7 +65,7 @@ L'application est construite avec une architecture moderne et évolutive :
 
 1. **Cloner le Repository**
    ```bash
-   git clone https://github.com/votre-username/resource-relationnel.git
+   git clone https://github.com/RE-Source-Relationnelle/application.git
    cd resource-relationnel
    ```
 
