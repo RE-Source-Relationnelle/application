@@ -17,9 +17,9 @@ def logout():
         
         if not token:
             # Si pas de token dans les cookies, vérifier les en-têtes
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                token = auth_header.split(' ')[1]
+            auth_cookie = request.cookies.get('Authorization')
+            if auth_cookie and auth_cookie.startswith('Bearer '):
+                token = auth_cookie.split(' ')[1]
             else:
                 print("Missing token")
                 return jsonify({'error': 'Token manquant'}), 401

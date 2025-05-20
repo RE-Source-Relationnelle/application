@@ -18,15 +18,15 @@ def create_resource():
         return jsonify({"error": "Erreur de connexion à la base de données"}), 500
 
     # Vérification du token
-    token_header = request.headers.get('token')
-    if not token_header:
+    token_cookie = request.cookies.get('token')
+    if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
-    print(token_header)
-    print(get_user_id_from_token(token_header))
+    print(token_cookie)
+    print(get_user_id_from_token(token_cookie))
 
 
-    access_token = token_header
+    access_token = token_cookie
 
     # Recherche du token dans la base
     token_data = db.token.find_one({'access_token': access_token})

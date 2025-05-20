@@ -14,15 +14,15 @@ def add_sous_comment(comment_id):
     Route pour ajouter un sous-commentaire à un commentaire
     """
     print("🔄 Début de la route add_sous_comment")
-    resource_id = request.headers.get('ressource')
+    resource_id = request.cookies.get('ressource')
     print(f"🔄 Ressource ID: {resource_id}")
     # Vérification du token
-    token_header = request.headers.get('token')
-    if not token_header:
+    token_cookie = request.cookies.get('token')
+    if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
 
-    user_id = get_user_id_from_token(token_header)
+    user_id = get_user_id_from_token(token_cookie)
     if not user_id:
         return jsonify({"error": "Token invalide"}), 401
     

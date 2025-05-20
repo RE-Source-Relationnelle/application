@@ -13,7 +13,7 @@ def update_user(user_id):
     print(f"🔄 Début de la route update_user pour l'ID: {user_id}")
 
     # Vérification des permissions
-    admin_id, db, error_response, status_code = check_admin_permissions(request.headers.get('token'))
+    admin_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
     if error_response:
         return error_response, status_code
 
@@ -30,17 +30,17 @@ def update_user(user_id):
             print("❌ Aucune donnée de mise à jour fournie")
             return jsonify({"error": "Aucune donnée de mise à jour fournie"}), 400
         print(data['role_id'])
-        print(data['email'])
+        print(data['mail'])
         print(data['is_active'])
         print(data['nom'])
         print(data['prenom'])
 
-        # Vérifier si l'email est déjà utilisé par un autre utilisateur
-        if 'email' in data and data['email'] != user.get('email'):
-            existing_user = db.users.find_one({"email": data['email']})
+        # Vérifier si l'mail est déjà utilisé par un autre utilisateur
+        if 'mail' in data and data['mail'] != user.get('mail'):
+            existing_user = db.users.find_one({"mail": data['mail']})
             if existing_user:
-                print(f"❌ L'email '{data['email']}' est déjà utilisé")
-                return jsonify({"error": "Cet email est déjà utilisé"}), 400
+                print(f"❌ L'mail '{data['mail']}' est déjà utilisé")
+                return jsonify({"error": "Cet mail est déjà utilisé"}), 400
 
         # Vérifier si le rôle existe si on le modifie
         if 'role_id' in data:
@@ -62,7 +62,7 @@ def update_user(user_id):
 
         # Préparer les champs à mettre à jour
         update_fields = {}
-        allowed_fields = ['nom', 'prenom', 'email', 'role_id', 'is_active']
+        allowed_fields = ['nom', 'prenom', 'mail', 'role_id', 'is_active']
         for field in allowed_fields:
             if field in data:
                 update_fields[field] = data[field]
@@ -116,7 +116,7 @@ def update_user(user_id):
             return doc
 
         sanitized_user = sanitize(updated_user)
-        print(f"✅ Utilisateur mis à jour avec succès: {sanitized_user.get('email')}")
+        print(f"✅ Utilisateur mis à jour avec succès: {sanitized_user.get('mail')}")
         return jsonify(sanitized_user), 200
 
     except Exception as e:

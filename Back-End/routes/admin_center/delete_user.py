@@ -13,7 +13,7 @@ def delete_user(user_id):
     print(f"🔄 Début de la route delete_user pour l'ID: {user_id}")
 
     # Vérification des permissions
-    admin_id, db, error_response, status_code = check_admin_permissions(request.headers.get('token'))
+    admin_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
     if error_response:
         return error_response, status_code
 
@@ -59,10 +59,10 @@ def delete_user(user_id):
             print("❌ Erreur lors de la suppression de l'utilisateur")
             return jsonify({"error": "Erreur lors de la suppression de l'utilisateur"}), 500
 
-        print(f"✅ Utilisateur supprimé avec succès: {user.get('email')}")
+        print(f"✅ Utilisateur supprimé avec succès: {user.get('mail')}")
         return jsonify({
             "message": "Utilisateur supprimé avec succès",
-            "email": user.get('email')
+            "mail": user.get('mail')
         }), 200
 
     except Exception as e:

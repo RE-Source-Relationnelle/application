@@ -3,16 +3,16 @@ from bson import ObjectId
 from config.database import get_db
 from utils.auth import get_user_id_from_token
 
-def check_admin_permissions(token_header):
+def check_admin_permissions(token_cookie):
     """
     Vérifie si l'utilisateur a les permissions d'administrateur
     Retourne (user_id, db) si les permissions sont valides, sinon retourne (None, None)
     """
-    if not token_header:
+    if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return None, None, jsonify({"error": "Token manquant ou invalide"}), 401
 
-    user_id = get_user_id_from_token(token_header)
+    user_id = get_user_id_from_token(token_cookie)
     if not user_id:
         return None, None, jsonify({"error": "Token invalide"}), 401
 

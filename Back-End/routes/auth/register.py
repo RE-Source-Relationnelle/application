@@ -25,10 +25,10 @@ def register():
             print(f"Missing required fields: {missing_fields}")
             return jsonify({'error': 'Tous les champs sont requis', 'missing_fields': missing_fields}), 400
 
-        # Vérification si l'email existe déjà
+        # Vérification si l'mail existe déjà
         if db.users.find_one({'mail': data['mail']}):
-            print("Email already exists")
-            return jsonify({'error': 'Email déjà utilisé'}), 400
+            print("mail already exists")
+            return jsonify({'error': 'mail déjà utilisé'}), 400
 
         # Création de l'utilisateur
         user = {

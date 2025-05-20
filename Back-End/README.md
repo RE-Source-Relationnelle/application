@@ -172,7 +172,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
   }
   ```
 - **Validation** :
-  - Email unique
+  - mail unique
   - Mot de passe minimum 8 caractères
   - Username unique
 - **Réponse** :
@@ -194,11 +194,11 @@ La base de données MongoDB est structurée avec les collections suivantes :
   ```
 - **Codes d'erreur** :
   - 400 : Données invalides
-  - 409 : Email ou username déjà utilisé
+  - 409 : mail ou username déjà utilisé
   - 500 : Erreur serveur
 
 #### POST /auth/auth_from_password
-- **Description** : Authentification avec email et mot de passe
+- **Description** : Authentification avec mail et mot de passe
 - **Données requises** :
   ```json
   {
@@ -207,7 +207,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
   }
   ```
 - **Validation** :
-  - Email format valide
+  - mail format valide
   - Mot de passe non vide
 - **Réponse** :
   ```json
@@ -242,26 +242,26 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /auth/logout
 - **Description** : Déconnexion de l'utilisateur
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Réponse** : Message de confirmation
 
 ### Utilisateurs
 
 #### GET /users/get_own_profile
 - **Description** : Récupération du profil de l'utilisateur connecté
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Réponse** : Informations du profil utilisateur
 
 #### PUT /users/update_profile
 - **Description** : Mise à jour du profil utilisateur
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Données possibles** :
   ```json
   {
     "prenom": "string",
     "nom": "string",
     "username": "string",
-    "email": "string",
+    "mail": "string",
     "genre": "string"
   }
   ```
@@ -280,7 +280,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /resources/create_resources
 - **Description** : Création d'une nouvelle ressource
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Données requises** :
   ```json
   {
@@ -293,7 +293,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### PUT /resources/update/<resource_id>
 - **Description** : Mise à jour d'une ressource existante
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Données possibles** :
   ```json
   {
@@ -306,25 +306,25 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### DELETE /resources/delete/<resource_id>
 - **Description** : Suppression d'une ressource
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Propriétaire ou modérateur
 - **Réponse** : Message de confirmation
 
 #### GET /resources/pending
 - **Description** : Liste les ressources en attente d'approbation
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Modérateur uniquement
 - **Réponse** : Liste des ressources en attente
 
 #### POST /resources/approve/<resource_id>
 - **Description** : Approuve une ressource en attente
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Modérateur uniquement
 - **Réponse** : Ressource approuvée
 
 #### GET /resources/randomressource
 - **Description** : Récupère une ressource aléatoire non consultée
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Réponse** : Ressource aléatoire
 
 ### Catégories
@@ -335,7 +335,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /categories/create_category
 - **Description** : Création d'une nouvelle catégorie
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Administrateur ou super-administrateur
 - **Données requises** :
   ```json
@@ -349,7 +349,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### PUT /categories/update_category/<category_id>
 - **Description** : Mise à jour d'une catégorie
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Administrateur ou super-administrateur
 - **Données possibles** :
   ```json
@@ -364,7 +364,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### DELETE /categories/delete_category/<category_id>
 - **Description** : Suppression d'une catégorie
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Permissions** : Administrateur ou super-administrateur
 - **Réponse** : Message de confirmation
 
@@ -372,7 +372,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /resources/comments/<resource_id>
 - **Description** : Ajoute un commentaire à une ressource
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Données requises** :
   ```json
   {
@@ -383,7 +383,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /resources/sous_comments/replies/<comment_id>
 - **Description** : Ajoute une réponse à un commentaire
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Données requises** :
   ```json
   {
@@ -396,7 +396,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 
 #### POST /resources/favorite/<resource_id>
 - **Description** : Ajoute une ressource aux favoris
-- **Headers requis** : Token d'authentification
+- **cookies requis** : Token d'authentification
 - **Réponse** : Favori créé
 
 ## Gestion des Erreurs
@@ -424,7 +424,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 | 401 | Non authentifié | Token manquant ou expiré |
 | 403 | Accès non autorisé | Permissions insuffisantes |
 | 404 | Ressource non trouvée | ID invalide |
-| 409 | Conflit | Email déjà utilisé |
+| 409 | Conflit | mail déjà utilisé |
 | 422 | Données invalides | Validation échouée |
 | 500 | Erreur serveur | Exception non gérée |
 
@@ -444,7 +444,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 - Protection contre les injections MongoDB
 - Hachage des mots de passe avec bcrypt
 - Protection CORS configurée
-- Headers de sécurité (HSTS, CSP, etc.)
+- cookies de sécurité (HSTS, CSP, etc.)
 
 ### Gestion des Permissions
 
@@ -528,13 +528,13 @@ def login():
 ```python
 def create_resource(token):
     url = "http://localhost:5000/resources/create_resources"
-    headers = {"Authorization": f"Bearer {token}"}
+    cookies = {"Authorization": f"Bearer {token}"}
     data = {
         "title": "Ma Ressource",
         "content": "Contenu de la ressource",
         "categorie": "category_id"
     }
-    response = requests.post(url, json=data, headers=headers)
+    response = requests.post(url, json=data, cookies=cookies)
     return response.json()
 ```
 

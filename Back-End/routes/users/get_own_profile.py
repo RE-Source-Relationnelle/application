@@ -15,11 +15,11 @@ def get_own_profile():
         
         if not token:
             # Si pas de token dans les cookies, vérifier les en-têtes
-            auth_header = request.headers.get('Authorization')
-            print(f"Auth header: {auth_header}")
-            if auth_header and auth_header.startswith('Bearer '):
-                token = auth_header.split(' ')[1]
-                print(f"Token from header: {token}")
+            auth_cookie = request.cookies.get('Authorization')
+            print(f"Auth cookie: {auth_cookie}")
+            if auth_cookie and auth_cookie.startswith('Bearer '):
+                token = auth_cookie.split(' ')[1]
+                print(f"Token from cookie: {token}")
             else:
                 print("No token found")
                 return jsonify({'error': 'Non authentifié'}), 401
