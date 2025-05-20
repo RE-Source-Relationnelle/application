@@ -668,13 +668,29 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('statistics');
     const { user } = useAuthStore();
 
-    // Déterminer si l'utilisateur est super admin
-    const isSuperAdmin = user?.mail === "emma.lefevre@example.com";
+    // Déterminer si l'utilisateur est super admin en utilisant le rôle
+    const isSuperAdmin = user?.role?.nom_role === "super-administrateur";
+    
+    // Récupérer le nom du rôle pour l'affichage
+    const userRole = user?.role?.nom_role || "utilisateur";
 
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-2xl font-bold mb-6">Tableau de bord d'administration</h1>
+                
+                {/* Affichage du rôle de l'utilisateur */}
+                <div className="bg-white rounded-lg ring-1 ring-gray-200 p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500">Connecté en tant que :</p>
+                            <p className="font-medium">{user?.nom} {user?.prenom} ({user?.mail})</p>
+                        </div>
+                        <div className="bg-primary bg-opacity-10 px-3 py-1 rounded-full">
+                            <p className="text-primary font-medium">Rôle : {userRole}</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="flex flex-col md:flex-row">
                     {/* Sidebar de navigation */}

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { User, RegisterFormData } from '../types/types';
 
 // Configuration de base pour axios
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://localhost:5001';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -138,6 +138,9 @@ const useAuthStore = create<AuthState>()(
           
           console.log('Réponse de connexion:', response.data);
           
+          // Vérifier spécifiquement les informations de rôle
+          console.log('Informations de rôle reçues:', response.data.role);
+          
           // Stocker le token dans un cookie
           if (response.data.access_token) {
             setCookie('access_token', response.data.access_token, {
@@ -152,8 +155,11 @@ const useAuthStore = create<AuthState>()(
             mail: email,
             nom: response.data.nom || '',
             prenom: response.data.prenom || '',
-            username: response.data.username || ''
+            username: response.data.username || '',
+            role: response.data.role || { role_id: null, nom_role: 'utilisateur' }
           };
+          
+          console.log('Données utilisateur formatées:', userData);
           
           set({ 
             user: userData, 
