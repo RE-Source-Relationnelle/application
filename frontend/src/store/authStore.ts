@@ -80,6 +80,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   clearError: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
+  fetchUserRole: () => Promise<any>;
 }
 
 // Création du store avec persistance
@@ -138,9 +139,6 @@ const useAuthStore = create<AuthState>()(
           
           console.log('Réponse de connexion:', response.data);
           
-          // Vérifier spécifiquement les informations de rôle
-          console.log('Informations de rôle reçues:', response.data.role);
-          
           // Stocker le token dans un cookie
           if (response.data.access_token) {
             setCookie('access_token', response.data.access_token, {
@@ -155,8 +153,8 @@ const useAuthStore = create<AuthState>()(
             mail: email,
             nom: response.data.nom || '',
             prenom: response.data.prenom || '',
-            username: response.data.username || '',
-            role: response.data.role || { role_id: null, nom_role: 'utilisateur' }
+            username: response.data.username || ''
+            // Le rôle sera récupéré séparément
           };
           
           console.log('Données utilisateur formatées:', userData);
@@ -167,6 +165,10 @@ const useAuthStore = create<AuthState>()(
             loading: false,
             error: null 
           });
+          
+          // Récupérer le rôle de l'utilisateur
+          const { fetchUserRole } = get();
+          await fetchUserRole();
           
           return response.data;
         } catch (err: any) {
@@ -269,7 +271,33 @@ const useAuthStore = create<AuthState>()(
           
           throw err;
         }
-      }
+      },
+
+      // Récupérer le rôle de l'utilisateur
+      fetchUserRole: async () => {
+        try {
+          console.log('Récupération du rôle utilisateur...');
+          const response = await api.get('/users/role');
+          console.log('Rôle récupéré:', response.data);
+          
+          const { user } = get();
+          if (user) {
+            // Mettre à jour l'utilisateur avec son rôle
+            set({
+              user: {
+                ...user,
+                role: response.data
+              }
+            });
+          }
+          
+          return response.data;
+        } catch (err: any) {
+          console.error('Erreur lors de la récupération du rôle:', err);
+          // Ne pas définir d'erreur dans le state pour ne pas perturber l'interface
+          return null;
+        }
+      },
     }),
     {
       name: 'auth-store', 

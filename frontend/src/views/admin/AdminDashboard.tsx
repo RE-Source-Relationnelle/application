@@ -673,6 +673,15 @@ const AdminDashboard = () => {
     
     // Récupérer le nom du rôle pour l'affichage
     const userRole = user?.role?.nom_role || "utilisateur";
+    
+    // Afficher le rôle de l'utilisateur dans la console
+    useEffect(() => {
+        console.log('=== Informations de l\'utilisateur connecté ===');
+        console.log('Utilisateur:', user);
+        console.log('Rôle:', userRole);
+        console.log('Est super admin:', isSuperAdmin);
+        console.log('==========================================');
+    }, [user, userRole, isSuperAdmin]);
 
     return (
         <div className="min-h-screen bg-gray-50">
