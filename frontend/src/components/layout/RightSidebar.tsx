@@ -1,7 +1,7 @@
 export default function RightSidebar() {
     return (
       <div className="bg-white rounded-lg ring-gray-200 ring-1 p-4">
-        <h3 className="font-semibold mb-4">Catégories populaires</h3>
+        <h3 className="font-semibold mb-4">Catégories</h3>
         
         {/* Liste des suggestions */}
         <div className="space-y-4">
