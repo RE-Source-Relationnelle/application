@@ -60,7 +60,8 @@ def get_own_profile():
             'mail': user.get('mail', ''),
             'nom': user.get('nom', ''),
             'prenom': user.get('prenom', ''),
-            'genre': user.get('genre', '')
+            'genre': user.get('genre', ''),
+            'role': user.get('role', '')
         }
         
         print(f"Returning user data: {user_data}")
