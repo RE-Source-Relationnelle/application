@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import useRoleStore, { Role, CreateRoleData, UpdateRoleData } from '../../store/roleStore';
-import useAuthStore from '../../store/authStore';
+import useRoleStore, { Role, CreateRoleData, UpdateRoleData } from '../../../store/roleStore';
+import useAuthStore from '../../../store/authStore';
 import { PlusCircle, Edit, Trash2, X, Check } from 'lucide-react';
 
 const RolesPanel = () => {
@@ -257,7 +257,7 @@ const RolesPanel = () => {
                                             <button
                                                 onClick={() => handleDeleteRole(role._id)}
                                                 className="text-red-600 hover:text-red-900"
-                                                disabled={loading || role.nom_role === 'super-administrateur'}
+                                                disabled={loading || role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur'}
                                                 title={role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur' ? 'Les rôles système ne peuvent pas être supprimés' : ''}
                                             >
                                                 <Trash2 className="h-5 w-5" />
