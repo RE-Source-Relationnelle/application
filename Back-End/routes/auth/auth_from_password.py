@@ -41,6 +41,34 @@ def auth_from_password():
             print(f"Mot de passe incorrect. Reçu: {data['password']}, Attendu: {user['password']}")
             return jsonify({'error': 'mail ou mot de passe incorrect'}), 401
 
+        # Récupération du rôle de l'utilisateur
+        role_info = None
+        if 'role_id' in user:
+            print(f"Role ID trouvé dans l'utilisateur: {user['role_id']} (type: {type(user['role_id'])})")
+            try:
+                role = db.role.find_one({'_id': user['role_id']})
+                print(f"Rôle trouvé: {role}")
+                if role:
+                    role_info = {
+                        'role_id': str(role['_id']),
+                        'nom_role': role.get('nom_role', 'utilisateur')
+                    }
+                    print(f"Informations de rôle: {role_info}")
+            except Exception as e:
+                print(f"Erreur lors de la récupération du rôle: {str(e)}")
+        else:
+            print("Aucun role_id trouvé dans le document utilisateur")
+            # Vérifier tous les champs de l'utilisateur pour déboguer
+            print(f"Champs disponibles dans l'utilisateur: {list(user.keys())}")
+        
+        # Si aucun rôle n'est trouvé, on utilise un rôle par défaut
+        if not role_info:
+            role_info = {
+                'role_id': None,
+                'nom_role': 'utilisateur'
+            }
+            print(f"Utilisation du rôle par défaut: {role_info}")
+
         # Génération des timestamps
         current_time = datetime.utcnow()
         access_token_expiration = current_time + timedelta(hours=1)
@@ -77,7 +105,8 @@ def auth_from_password():
             'username': user.get('username', ''),
             'mail': user.get('mail', ''),
             'nom': user.get('nom', ''),
-            'prenom': user.get('prenom', '')
+            'prenom': user.get('prenom', ''),
+            'role': role_info
         }
 
         # Création de la réponse avec cookies

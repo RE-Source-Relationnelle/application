@@ -12,6 +12,10 @@ export interface User {
     prenom?: string;
     username?: string;
     genre?: string;
+    role?: {
+        role_id: string | null;
+        nom_role: string;
+    };
 }
 
 export interface RegisterFormData {
