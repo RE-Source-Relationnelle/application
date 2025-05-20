@@ -61,8 +61,8 @@ def update_profile():
         if 'username' in data and data['username']:
             update_fields['username'] = data['username']
         
-        if 'email' in data and data['email']:
-            update_fields['mail'] = data['email']  # Notez que le champ dans la BD est 'mail'
+        if 'mail' in data and data['mail']:
+            update_fields['mail'] = data['mail']  # Notez que le champ dans la BD est 'mail'
         
         if 'genre' in data and data['genre']:
             update_fields['genre'] = data['genre']

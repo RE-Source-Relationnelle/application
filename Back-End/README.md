@@ -172,7 +172,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
   }
   ```
 - **Validation** :
-  - Email unique
+  - mail unique
   - Mot de passe minimum 8 caractères
   - Username unique
 - **Réponse** :
@@ -194,11 +194,11 @@ La base de données MongoDB est structurée avec les collections suivantes :
   ```
 - **Codes d'erreur** :
   - 400 : Données invalides
-  - 409 : Email ou username déjà utilisé
+  - 409 : mail ou username déjà utilisé
   - 500 : Erreur serveur
 
 #### POST /auth/auth_from_password
-- **Description** : Authentification avec email et mot de passe
+- **Description** : Authentification avec mail et mot de passe
 - **Données requises** :
   ```json
   {
@@ -207,7 +207,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
   }
   ```
 - **Validation** :
-  - Email format valide
+  - mail format valide
   - Mot de passe non vide
 - **Réponse** :
   ```json
@@ -261,7 +261,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
     "prenom": "string",
     "nom": "string",
     "username": "string",
-    "email": "string",
+    "mail": "string",
     "genre": "string"
   }
   ```
@@ -424,7 +424,7 @@ La base de données MongoDB est structurée avec les collections suivantes :
 | 401 | Non authentifié | Token manquant ou expiré |
 | 403 | Accès non autorisé | Permissions insuffisantes |
 | 404 | Ressource non trouvée | ID invalide |
-| 409 | Conflit | Email déjà utilisé |
+| 409 | Conflit | mail déjà utilisé |
 | 422 | Données invalides | Validation échouée |
 | 500 | Erreur serveur | Exception non gérée |
 

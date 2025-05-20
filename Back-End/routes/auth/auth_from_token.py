@@ -20,7 +20,7 @@ def auth_from_password():
         # Vérification des données requises
         if not all(k in data for k in ('mail', 'password')):
             print("Missing required fields")
-            return jsonify({'error': 'Email et mot de passe requis'}), 400
+            return jsonify({'error': 'mail et mot de passe requis'}), 400
 
         # Recherche de l'utilisateur
         user = db.token.find_one({'access_token': data['access_token']})

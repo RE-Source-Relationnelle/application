@@ -20,13 +20,13 @@ def auth_from_password():
         # Afficher tous les utilisateurs et leurs mots de passe
         print("\n=== Liste des utilisateurs en base de données ===")
         for u in db.users.find():
-            print(f"Email: {u.get('mail')} | Password: {u.get('password')}")
+            print(f"mail: {u.get('mail')} | Password: {u.get('password')}")
         print("============================================\n")
 
         # Vérification des données requises
         if not all(k in data for k in ('mail', 'password')):
             print("Missing required fields")
-            return jsonify({'error': 'Email et mot de passe requis'}), 400
+            return jsonify({'error': 'mail et mot de passe requis'}), 400
 
         # Recherche de l'utilisateur
         user = db.users.find_one({'mail': data['mail']})
@@ -34,12 +34,12 @@ def auth_from_password():
         
         # Vérification simple du mot de passe
         if not user:
-            print(f"Aucun utilisateur trouvé avec l'email: {data['mail']}")
-            return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
+            print(f"Aucun utilisateur trouvé avec l'mail: {data['mail']}")
+            return jsonify({'error': 'mail ou mot de passe incorrect'}), 401
             
         if user['password'] != data['password']:
             print(f"Mot de passe incorrect. Reçu: {data['password']}, Attendu: {user['password']}")
-            return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
+            return jsonify({'error': 'mail ou mot de passe incorrect'}), 401
 
         # Génération des timestamps
         current_time = datetime.utcnow()
