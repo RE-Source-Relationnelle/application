@@ -13,7 +13,7 @@ def get_users():
     print("🔄 Début de la route get_users")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_admin_permissions(request.headers.get('token'))
+    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
     if error_response:
         return error_response, status_code
 

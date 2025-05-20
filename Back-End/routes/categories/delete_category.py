@@ -13,7 +13,7 @@ def delete_category(category_id):
     print(f"🔄 Début de la route delete_category pour l'ID: {category_id}")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_category_permissions(request.headers.get('token'))
+    user_id, db, error_response, status_code = check_category_permissions(request.cookies.get('token'))
     if error_response:
         return error_response, status_code
 

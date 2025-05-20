@@ -13,7 +13,7 @@ def delete_user(user_id):
     print(f"🔄 Début de la route delete_user pour l'ID: {user_id}")
 
     # Vérification des permissions
-    admin_id, db, error_response, status_code = check_admin_permissions(request.headers.get('token'))
+    admin_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
     if error_response:
         return error_response, status_code
 

@@ -71,7 +71,7 @@ class TestResourcesRoutes(unittest.TestCase):
         response = self.client.post(
             '/resources/create_resources',
             json=test_data,
-            headers={'token': self.valid_token}
+            cookies={'token': self.valid_token}
         )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -152,7 +152,7 @@ class TestResourcesRoutes(unittest.TestCase):
         response = self.client.put(
             f'/resources/update/{self.resource_id}',
             json=update_data,
-            headers={'token': self.valid_token}
+            cookies={'token': self.valid_token}
         )
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -175,7 +175,7 @@ class TestResourcesRoutes(unittest.TestCase):
         db.role.find_one.return_value = {"nom_role": "utilisateur"}
         response = self.client.delete(
             f'/resources/delete/{self.resource_id}',
-            headers={'token': self.valid_token}
+            cookies={'token': self.valid_token}
         )
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -198,7 +198,7 @@ class TestResourcesRoutes(unittest.TestCase):
         response = self.client.post(
             f'/resources/comments/{self.resource_id}',
             json=comment_data,
-            headers={'token': self.valid_token}
+            cookies={'token': self.valid_token}
         )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
@@ -218,7 +218,7 @@ class TestResourcesRoutes(unittest.TestCase):
         db.favoris.find_one.return_value = None
         response = self.client.post(
             f'/resources/favorite/{self.resource_id}',
-            headers={'token': self.valid_token}
+            cookies={'token': self.valid_token}
         )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)

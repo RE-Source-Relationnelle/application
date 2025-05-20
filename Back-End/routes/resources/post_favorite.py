@@ -13,12 +13,12 @@ def add_favorite(resource_id):
     print("🔄 Début de la route add_favorite")
     
     # Vérification du token
-    token_header = request.headers.get('token')
-    if not token_header:
+    token_cookie = request.cookies.get('token')
+    if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
 
-    user_id = get_user_id_from_token(token_header)
+    user_id = get_user_id_from_token(token_cookie)
     if not user_id:
         return jsonify({"error": "Token invalide"}), 401
     
