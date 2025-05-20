@@ -13,7 +13,7 @@ def create_role():
     print("🔄 Début de la route create_role")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
+    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('access_token'))
     if error_response:
         return error_response, status_code
 

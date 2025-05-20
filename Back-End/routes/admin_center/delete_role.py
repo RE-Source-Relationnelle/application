@@ -7,12 +7,12 @@ from .utils import check_admin_permissions
 def delete_role(role_id):
     """
     Route pour supprimer un rôle
-    Accessible uniquement aux administrateurs et super-administrateurs
+    Accessible aux administrateurs et super-administrateurs
     """
     print(f"🔄 Début de la route delete_role pour l'ID: {role_id}")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('token'))
+    user_id, db, error_response, status_code = check_admin_permissions(request.cookies.get('access_token'))
     if error_response:
         return error_response, status_code
 
@@ -54,4 +54,4 @@ def delete_role(role_id):
         print(f"❌ Erreur lors de la suppression du rôle: {str(e)}")
         import traceback
         print(f"Stack trace: {traceback.format_exc()}")
-        return jsonify({"error": f"Erreur lors de la suppression du rôle: {str(e)}"}), 500 
+        return jsonify({"error": f"Erreur lors de la suppression du rôle: {str(e)}"}), 500

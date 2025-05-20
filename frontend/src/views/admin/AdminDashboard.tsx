@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, Users, FileText, Tag, Shield } from 'lucide-react';
+import { BarChart3, Users, FileText, Tag, Shield, UserCog } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import useResourcesStore from '../../store/resourcesStore';
 import useCategoryStore from '../../store/categoryStore';
 import { Resource } from '../../types/types';
+import RolesPanel from './RolesPanel';
 
 // Composants fictifs pour la démonstration
 const StatisticsPanel = () => (
@@ -673,6 +674,15 @@ const AdminDashboard = () => {
     
     // Récupérer le nom du rôle pour l'affichage
     const userRole = user?.role?.nom_role || "utilisateur";
+    
+    // Afficher le rôle de l'utilisateur dans la console
+    useEffect(() => {
+        console.log('=== Informations de l\'utilisateur connecté ===');
+        console.log('Utilisateur:', user);
+        console.log('Rôle:', userRole);
+        console.log('Est super admin:', isSuperAdmin);
+        console.log('==========================================');
+    }, [user, userRole, isSuperAdmin]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -734,13 +744,23 @@ const AdminDashboard = () => {
                                 </button>
 
                                 {isSuperAdmin && (
-                                    <button
-                                        onClick={() => setActiveTab('admins')}
-                                        className={`flex items-center w-full px-4 py-2 rounded-md text-left ${activeTab === 'admins' ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
-                                    >
-                                        <Shield className="h-5 w-5 mr-2" />
-                                        <span>Administrateurs</span>
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={() => setActiveTab('roles')}
+                                            className={`flex items-center w-full px-4 py-2 rounded-md text-left ${activeTab === 'roles' ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                                        >
+                                            <UserCog className="h-5 w-5 mr-2" />
+                                            <span>Rôles</span>
+                                        </button>
+                                        
+                                        <button
+                                            onClick={() => setActiveTab('admins')}
+                                            className={`flex items-center w-full px-4 py-2 rounded-md text-left ${activeTab === 'admins' ? 'bg-primary text-white' : 'hover:bg-gray-100'}`}
+                                        >
+                                            <Shield className="h-5 w-5 mr-2" />
+                                            <span>Administrateurs</span>
+                                        </button>
+                                    </>
                                 )}
                             </nav>
                         </div>
@@ -753,6 +773,7 @@ const AdminDashboard = () => {
                             {activeTab === 'users' && <UsersPanel />}
                             {activeTab === 'posts' && <PostsPanel />}
                             {activeTab === 'categories' && <CategoriesPanel />}
+                            {activeTab === 'roles' && isSuperAdmin && <RolesPanel />}
                             {activeTab === 'admins' && isSuperAdmin && <AdminsPanel />}
                         </div>
                     </div>

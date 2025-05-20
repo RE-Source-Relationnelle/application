@@ -13,7 +13,7 @@ def get_own_roles():
     print("🔄 Début de la route get_roles")
 
     # Vérification du token
-    token_cookie = request.cookies.get('token')
+    token_cookie = request.cookies.get('access_token')
     if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
