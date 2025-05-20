@@ -43,7 +43,7 @@ def get_random_resource():
         ]
         
         resource = list(db.ressource.aggregate(pipeline))
-        
+
         if not resource:
             print("ℹ️ Plus de nouvelles ressources disponibles")
             return jsonify({"message": "plus de ressources"}), 200
