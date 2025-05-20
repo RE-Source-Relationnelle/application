@@ -65,7 +65,11 @@ def update_user(user_id):
         allowed_fields = ['nom', 'prenom', 'mail', 'role_id', 'is_active']
         for field in allowed_fields:
             if field in data:
-                update_fields[field] = data[field]
+                # Convertir role_id en ObjectId si c'est une chaîne
+                if field == 'role_id' and isinstance(data[field], str):
+                    update_fields[field] = ObjectId(data[field])
+                else:
+                    update_fields[field] = data[field]
 
         if not update_fields:
             print(" Aucun champ valide à mettre à jour")

@@ -30,6 +30,20 @@ def register():
             print("mail already exists")
             return jsonify({'error': 'mail déjà utilisé'}), 400
 
+        # Récupérer le rôle "Citoyen"
+        citoyen_role = db.role.find_one({'nom_role': 'Citoyen'})
+        if not citoyen_role:
+            print("Rôle 'Citoyen' non trouvé, création du rôle")
+            # Créer le rôle citoyen s'il n'existe pas
+            citoyen_role = {
+                '_id': ObjectId(),
+                'nom_role': 'citoyen',
+                'permissions': ['read'],
+                'created_at': datetime.utcnow()
+            }
+            db.role.insert_one(citoyen_role)
+            print(f"Rôle 'citoyen' créé avec l'ID: {citoyen_role['_id']}")
+
         # Création de l'utilisateur
         user = {
             '_id': ObjectId(),
@@ -39,6 +53,8 @@ def register():
             'password': data['password'],
             'username': data['username'],
             'genre': data['genre'],
+            'role_id': citoyen_role['_id'],  # Ajouter le rôle citoyen par défaut
+            'is_active': True,  # Activer l'utilisateur par défaut
             'created_at': datetime.utcnow()
         }
 
@@ -72,7 +88,7 @@ def register():
         }
 
         # Insertion du token dans la base de données
-        db.Token.insert_one(token_data)
+        db.token.insert_one(token_data)
 
         # Préparation de la réponse
         response_data = {

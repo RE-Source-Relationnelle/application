@@ -10,9 +10,7 @@ const Navbar = () => {
   const { logout, isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Simulation de la vérification du rôle admin
-  // À remplacer par une vérification réelle basée sur les données de l'utilisateur
-  const isAdmin = user?.mail === "emma.lefevre@example.com"; // Exemple temporaire
+  const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
