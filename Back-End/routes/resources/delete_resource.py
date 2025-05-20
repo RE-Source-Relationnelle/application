@@ -13,7 +13,7 @@ def delete_resource(resource_id):
     print(f"🔄 Début de la route delete_resource pour l'ID: {resource_id}")
 
     # Vérification du token
-    token_cookie = request.cookies.get('token')
+    token_cookie = request.cookies.get('access_token')
     if not token_cookie:
         print("❌ Token manquant ou mal formé")
         return jsonify({"error": "Token manquant ou invalide"}), 401
