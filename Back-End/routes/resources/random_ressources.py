@@ -1,5 +1,19 @@
+import random
+from flask import jsonify, request
+from bson import ObjectId
+from config.database import get_db
+from . import resources_bp
+from datetime import datetime
+from utils.auth import get_user_id_from_token
+from flask_cors import cross_origin
+
+
 @resources_bp.route('/randomressource', methods=['GET'])
+@cross_origin(supports_credentials=True, origins=["http://localhost:3000"])
 def get_random_resource():
+    """
+    Route pour récupérer une ressource aléatoire non consultée
+    """
     print("🎲 Début de la route get_random_resource")
 
     token_cookie = request.cookies.get('access_token')
@@ -19,9 +33,17 @@ def get_random_resource():
         else:
             print("⚠️ Pas d'utilisateur connecté, envoi d'une ressource totalement aléatoire")
 
+        # Vérifier s'il y a des ressources validées
         pipeline = []
+        
+        # Ne montrer que les ressources validées (date_validation non nulle)
+        pipeline.append({"$match": {"date_validation": {"$ne": None}}})
+        
+        # Exclure les ressources déjà consultées si l'utilisateur est connecté
         if ressources_consultees:
             pipeline.append({"$match": {"_id": {"$nin": [ObjectId(id) for id in ressources_consultees]}}})
+        
+        # Sélectionner une ressource aléatoire
         pipeline.append({"$sample": {"size": 1}})
 
         resource = list(db.ressource.aggregate(pipeline))
@@ -31,6 +53,7 @@ def get_random_resource():
 
         resource = resource[0]
 
+        # Ajouter à l'historique si l'utilisateur est connecté
         if user_id:
             historique_entry = {
                 "user_id": ObjectId(user_id),
@@ -41,12 +64,16 @@ def get_random_resource():
             print(f"📝 Ressource {resource['_id']} ajoutée à l'historique de l'utilisateur {user_id}")
 
         def sanitize(document):
-            for key, value in document.items():
+            """
+            Fonction pour convertir tous les ObjectId et datetime en string
+            """
+            result = document.copy()  # Créer une copie pour éviter de modifier l'original
+            for key, value in result.items():
                 if isinstance(value, ObjectId):
-                    document[key] = str(value)
+                    result[key] = str(value)
                 elif isinstance(value, datetime):
-                    document[key] = value.isoformat()
-            return document
+                    result[key] = value.isoformat()
+            return result
 
         sanitized_resource = sanitize(resource)
         print(f"✅ Ressource aléatoire trouvée: {sanitized_resource.get('titre', '[sans titre]')}")
