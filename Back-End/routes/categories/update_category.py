@@ -13,7 +13,7 @@ def update_category(category_id):
     print(f"🔄 Début de la route update_category pour l'ID: {category_id}")
 
     # Vérification des permissions
-    user_id, db, error_response, status_code = check_category_permissions(request.cookies.get('token'))
+    user_id, db, error_response, status_code = check_category_permissions(request.cookies.get('access_token'))
     if error_response:
         return error_response, status_code
 
@@ -51,7 +51,7 @@ def update_category(category_id):
 
         # Préparer les champs à mettre à jour
         update_fields = {}
-        allowed_fields = ['nom_categorie', 'description', 'parent_id', 'is_active']
+        allowed_fields = ['nom_categorie', 'description_categorie', 'parent_id', 'is_active']
         for field in allowed_fields:
             if field in data:
                 if field == 'parent_id' and data[field]:

@@ -3,8 +3,10 @@ from config.database import get_db
 from bson import json_util, ObjectId
 import json
 from . import resources_bp
+from flask_cors import cross_origin
 
 @resources_bp.route('/categories', methods=['GET'])
+@cross_origin(supports_credentials=True, origins=["http://localhost:3000"])
 def get_categories_for_resources():
     """
     Récupère toutes les catégories avec le nombre de ressources associées
@@ -31,7 +33,7 @@ def get_categories_for_resources():
         }
         transformed_categories.append(transformed_category)
     
-    print(f"🔄 Catégories avec nombre de ressources récupérées : {len(transformed_categories)}")
+    print(f" Catégories avec nombre de ressources récupérées : {len(transformed_categories)}")
     
     return jsonify(transformed_categories), 200
 
@@ -74,5 +76,5 @@ def get_category_for_resource(resource_id):
         return jsonify(transformed_category), 200
         
     except Exception as e:
-        print(f"❌ Erreur lors de la récupération de la catégorie: {str(e)}")
+        print(f" Erreur lors de la récupération de la catégorie: {str(e)}")
         return jsonify({"error": str(e)}), 500

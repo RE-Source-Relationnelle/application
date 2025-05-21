@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 
 // Définition des types
-interface User {
+export interface User {
   _id: string;
   nom: string;
   prenom: string;

@@ -87,10 +87,11 @@ def auth_from_password():
         response.set_cookie(
             'access_token', 
             access_token, 
-            httponly=True, 
+            httponly=False, 
             secure=False,  
             samesite='Lax',
-            max_age=3600 
+            max_age=3600,
+            path='/'
         )
         
         response.set_cookie(
@@ -99,7 +100,8 @@ def auth_from_password():
             httponly=True, 
             secure=False, 
             samesite='Lax',
-            max_age=604800 
+            max_age=604800,
+            path='/'
         )
 
         print("Authentication successful")

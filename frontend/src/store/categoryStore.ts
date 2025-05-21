@@ -39,10 +39,13 @@ interface CategoryState {
   
   // Actions
   fetchCategories: () => Promise<void>;
+  createCategory: (nom: string, description: string) => Promise<void>;
+  updateCategory: (id: string, nom: string, description: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   clearError: () => void;
 }
 
-const useCategoryStore = create<CategoryState>((set) => ({
+const useCategoryStore = create<CategoryState>((set, get) => ({
   // État initial
   categories: [],
   loading: false,
@@ -52,7 +55,7 @@ const useCategoryStore = create<CategoryState>((set) => ({
   fetchCategories: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await api.get('/categories');
+      const response = await api.get('/categories/all_categories');
       set({ 
         categories: response.data, 
         loading: false 
@@ -66,6 +69,90 @@ const useCategoryStore = create<CategoryState>((set) => ({
         error: err.response?.data?.error || 'Erreur lors de la récupération des catégories', 
         loading: false 
       });
+    }
+  },
+  
+  // Créer une nouvelle catégorie
+  createCategory: async (nom: string, description: string) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.post('/categories/create_category', {
+        nom_categorie: nom,
+        description_categorie: description
+      });
+      
+      // Mettre à jour l'état local avec la nouvelle catégorie
+      set(state => ({
+        categories: [...state.categories, { ...response.data, nom, description }],
+        loading: false
+      }));
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Erreur lors de la création de la catégorie:', err);
+      console.error('Status:', err.response?.status);
+      console.error('Message:', err.response?.data || err.message);
+      
+      set({
+        error: err.response?.data?.error || 'Erreur lors de la création de la catégorie',
+        loading: false
+      });
+      throw err;
+    }
+  },
+  
+  // Mettre à jour une catégorie
+  updateCategory: async (id: string, nom: string, description: string) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await api.put(`/categories/update_category/${id}`, { 
+        nom_categorie: nom, 
+        description_categorie: description 
+      });
+      
+      // Mettre à jour l'état local avec la catégorie modifiée
+      set(state => ({ 
+        categories: state.categories.map(cat => 
+          cat._id === id ? { ...cat, nom, description_categorie: description } : cat
+        ),
+        loading: false 
+      }));
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour de la catégorie:', err);
+      console.error('Status:', err.response?.status);
+      console.error('Message:', err.response?.data || err.message);
+      
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la mise à jour de la catégorie', 
+        loading: false 
+      });
+      throw err;
+    }
+  },
+  
+  // Supprimer une catégorie
+  deleteCategory: async (id: string) => {
+    set({ loading: true, error: null });
+    try {
+      await api.delete(`/categories/delete_category/${id}`);
+      
+      // Mettre à jour l'état local en supprimant la catégorie
+      set(state => ({ 
+        categories: state.categories.filter(cat => cat._id !== id),
+        loading: false 
+      }));
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression de la catégorie:', err);
+      console.error('Status:', err.response?.status);
+      console.error('Message:', err.response?.data || err.message);
+      
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la suppression de la catégorie', 
+        loading: false 
+      });
+      throw err;
     }
   },
   
