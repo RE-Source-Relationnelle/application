@@ -350,15 +350,22 @@ const useAuthStore = create<AuthState>()(
           const response = await api.get('/users/role');
           console.log('Réponse de get_role:', response.data);
           
+          // Extraire les données du rôle
+          const roleData = response.data.role || response.data;
+          console.log('Données du rôle structurées:', roleData);
+          
           // Mettre à jour l'utilisateur avec son rôle
           set({ 
             user: { 
               ...get().user, 
-              role: response.data.role 
+              role: {
+                role_id: roleData.role_id || roleData.id,
+                nom_role: roleData.nom_role
+              }
             } as User
           });
           
-          return response.data.role;
+          return roleData;
         } catch (error) {
           console.error('Erreur lors de la récupération du rôle:', error);
           
