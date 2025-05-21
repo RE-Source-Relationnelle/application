@@ -45,7 +45,7 @@ interface CategoryState {
   clearError: () => void;
 }
 
-const useCategoryStore = create<CategoryState>((set, get) => ({
+const useCategoryStore = create<CategoryState>((set) => ({
   // État initial
   categories: [],
   loading: false,

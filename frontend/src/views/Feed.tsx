@@ -22,7 +22,7 @@ const Feed = () => {
                 console.log('Rôle récupéré dans Feed')
             })
         }
-        
+      
         // Charger les ressources aléatoires
         const fetchRandomResources = async () => {
             try {
@@ -83,6 +83,7 @@ const Feed = () => {
             addViewedResourcesToHistory();
         }
     }, [viewedResources]);
+
 
     const handlePostSubmit = (content: string) => {
         if (content.trim()) {
