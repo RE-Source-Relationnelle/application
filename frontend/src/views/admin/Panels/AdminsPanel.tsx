@@ -33,6 +33,17 @@ const AdminsPanel = () => {
         role.nom_role === "super-administrateur"
     );
 
+    // Log tous les rôles pour débogage
+    useEffect(() => {
+        if (roles.length > 0) {
+            console.log("Tous les rôles disponibles:", roles);
+            console.log("Rôle Citoyen existe:", roles.some(role => role.nom_role === "Citoyen"));
+            console.log("Rôle citoyen (minuscule) existe:", roles.some(role => role.nom_role === "citoyen"));
+            console.log("Rôles contenant 'citoyen' (insensible à la casse):", 
+                roles.filter(role => role.nom_role.toLowerCase().includes("citoyen")));
+        }
+    }, [roles]);
+
     const handleAddAdmin = async () => {
         if (newAdmin.email.trim() && newAdmin.role) {
             try {
@@ -74,8 +85,10 @@ const AdminsPanel = () => {
         }
         
         try {
-            // Trouver le rôle "Citoyen" pour rétrograder l'admin
-            const citizenRole = roles.find(role => role.nom_role === "Citoyen");
+            // Trouver le rôle "Citoyen" pour rétrograder l'admin (recherche insensible à la casse)
+            const citizenRole = roles.find(role => 
+                role.nom_role.toLowerCase() === "citoyen".toLowerCase()
+            );
             
             if (citizenRole) {
                 // Rétrograder l'admin en citoyen au lieu de le supprimer complètement
@@ -83,6 +96,7 @@ const AdminsPanel = () => {
                 // Rafraîchir la liste des utilisateurs
                 fetchUsers();
             } else {
+                console.error("Rôle Citoyen non trouvé. Rôles disponibles:", roles.map(r => r.nom_role));
                 alert("Impossible de trouver le rôle Citoyen");
             }
         } catch (error) {

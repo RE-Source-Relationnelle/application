@@ -9,8 +9,8 @@ from flask_cors import cross_origin
 @cross_origin(supports_credentials=True, origins=["http://localhost:3000"])
 def get_roles():
     """
-    Route pour récupérer uniquement les rôles 'administrateur' ou 'super-administrateur'
-    Accessible uniquement aux utilisateurs ayant l'un de ces rôles
+    Route pour récupérer tous les rôles disponibles dans la base de données
+    Accessible uniquement aux utilisateurs ayant le rôle 'administrateur' ou 'super-administrateur'
     """
     print("🔄 Début de la route get_roles")
 
@@ -44,14 +44,16 @@ def get_roles():
             print(f"❌ Accès refusé : l'utilisateur a le rôle '{user_role}'")
             return jsonify({"error": "Accès non autorisé"}), 403
 
-        # 🔽 Seulement les rôles autorisés
-        roles = list(db.role.find({"nom_role": {"$in": ["administrateur", "super-administrateur"]}}))
+        # Récupérer tous les rôles sans filtrage
+        roles = list(db.role.find())
+        print(f"🔍 Récupération de tous les rôles : {len(roles)} rôles trouvés")
 
         def sanitize(doc):
+            doc_copy = doc.copy()  # Créer une copie pour éviter de modifier l'original
             for key, value in doc.items():
                 if isinstance(value, ObjectId):
-                    doc[key] = str(value)
-            return doc
+                    doc_copy[key] = str(value)
+            return doc_copy
 
         sanitized_roles = [sanitize(role) for role in roles]
 
