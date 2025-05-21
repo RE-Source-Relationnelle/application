@@ -22,7 +22,7 @@ const Feed = () => {
         
         // Charger les ressources
         fetchResources()
-    }, [user, fetchUserRole, fetchResources])
+    }, [user?.id, fetchResources])
 
     const handlePostSubmit = (content: string) => {
         if (content.trim()) {

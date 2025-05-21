@@ -79,7 +79,7 @@ const Profile = () => {
                 prenom: formData.prenom,
                 nom: formData.nom,
                 username: formData.username,
-                email: formData.email,
+                mail: formData.email,
                 genre: formData.genre
             });
             setSuccessMessage('Vos informations ont été mises à jour avec succès.');
