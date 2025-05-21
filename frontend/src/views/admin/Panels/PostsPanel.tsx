@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import useResourcesStore from '../../../store/resourcesStore';
 import { Resource } from '../../../types/types';
-import { Trash2, SquarePen, Eye, Plus } from 'lucide-react';
+import { Trash2, SquarePen, Eye, Plus, Filter } from 'lucide-react';
 
 const PostsPanel = () => {
     const { resources, loading, error, categories, fetchResources, fetchCategories, deleteResource, approveResource, updateResourceCategory, updateResource, createResource } = useResourcesStore();
@@ -11,6 +11,7 @@ const PostsPanel = () => {
     const [showEditModal, setShowEditModal] = useState<boolean>(false);
     const [newResource, setNewResource] = useState<{ titre: string, contenu: string, id_categorie?: string } | null>(null);
     const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+    const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved'>('all');
 
     // Charger les ressources et les catégories au montage du composant
     useEffect(() => {
@@ -25,8 +26,25 @@ const PostsPanel = () => {
     };
 
     const handleApproveResource = async (id: string) => {
-        const comment = prompt('Commentaire d\'approbation (optionnel):');
-        await approveResource(id, comment || undefined);
+        try {
+            const comment = prompt('Commentaire d\'approbation (optionnel):');
+            
+            // Confirmer l'action
+            if (!confirm('Êtes-vous sûr de vouloir approuver cette ressource ?')) {
+                return;
+            }
+            
+            await approveResource(id, comment || undefined);
+            
+            // Rafraîchir la liste des ressources pour s'assurer que tout est à jour
+            fetchResources();
+            
+            // Afficher un message de succès (vous pourriez utiliser une bibliothèque de toast notifications ici)
+            alert('La ressource a été approuvée avec succès !');
+        } catch (error) {
+            console.error('Erreur lors de l\'approbation:', error);
+            alert('Une erreur est survenue lors de l\'approbation de la ressource.');
+        }
     };
 
     const handleSaveCategory = async (resourceId: string) => {
@@ -83,7 +101,14 @@ const PostsPanel = () => {
     };
 
     const isResourceApproved = (resource: Resource) => {
-        return !!resource.date_validation;
+        return resource.approved === true || !!resource.date_validation;
+    };
+
+    const filteredResources = () => {
+        if (filterStatus === 'all') return resources;
+        if (filterStatus === 'pending') return resources.filter(r => !isResourceApproved(r));
+        if (filterStatus === 'approved') return resources.filter(r => isResourceApproved(r));
+        return resources;
     };
 
     if (loading) {
@@ -108,13 +133,24 @@ const PostsPanel = () => {
         <div className="space-y-4">
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-semibold">Gestion des ressources</h2>
-                <button
-                    className="px-4 py-2 bg-primary text-white rounded-md flex items-center gap-2 hover:bg-secondary"
-                    onClick={handleCreateResource}
-                >
-                    <Plus size={16} />
-                    Créer une ressource
-                </button>
+                <div className="flex space-x-2">
+                    <div className="relative">
+                        <button
+                            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md flex items-center gap-2 hover:bg-gray-300"
+                            onClick={() => setFilterStatus(filterStatus === 'all' ? 'pending' : filterStatus === 'pending' ? 'approved' : 'all')}
+                        >
+                            <Filter size={16} />
+                            {filterStatus === 'all' ? 'Toutes' : filterStatus === 'pending' ? 'En attente' : 'Approuvées'}
+                        </button>
+                    </div>
+                    <button
+                        className="px-4 py-2 bg-primary text-white rounded-md flex items-center gap-2 hover:bg-secondary"
+                        onClick={handleCreateResource}
+                    >
+                        <Plus size={16} />
+                        Créer une ressource
+                    </button>
+                </div>
             </div>
 
             <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
@@ -130,15 +166,19 @@ const PostsPanel = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {resources.length === 0 ? (
+                        {filteredResources().length === 0 ? (
                             <tr>
                                 <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Aucune ressource trouvée
+                                    {filterStatus === 'pending' 
+                                        ? 'Aucune ressource en attente d\'approbation' 
+                                        : filterStatus === 'approved' 
+                                            ? 'Aucune ressource approuvée'
+                                            : 'Aucune ressource trouvée'}
                                 </td>
                             </tr>
                         ) : (
-                            resources.map((resource) => (
-                                <tr key={resource._id}>
+                            filteredResources().map((resource) => (
+                                <tr key={resource._id} className={!isResourceApproved(resource) ? 'bg-yellow-50' : ''}>
                                     <td className="px-6 py-4 whitespace-nowrap max-w-[200px]">
                                         {editingResource && editingResource.id === resource._id ? (
                                             <input
@@ -202,6 +242,11 @@ const PostsPanel = () => {
                                             }`}>
                                             {isResourceApproved(resource) ? 'Approuvé' : 'En attente'}
                                         </span>
+                                        {resource.commentaire_validation && (
+                                            <div className="mt-1 text-xs text-gray-500 max-w-xs truncate" title={resource.commentaire_validation}>
+                                                Commentaire: {resource.commentaire_validation}
+                                            </div>
+                                        )}
                                     </td>
                                     <td className="flex items-center px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {!isResourceApproved(resource) && (

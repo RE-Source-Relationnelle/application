@@ -8,7 +8,8 @@ const api = axios.create({
   baseURL: 'http://localhost:5001',
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
 
@@ -26,8 +27,8 @@ api.interceptors.request.use(config => {
   if (token && config.headers) {
     // Ajouter le token dans l'en-tête Authorization
     config.headers['Authorization'] = `Bearer ${token}`;
-    // Ajouter aussi le token dans un en-tête 'token' pour compatibilité avec le backend actuel
-    config.headers['token'] = token;
+    // Ne pas ajouter l'en-tête 'token' qui cause des problèmes CORS
+    // config.headers['token'] = token;
   }
   
   return config;
@@ -47,7 +48,7 @@ interface ResourcesState {
   fetchResources: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   deleteResource: (id: string) => Promise<void>;
-  approveResource: (id: string, comment?: string) => Promise<void>;
+  approveResource: (id: string, comment?: string) => Promise<any>;
   updateResourceCategory: (id: string, categoryId: string) => Promise<void>;
   updateResource: (id: string, data: Partial<Resource>) => Promise<void>;
   createResource: (data: { titre: string, contenu: string, id_categorie?: string }) => Promise<void>;
@@ -153,12 +154,24 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   approveResource: async (id: string, comment?: string) => {
     set({ loading: true });
     try {
-      await api.post(`/resources/approve/${id}`, { comment });
+      // Créer une instance Axios spécifique pour cette requête sans l'intercepteur qui ajoute le token
+      const approveApi = axios.create({
+        baseURL: 'http://localhost:5001',
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
+      
+      // Utiliser cette instance pour faire la requête
+      const response = await approveApi.post(`/resources/approve/${id}`, { comment });
       
       const updatedResources = get().resources.map(resource => {
         if (resource._id === id) {
           return { 
             ...resource, 
+            approved: true,
             date_validation: new Date().toISOString(),
             commentaire_validation: comment || null
           };
@@ -167,12 +180,14 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
       });
       
       set({ resources: updatedResources, loading: false });
+      return response.data; // Retourner la ressource mise à jour
     } catch (err: any) {
       console.error('Erreur lors de l\'approbation de la ressource:', err);
       set({ 
         error: err.response?.data?.error || 'Erreur lors de l\'approbation de la ressource', 
         loading: false 
       });
+      throw err; // Propager l'erreur pour permettre au composant de la gérer
     }
   },
 

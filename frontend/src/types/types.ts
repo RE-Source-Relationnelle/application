@@ -34,6 +34,7 @@ export interface Resource {
     id_publieur: string;
     id_categorie?: string;
     createdAt: string;
+    approved?: boolean;
     id_validateur?: string;
     date_validation?: string | null;
     commentaire_validation?: string | null;

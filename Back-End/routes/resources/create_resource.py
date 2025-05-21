@@ -57,7 +57,8 @@ def create_resource():
             "date_publication": {
                 "date": now.isoformat() + "Z"
             },
-            "createdAt": now
+            "createdAt": now,
+            "approved": False  # Par défaut, la ressource n'est pas approuvée
         }
 
         # Si une catégorie est spécifiée, vérifier qu'elle existe
@@ -70,7 +71,11 @@ def create_resource():
         # Insérer dans la collection des ressources en attente
         result = db.ressource.insert_one(resource)
         resource['_id'] = result.inserted_id
-
+        
+        # Copier la ressource dans la collection des ressources en attente
+        resource_en_attente = resource.copy()
+        db.ressources_en_attente.insert_one(resource_en_attente)
+        
         # Sanitize
         def sanitize(doc):
             for key, value in doc.items():
