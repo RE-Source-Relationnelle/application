@@ -31,6 +31,17 @@ const UsersPanel = () => {
         fetchRoles();
     }, [fetchUsers, fetchRoles]);
 
+    // Filtrer pour n'afficher que les utilisateurs avec les rôles "Citoyen" et "Modérateur"
+    const filteredUsers = users.filter(user => {
+        const roleName = user.role_info?.nom_role || getRoleName(user.role_id);
+        return roleName === "Citoyen" || roleName === "Modérateur";
+    });
+
+    // Filtrer les rôles pour n'afficher que "Citoyen" et "Modérateur" dans le sélecteur
+    const allowedRoles = roles.filter(role => 
+        role.nom_role === "Citoyen" || role.nom_role === "Modérateur"
+    );
+
     // Fonction pour commencer l'édition d'un utilisateur
     const handleEditUser = (user: any) => {
         setEditingUserId(user._id);
@@ -51,6 +62,13 @@ const UsersPanel = () => {
     // Fonction pour sauvegarder les modifications
     const handleSaveUser = async (userId: string) => {
         try {
+            // Vérifier que le rôle sélectionné est autorisé (Citoyen ou Modérateur)
+            const selectedRole = roles.find(role => role._id === editForm.role_id);
+            if (selectedRole && (selectedRole.nom_role !== "Citoyen" && selectedRole.nom_role !== "Modérateur")) {
+                alert("Vous ne pouvez attribuer que les rôles Citoyen ou Modérateur dans cette section.");
+                return;
+            }
+
             await updateUser(userId, editForm);
             setEditingUserId(null);
         } catch (error) {
@@ -125,7 +143,7 @@ const UsersPanel = () => {
 
     return (
         <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Gestion des utilisateurs</h2>
+            <h2 className="text-xl font-semibold">Gestion des utilisateurs (Citoyens et Modérateurs)</h2>
 
             <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -139,14 +157,14 @@ const UsersPanel = () => {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {users.length === 0 ? (
+                        {filteredUsers.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                                     Aucun utilisateur trouvé
                                 </td>
                             </tr>
                         ) : (
-                            users.map((user) => (
+                            filteredUsers.map((user) => (
                                 <tr key={user._id}>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         {editingUserId === user._id ? (
@@ -193,7 +211,7 @@ const UsersPanel = () => {
                                                 className="w-full px-2 py-1 border border-gray-300 rounded-md"
                                             >
                                                 <option value="">Sélectionner un rôle</option>
-                                                {roles.map(role => (
+                                                {allowedRoles.map(role => (
                                                     <option key={role._id} value={role._id}>
                                                         {role.nom_role}
                                                     </option>
