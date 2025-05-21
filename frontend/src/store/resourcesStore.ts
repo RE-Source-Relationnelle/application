@@ -49,8 +49,10 @@ interface ResourcesState {
   deleteResource: (id: string) => Promise<void>;
   approveResource: (id: string, comment?: string) => Promise<void>;
   updateResourceCategory: (id: string, categoryId: string) => Promise<void>;
-  createCategory: (name: string, description?: string) => Promise<Category | undefined>;
-  updateCategory: (id: string, name: string, description?: string) => Promise<Category | undefined>;
+  updateResource: (id: string, data: Partial<Resource>) => Promise<void>;
+  createResource: (data: { titre: string, contenu: string, id_categorie?: string }) => Promise<void>;
+  createCategory: (name: string, description?: string) => Promise<void>;
+  updateCategory: (id: string, name: string, description?: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   clearError: () => void;
 }
@@ -88,14 +90,35 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
       
       // Récupérer les catégories du categoryStore
       const categories = categoryStore.categories;
+      console.log("Catégories récupérées du categoryStore:", categories);
+      
+      if (categories.length === 0) {
+        console.log("Aucune catégorie trouvée dans le categoryStore, tentative de récupération directe");
+        // Tentative de récupération directe
+        const response = await api.get('/categories/all_categories');
+        console.log("Réponse directe de l'API:", response.data);
+        
+        if (response.data && response.data.length > 0) {
+          // Utiliser directement les catégories de l'API
+          set({ categories: response.data, loadingCategories: false });
+          return;
+        }
+      }
       
       // Calculer le nombre de ressources par catégorie
       const resources = get().resources;
       const categoriesWithCount = categories.map(category => {
-        const count = resources.filter(r => r.id_categorie === category._id).length;
+        // Convertir les ID en chaînes pour la comparaison
+        const categoryId = category._id.toString();
+        const count = resources.filter(r => {
+          const resourceCategoryId = r.id_categorie ? r.id_categorie.toString() : '';
+          return resourceCategoryId === categoryId;
+        }).length;
+        
         return { ...category, resourceCount: count };
       });
       
+      console.log("Catégories avec comptage:", categoriesWithCount);
       set({ categories: categoriesWithCount, loadingCategories: false });
     } catch (err: any) {
       console.error('Erreur lors de la récupération des catégories:', err);
@@ -110,7 +133,7 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   deleteResource: async (id: string) => {
     set({ loading: true });
     try {
-      await api.delete(`/resources/${id}`);
+      await api.delete(`/resources/delete/${id}`);
       
       const updatedResources = get().resources.filter(resource => resource._id !== id);
       set({ resources: updatedResources, loading: false });
@@ -157,7 +180,7 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   updateResourceCategory: async (id: string, categoryId: string) => {
     set({ loading: true });
     try {
-      await api.put(`/resources/${id}`, { id_categorie: categoryId });
+      await api.put(`/resources/update/${id}`, { categories: categoryId });
       
       const updatedResources = get().resources.map(resource => {
         if (resource._id === id) {
@@ -169,11 +192,64 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
       set({ resources: updatedResources, loading: false });
       
       // Mettre à jour le comptage des ressources par catégorie
-      await get().fetchCategories();
+      get().fetchCategories();
     } catch (err: any) {
       console.error('Erreur lors de la mise à jour de la catégorie:', err);
       set({ 
         error: err.response?.data?.error || 'Erreur lors de la mise à jour de la catégorie', 
+        loading: false 
+      });
+    }
+  },
+
+  // Mettre à jour une ressource
+  updateResource: async (id: string, data: Partial<Resource>) => {
+    set({ loading: true });
+    try {
+      await api.put(`/resources/update/${id}`, data);
+      
+      const updatedResources = get().resources.map(resource => {
+        if (resource._id === id) {
+          return { ...resource, ...data };
+        }
+        return resource;
+      });
+      
+      set({ resources: updatedResources, loading: false });
+    } catch (err: any) {
+      console.error('Erreur lors de la mise à jour de la ressource:', err);
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la mise à jour de la ressource', 
+        loading: false 
+      });
+    }
+  },
+  
+  // Créer une nouvelle ressource
+  createResource: async (data: { titre: string, contenu: string, id_categorie?: string }) => {
+    set({ loading: true });
+    try {
+      // Adapter les noms de champs pour le backend
+      const backendData = {
+        title: data.titre,
+        content: data.contenu,
+        categorie: data.id_categorie || ''
+      };
+      
+      const response = await api.post('/resources/create_resources', backendData);
+      
+      // Ajouter la nouvelle ressource à la liste
+      const newResource = response.data;
+      set({ 
+        resources: [...get().resources, newResource],
+        loading: false 
+      });
+      
+      return newResource;
+    } catch (err: any) {
+      console.error('Erreur lors de la création de la ressource:', err);
+      set({ 
+        error: err.response?.data?.error || 'Erreur lors de la création de la ressource', 
         loading: false 
       });
     }
