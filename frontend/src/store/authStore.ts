@@ -66,6 +66,41 @@ api.interceptors.request.use(
   }
 );
 
+// Intercepteur pour gérer les erreurs 401 (non autorisé)
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Si l'erreur est 401 et que la requête n'a pas déjà été retentée
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Utiliser la fonction refreshToken du store
+        const authStore = useAuthStore.getState();
+        const newToken = await authStore.refreshToken();
+        
+        if (newToken) {
+          // Mettre à jour l'en-tête avec le nouveau token
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          originalRequest.headers['token'] = newToken;
+          
+          // Réessayer la requête originale
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('Échec du rafraîchissement du token:', refreshError);
+        // En cas d'échec, rediriger vers la page de connexion
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
 interface AuthState {
   // État
   user: User | null;
@@ -81,6 +116,7 @@ interface AuthState {
   clearError: () => void;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   fetchUserRole: () => Promise<any>;
+  refreshToken: () => Promise<string | null>;
 }
 
 // Création du store avec persistance
@@ -142,7 +178,15 @@ const useAuthStore = create<AuthState>()(
           // Stocker le token dans un cookie
           if (response.data.access_token) {
             setCookie('access_token', response.data.access_token, {
-              'max-age': 3600, // 1 heure
+              'max-age': 900, // 15 minutes
+              'SameSite': 'Lax'
+            });
+          }
+          
+          // Stocker aussi le refresh token
+          if (response.data.refresh_token) {
+            setCookie('refresh_token', response.data.refresh_token, {
+              'max-age': 604800, // 7 jours
               'SameSite': 'Lax'
             });
           }
@@ -195,7 +239,15 @@ const useAuthStore = create<AuthState>()(
           
           if (response.data.access_token) {
             setCookie('access_token', response.data.access_token, {
-              'max-age': 3600, // 1 heure
+              'max-age': 900, // 15 minutes
+              'SameSite': 'Lax'
+            });
+          }
+          
+          // Stocker aussi le refresh token
+          if (response.data.refresh_token) {
+            setCookie('refresh_token', response.data.refresh_token, {
+              'max-age': 604800, // 7 jours
               'SameSite': 'Lax'
             });
           }
@@ -232,17 +284,20 @@ const useAuthStore = create<AuthState>()(
       // Déconnexion
       logout: async () => {
         try {
-          deleteCookie('access_token');
-          
-          // Réinitialiser l'état
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            error: null
-          });
+          await api.post('/auth/logout');
         } catch (err) {
           console.error('Erreur lors de la déconnexion:', err);
         }
+        
+        // Supprimer les cookies
+        deleteCookie('access_token');
+        deleteCookie('refresh_token');
+        
+        set({ 
+          user: null, 
+          isAuthenticated: false,
+          error: null
+        });
       },
 
       clearError: () => set({ error: null }),
@@ -295,6 +350,56 @@ const useAuthStore = create<AuthState>()(
         } catch (err: any) {
           console.error('Erreur lors de la récupération du rôle:', err);
           // Ne pas définir d'erreur dans le state pour ne pas perturber l'interface
+          return null;
+        }
+      },
+
+      // Rafraîchir le token
+      refreshToken: async () => {
+        const refreshToken = document.cookie
+          .split(';')
+          .find(c => c.trim().startsWith('refresh_token='))
+          ?.split('=')[1];
+          
+        if (!refreshToken) {
+          console.log('Pas de refresh token disponible');
+          // Pas de refresh token, déconnexion
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            loading: false
+          });
+          return null;
+        }
+        
+        try {
+          console.log('Tentative de rafraîchissement du token...');
+          const response = await axios.post(
+            `${API_URL}/auth/refresh_token`,
+            { refresh_token: refreshToken },
+            { withCredentials: true }
+          );
+          
+          console.log('Réponse du rafraîchissement:', response.data);
+          
+          // Le cookie access_token devrait être défini automatiquement par le backend
+          // Mais on le définit aussi côté client par sécurité
+          if (response.data.access_token) {
+            setCookie('access_token', response.data.access_token, {
+              'max-age': 900, // 15 minutes
+              'SameSite': 'Lax'
+            });
+            return response.data.access_token;
+          }
+          return null;
+        } catch (error) {
+          console.error('Erreur lors du rafraîchissement du token:', error);
+          // En cas d'échec, déconnexion
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            loading: false
+          });
           return null;
         }
       },

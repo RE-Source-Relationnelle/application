@@ -27,48 +27,56 @@ def parse_date(date_value):
 
 @auth_bp.route('/refresh_token', methods=['POST'])
 def refresh_token():
-    print("🔄 Début de la route refresh_token")
+    print(" Début de la route refresh_token")
 
     db = get_db()
     if db is None:
-        print("❌ Erreur: Base de données non connectée")
+        print(" Erreur: Base de données non connectée")
         return jsonify({"error": "Erreur de connexion à la base de données"}), 500
 
-    # Récupérer le refresh token du body
+    # Récupérer le refresh token du body ou des cookies
     data = request.get_json()
-    print(f"📝 Données reçues: {data}")
-
-    if not data or 'refresh_token' not in data:
-        print("❌ Erreur: Refresh token manquant dans la requête")
+    print(f" Données reçues: {data}")
+    
+    refresh_token = None
+    
+    # Vérifier d'abord dans le body
+    if data and 'refresh_token' in data:
+        refresh_token = data['refresh_token']
+    # Sinon, vérifier dans les cookies
+    else:
+        refresh_token = request.cookies.get('refresh_token')
+    
+    if not refresh_token:
+        print(" Erreur: Refresh token manquant dans la requête")
         return jsonify({"error": "Refresh token manquant"}), 400
 
-    refresh_token = data['refresh_token']
-    print(f"🔑 Recherche du token: {refresh_token}")
+    print(f" Recherche du token: {refresh_token}")
 
     try:
         # Vérifier le refresh token dans la base de données
         token_doc = db.token.find_one({"refresh_token": refresh_token})
-        print(f"🔍 Document trouvé: {token_doc}")
+        print(f" Document trouvé: {token_doc}")
 
         if not token_doc:
-            print("❌ Erreur: Token non trouvé dans la base de données")
+            print(" Erreur: Token non trouvé dans la base de données")
             return jsonify({"error": "Refresh token invalide"}), 401
 
         # Vérifier si le refresh token n'est pas expiré
         try:
             expiration_refresh = parse_date(token_doc['expiration_refresh_token'])
-            print(f"⏰ Date d'expiration du refresh token: {expiration_refresh}")
+            print(f" Date d'expiration du refresh token: {expiration_refresh}")
         except Exception as e:
-            print(f"❌ Erreur lors du parsing de la date: {str(e)}")
+            print(f" Erreur lors du parsing de la date: {str(e)}")
             return jsonify({"error": "Format de date invalide"}), 500
 
         if expiration_refresh < datetime.now(timezone.utc):
-            print("❌ Erreur: Refresh token expiré")
+            print(" Erreur: Refresh token expiré")
             return jsonify({"error": "Refresh token expiré"}), 401
 
         # Générer un nouveau access token UNIQUEMENT
         user_id = token_doc['id_user']
-        expiration_access = datetime.now(timezone.utc) + timedelta(hours=1)
+        expiration_access = datetime.now(timezone.utc) + timedelta(minutes=15)
 
         print(f"👤 ID utilisateur: {user_id}")
         print(f"⏰ Nouvelle expiration access token: {expiration_access}")
@@ -92,7 +100,7 @@ def refresh_token():
                 }
             }
         )
-        print(f"✏️ Résultat de la mise à jour: {update_result.modified_count} document(s) modifié(s)")
+        print(f" Résultat de la mise à jour: {update_result.modified_count} document(s) modifié(s)")
 
         # Préparer la réponse
         response_data = {
@@ -103,7 +111,22 @@ def refresh_token():
         }
         print(f"✅ Réponse envoyée: {response_data}")
 
-        return jsonify(response_data), 200
+        # Créer une réponse avec les cookies
+        response = jsonify(response_data)
+        
+        # Définir les cookies
+        response.set_cookie(
+            'access_token', 
+            new_access_token, 
+            max_age=900,  # 15 minutes
+            path='/',
+            httponly=True,
+            samesite='Lax'
+        )
+        
+        # Ne pas redéfinir le refresh_token car il est toujours valide
+        
+        return response, 200
     except Exception as e:
         print(f"❌ Erreur lors du refresh token: {str(e)}")
         import traceback

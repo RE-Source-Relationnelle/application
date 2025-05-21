@@ -43,7 +43,7 @@ def auth_from_password():
 
         # Génération des timestamps
         current_time = datetime.utcnow()
-        access_token_expiration = current_time + timedelta(hours=1)
+        access_token_expiration = current_time + timedelta(minutes=15)
         refresh_token_expiration = current_time + timedelta(days=7)
 
         # Génération des tokens

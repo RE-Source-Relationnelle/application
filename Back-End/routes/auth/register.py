@@ -64,7 +64,7 @@ def register():
         
         # Génération des timestamps pour les tokens
         current_time = datetime.utcnow()
-        access_token_expiration = current_time + timedelta(hours=1)
+        access_token_expiration = current_time + timedelta(minutes=15)
         refresh_token_expiration = current_time + timedelta(days=7)
 
         # Génération des tokens
@@ -110,7 +110,7 @@ def register():
             httponly=True, 
             secure=False,  # Mettre à True en production avec HTTPS
             samesite='Lax',
-            max_age=3600  # 1 heure
+            max_age=900  # 15 minutes
         )
         
         response.set_cookie(
