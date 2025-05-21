@@ -14,15 +14,40 @@ const api = axios.create({
   }
 });
 
-// Fonction pour récupérer le token depuis les cookies
-const getTokenFromCookies = (): string | null => {
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
+// Fonction améliorée pour extraire un cookie spécifique
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    const cookieValue = parts.pop()?.split(';').shift();
+    return cookieValue || null;
+  }
+  return null;
+};
+
+// Variable pour suivre si un rafraîchissement est en cours
+let refreshingPromise: Promise<string | null> | null = null;
+let refreshInterval: number | null = null;
+// Variable pour suivre si une récupération de rôle est en cours
+let fetchingRolePromise: Promise<any> | null = null;
+
+// Fonction pour vérifier si le token est sur le point d'expirer
+const isTokenExpiring = (): boolean => {
+  // Vérifier si le token expire dans les 30 secondes (au lieu de 2 minutes)
+  const tokenExpiresAt = localStorage.getItem('tokenExpiresAt');
+  if (!tokenExpiresAt) {
+    console.log('Pas de date d\'expiration stockée, considéré comme expirant');
+    return true;
+  }
   
-  return cookies['access_token'] || null;
+  const expirationTime = parseInt(tokenExpiresAt, 10);
+  const currentTime = Math.floor(Date.now() / 1000);
+  const timeRemaining = expirationTime - currentTime;
+  
+  console.log(`Temps restant avant expiration: ${timeRemaining} secondes`);
+  
+  // Si le token expire dans moins de 30 secondes, considérer qu'il est en train d'expirer
+  return timeRemaining < 30;
 };
 
 // Fonction pour définir un cookie
@@ -50,20 +75,36 @@ const deleteCookie = (name: string) => {
 
 // Intercepteur pour ajouter le token à chaque requête
 api.interceptors.request.use(
-  (config) => {
-    const token = getTokenFromCookies();
+  async (config) => {
+    const token = getCookie('access_token');
+    
+    // Vérifier si le token est sur le point d'expirer
+    if (token && isTokenExpiring()) {
+      console.log('Token sur le point d\'expirer, rafraîchissement préventif...');
+      try {
+        // Utiliser la fonction refreshToken du store pour obtenir un nouveau token
+        const authStore = useAuthStore.getState();
+        const newToken = await authStore.refreshToken();
+        
+        if (newToken && config.headers) {
+          config.headers['Authorization'] = `Bearer ${newToken}`;
+          config.headers['token'] = newToken;
+          return config;
+        }
+      } catch (error) {
+        console.error('Échec du rafraîchissement préventif du token:', error);
+        // Continuer avec le token actuel même s'il est sur le point d'expirer
+      }
+    }
     
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
-      // Ajouter aussi le token dans l'en-tête 'token' pour compatibilité avec le backend
       config.headers['token'] = token;
     }
     
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Intercepteur pour gérer les erreurs 401 (non autorisé)
@@ -132,7 +173,7 @@ const useAuthStore = create<AuthState>()(
       checkAuth: async () => {
         if (get().loading) return;
         
-        const token = getTokenFromCookies();
+        const token = getCookie('access_token');
         if (!token && !get().isAuthenticated) {
           return;
         }
@@ -163,42 +204,47 @@ const useAuthStore = create<AuthState>()(
       },
 
       // Connexion
-      login: async (email, password) => {
+      login: async (mail: string, password: string) => {
         set({ loading: true, error: null });
         
         try {
           console.log('Tentative de connexion...');
-          const response = await api.post('/auth/auth_from_password', { 
-            mail: email,
-            password 
-          });
+          const response = await axios.post(
+            `${API_URL}/auth/auth_from_password`,
+            { mail, password },
+            { withCredentials: true }
+          );
           
           console.log('Réponse de connexion:', response.data);
           
-          // Stocker le token dans un cookie
-          if (response.data.access_token) {
-            setCookie('access_token', response.data.access_token, {
-              'max-age': 900, // 15 minutes
-              'SameSite': 'Lax'
-            });
+          // Stocker la date d'expiration de l'access_token
+          if (response.data.expiration_access_token) {
+            const expirationDate = new Date(response.data.expiration_access_token);
+            localStorage.setItem('tokenExpiresAt', Math.floor(expirationDate.getTime() / 1000).toString());
+            console.log(`Date d'expiration stockée: ${expirationDate.toISOString()}`);
+            
+            // Configurer un intervalle pour rafraîchir le token périodiquement
+            // Rafraîchir toutes les 45 secondes (si le token expire après 60 secondes)
+            if (refreshInterval) {
+              clearInterval(refreshInterval);
+            }
+            refreshInterval = window.setInterval(() => {
+              const authStore = useAuthStore.getState();
+              console.log('Rafraîchissement périodique du token...');
+              authStore.refreshToken();
+            }, 45000); // 45 secondes
           }
           
-          // Stocker aussi le refresh token
-          if (response.data.refresh_token) {
-            setCookie('refresh_token', response.data.refresh_token, {
-              'max-age': 604800, // 7 jours
-              'SameSite': 'Lax'
-            });
-          }
+          // Le backend définit déjà les cookies, pas besoin de les redéfinir ici
           
+          // Formater les données utilisateur
           const userData: User = {
             id: response.data.user_id || '',
-            email: email,
-            mail: email,
+            email: mail,
+            mail: mail,
             nom: response.data.nom || '',
             prenom: response.data.prenom || '',
             username: response.data.username || ''
-            // Le rôle sera récupéré séparément
           };
           
           console.log('Données utilisateur formatées:', userData);
@@ -228,7 +274,7 @@ const useAuthStore = create<AuthState>()(
       },
 
       // Inscription
-      register: async (formData) => {
+      register: async (formData: RegisterFormData) => {
         set({ loading: true, error: null });
         
         try {
@@ -239,7 +285,7 @@ const useAuthStore = create<AuthState>()(
           
           if (response.data.access_token) {
             setCookie('access_token', response.data.access_token, {
-              'max-age': 900, // 15 minutes
+              'max-age': 60, // 1 minute
               'SameSite': 'Lax'
             });
           }
@@ -284,26 +330,33 @@ const useAuthStore = create<AuthState>()(
       // Déconnexion
       logout: async () => {
         try {
+          // Nettoyer l'intervalle de rafraîchissement
+          if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+          }
+          
           await api.post('/auth/logout');
-        } catch (err) {
-          console.error('Erreur lors de la déconnexion:', err);
+          
+          // Supprimer les cookies
+          deleteCookie('access_token');
+          deleteCookie('refresh_token');
+          
+          // Réinitialiser le state
+          set({ 
+            user: null, 
+            isAuthenticated: false,
+            loading: false
+          });
+        } catch (error) {
+          console.error('Erreur lors de la déconnexion:', error);
         }
-        
-        // Supprimer les cookies
-        deleteCookie('access_token');
-        deleteCookie('refresh_token');
-        
-        set({ 
-          user: null, 
-          isAuthenticated: false,
-          error: null
-        });
       },
 
       clearError: () => set({ error: null }),
 
       // Mettre à jour le profil utilisateur
-      updateProfile: async (userData) => {
+      updateProfile: async (userData: Partial<User>) => {
         set({ loading: true, error: null });
         
         try {
@@ -330,78 +383,93 @@ const useAuthStore = create<AuthState>()(
 
       // Récupérer le rôle de l'utilisateur
       fetchUserRole: async () => {
-        try {
-          console.log('Récupération du rôle utilisateur...');
-          const response = await api.get('/users/role');
-          console.log('Rôle récupéré:', response.data);
-          
-          const { user } = get();
-          if (user) {
-            // Mettre à jour l'utilisateur avec son rôle
-            set({
-              user: {
-                ...user,
-                role: response.data
-              }
-            });
-          }
-          
-          return response.data;
-        } catch (err: any) {
-          console.error('Erreur lors de la récupération du rôle:', err);
-          // Ne pas définir d'erreur dans le state pour ne pas perturber l'interface
-          return null;
+        // Si une récupération est déjà en cours, retourner la promesse existante
+        if (fetchingRolePromise) {
+          console.log('Récupération du rôle déjà en cours, réutilisation de la promesse existante');
+          return fetchingRolePromise;
         }
+        
+        // Créer une nouvelle promesse de récupération
+        fetchingRolePromise = (async () => {
+          try {
+            console.log('Récupération du rôle utilisateur...');
+            const response = await api.get('/users/role');
+            console.log('Rôle récupéré:', response.data);
+            
+            const { user } = get();
+            if (user) {
+              // Mettre à jour l'utilisateur avec son rôle
+              set({
+                user: {
+                  ...user,
+                  role: response.data
+                }
+              });
+            }
+            
+            return response.data;
+          } catch (err: any) {
+            console.error('Erreur lors de la récupération du rôle:', err);
+            // Ne pas définir d'erreur dans le state pour ne pas perturber l'interface
+            return null;
+          } finally {
+            // Réinitialiser la promesse de récupération
+            setTimeout(() => {
+              fetchingRolePromise = null;
+            }, 1000); // Attendre 1 seconde avant de permettre une nouvelle récupération
+          }
+        })();
+        
+        return fetchingRolePromise;
       },
 
       // Rafraîchir le token
       refreshToken: async () => {
-        const refreshToken = document.cookie
-          .split(';')
-          .find(c => c.trim().startsWith('refresh_token='))
-          ?.split('=')[1];
-          
-        if (!refreshToken) {
-          console.log('Pas de refresh token disponible');
-          // Pas de refresh token, déconnexion
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            loading: false
-          });
-          return null;
+        // Si un rafraîchissement est déjà en cours, retourner la promesse existante
+        if (refreshingPromise) {
+          console.log('Rafraîchissement déjà en cours, réutilisation de la promesse existante');
+          return refreshingPromise;
         }
         
-        try {
-          console.log('Tentative de rafraîchissement du token...');
-          const response = await axios.post(
-            `${API_URL}/auth/refresh_token`,
-            { refresh_token: refreshToken },
-            { withCredentials: true }
-          );
-          
-          console.log('Réponse du rafraîchissement:', response.data);
-          
-          // Le cookie access_token devrait être défini automatiquement par le backend
-          // Mais on le définit aussi côté client par sécurité
-          if (response.data.access_token) {
-            setCookie('access_token', response.data.access_token, {
-              'max-age': 900, // 15 minutes
-              'SameSite': 'Lax'
+        // Créer une nouvelle promesse de rafraîchissement
+        refreshingPromise = (async () => {
+          try {
+            console.log('Tentative de rafraîchissement du token...');
+            const response = await axios.post(
+              `${API_URL}/auth/refresh_token`,
+              {}, // Pas besoin d'envoyer le refresh_token, il sera lu depuis les cookies côté serveur
+              { withCredentials: true }
+            );
+            
+            console.log('Réponse du rafraîchissement:', response.data);
+            
+            // Stocker la date d'expiration pour pouvoir vérifier proactivement
+            if (response.data.expiration_access_token) {
+              const expirationDate = new Date(response.data.expiration_access_token);
+              localStorage.setItem('tokenExpiresAt', Math.floor(expirationDate.getTime() / 1000).toString());
+              console.log(`Nouvelle date d'expiration stockée: ${expirationDate.toISOString()}`);
+            }
+            
+            // Le backend définit déjà les cookies, pas besoin de les redéfinir ici
+            return response.data.access_token || null;
+          } catch (error) {
+            console.error('Erreur lors du rafraîchissement du token:', error);
+            // En cas d'échec, déconnexion
+            set({ 
+              user: null, 
+              isAuthenticated: false,
+              loading: false
             });
-            return response.data.access_token;
+            return null;
+          } finally {
+            // Réinitialiser la promesse de rafraîchissement
+            setTimeout(() => {
+              refreshingPromise = null;
+            }, 1000); // Attendre 1 seconde avant de permettre un nouveau rafraîchissement
           }
-          return null;
-        } catch (error) {
-          console.error('Erreur lors du rafraîchissement du token:', error);
-          // En cas d'échec, déconnexion
-          set({ 
-            user: null, 
-            isAuthenticated: false,
-            loading: false
-          });
-          return null;
-        }
+        })();
+        
+        return refreshingPromise;
       },
     }),
     {

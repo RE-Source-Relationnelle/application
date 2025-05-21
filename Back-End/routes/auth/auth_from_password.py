@@ -43,7 +43,7 @@ def auth_from_password():
 
         # Génération des timestamps
         current_time = datetime.utcnow()
-        access_token_expiration = current_time + timedelta(minutes=15)
+        access_token_expiration = current_time + timedelta(minutes=1)
         refresh_token_expiration = current_time + timedelta(days=7)
 
         # Génération des tokens
@@ -90,7 +90,7 @@ def auth_from_password():
             httponly=False, 
             secure=False,  
             samesite='Lax',
-            max_age=3600,
+            max_age=60,
             path='/'
         )
         
