@@ -13,6 +13,7 @@ const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
     if (diffInHours < 24) {
         return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
     } else {
@@ -109,7 +110,9 @@ const Feed = () => {
         loadInitialResources(5);
     }, []);
 
-    // Gestion du scroll infini à la manière d’Angular
+
+    // Gestion du scroll infini
+
     useEffect(() => {
         const handleScroll = () => {
             const position = window.innerHeight + window.scrollY;
@@ -223,3 +226,4 @@ const Feed = () => {
 };
 
 export default Feed;
+

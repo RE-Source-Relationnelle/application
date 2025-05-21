@@ -5,7 +5,7 @@ import useAuthStore from '../store/authStore';
 import { Resource } from '../types/types';
 import axios from 'axios';
 
-const ResourceDetails = () => {
+const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [resource, setResource] = useState<Resource | null>(null);
@@ -284,4 +284,4 @@ const ResourceDetails = () => {
     );
 };
 
-export default ResourceDetails;
+export default ResourceDetail;

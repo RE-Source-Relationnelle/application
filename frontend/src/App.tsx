@@ -8,7 +8,7 @@ import Profile from './views/user/Profile'
 import ProtectedRoute from './components/features/auth/ProtectedRoute'
 import AdminDashboard from './views/admin/AdminDashboard'
 import AdminRoute from './components/features/auth/AdminRoute'
-import ResourceDetails from './views/ResourceDetails'
+import ResourceDetail from './views/ResourceDetail'
 
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
           <Route path="/inscription" element={<Register />} />
           <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
-          <Route path="/feed/ResourceDetail/:id" element={<ResourceDetails />} />
+          <Route path="/feed/ResourceDetail/:id" element={<ResourceDetail />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
