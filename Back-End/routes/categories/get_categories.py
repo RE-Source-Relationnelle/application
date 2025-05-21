@@ -3,8 +3,10 @@ from config.database import get_db
 from bson import json_util
 import json
 from . import categories_bp
+from flask_cors import cross_origin
 
-@categories_bp.route('/', methods=['GET'])
+@categories_bp.route('/all_categories', methods=['GET'])
+@cross_origin(supports_credentials=True, origins=["http://localhost:3000"])
 def get_categories():
     """
     Récupère toutes les catégories de ressources

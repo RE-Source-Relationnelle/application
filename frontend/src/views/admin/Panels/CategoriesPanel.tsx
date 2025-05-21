@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import useCategoryStore from '../../../store/categoryStore';
-import useResourcesStore from '../../../store/resourcesStore';
 
 const CategoriesPanel = () => {
-    const { categories, loading: loadingCategories, error, fetchCategories } = useCategoryStore();
-    const { createCategory, deleteCategory, updateCategory } = useResourcesStore();
+    const { categories, loading: loadingCategories, error, fetchCategories, updateCategory, deleteCategory, createCategory } = useCategoryStore();
     const [newCategory, setNewCategory] = useState("");
     const [newCategoryDescription, setNewCategoryDescription] = useState("");
     const [showDescriptionField, setShowDescriptionField] = useState(false);
