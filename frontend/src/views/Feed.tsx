@@ -4,14 +4,16 @@ import axios from 'axios'
 
 import MainLayout from '../components/layout/MainLayout'
 import PostModal from '../components/features/PostModal'
+
 import useAuthStore from '../store/authStore'
+
 import { Resource } from '../types/types'
 
 const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 24) {
         return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
     } else {
@@ -108,7 +110,9 @@ const Feed = () => {
         loadInitialResources(5);
     }, []);
 
+
     // Gestion du scroll infini
+
     useEffect(() => {
         const handleScroll = () => {
             const position = window.innerHeight + window.scrollY;
@@ -139,7 +143,7 @@ const Feed = () => {
                 <div className="w-full mx-auto space-y-4 sm:px-0">
                     <div className="bg-white rounded-lg ring-gray-200 ring-1 p-3 sm:p-4 hidden sm:block">
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-3">
-                            <div 
+                            <div
                                 onClick={openPostModal}
                                 className="flex-1 py-2.5 px-3 bg-gray-100 hover:bg-gray-200 rounded-full text-sm sm:text-base text-gray-500 cursor-pointer"
                             >
@@ -222,3 +226,4 @@ const Feed = () => {
 };
 
 export default Feed;
+
