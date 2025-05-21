@@ -3,13 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import MainLayout from '../components/layout/MainLayout'
 import PostModal from '../components/features/PostModal'
 import useAuthStore from '../store/authStore'
-import useResourcesStore from '../store/resourcesStore'
 import { Resource } from '../types/types'
+import axios from 'axios'
 
 const Feed = () => {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false)
     const { user, fetchUserRole } = useAuthStore()
-    const { resources, loading, error, fetchResources } = useResourcesStore()
+    const [resources, setResources] = useState<Resource[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [viewedResources, setViewedResources] = useState<string[]>([])
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -19,10 +22,68 @@ const Feed = () => {
                 console.log('Rôle récupéré dans Feed')
             })
         }
-        
-        // Charger les ressources
-        fetchResources()
-    }, [user?.id, fetchResources])
+      
+        // Charger les ressources aléatoires
+        const fetchRandomResources = async () => {
+            try {
+                setLoading(true);
+                const resourcesPromises = Array(3).fill(null).map(() => 
+                    axios.get('http://localhost:5001/resources/randomressource', {
+                        withCredentials: true,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                );
+
+                const responses = await Promise.all(resourcesPromises);
+                const newResources = responses
+                    .map(response => response.data)
+                    .filter(resource => resource && !resource.message); // Filtrer les réponses "plus de ressources"
+
+                setResources(newResources);
+                setError(null);
+            } catch (err: any) {
+                console.error('Erreur lors de la récupération des ressources:', err);
+                if (err.response) {
+                    setError(err.response.data?.error || 'Erreur lors de la récupération des ressources');
+                } else if (err.request) {
+                    setError('Impossible de se connecter au serveur. Veuillez vérifier que le serveur est en cours d\'exécution.');
+                } else {
+                    setError('Une erreur est survenue lors de la récupération des ressources');
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRandomResources();
+    }, [user, fetchUserRole]);
+
+    // Ajouter les ressources vues à l'historique lors de l'actualisation de la page
+    useEffect(() => {
+        const addViewedResourcesToHistory = async () => {
+            for (const resourceId of viewedResources) {
+                try {
+                    await axios.post(`http://localhost:5001/resources/add_to_history/${resourceId}`, {}, {
+                        withCredentials: true,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    });
+                } catch (err) {
+                    console.error(`Erreur lors de l'ajout de la ressource ${resourceId} à l'historique:`, err);
+                }
+            }
+        };
+
+        if (viewedResources.length > 0) {
+            addViewedResourcesToHistory();
+        }
+    }, [viewedResources]);
+
 
     const handlePostSubmit = (content: string) => {
         if (content.trim()) {
@@ -56,7 +117,38 @@ const Feed = () => {
     }
 
     const handleResourceClick = (resourceId: string) => {
+        // Ajouter la ressource à la liste des ressources vues
+        setViewedResources(prev => [...prev, resourceId]);
+        // Naviguer vers la page de détails
         navigate(`/feed/ResourceDetail/${resourceId}`);
+    };
+
+    // Fonction pour obtenir les initiales de l'utilisateur
+    const getUserInitials = (name: string) => {
+        if (!name) return '?';
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    };
+
+    // Fonction pour générer une couleur de fond basée sur le nom
+    const getBackgroundColor = (name: string) => {
+        if (!name) return '#E5E7EB';
+        const colors = [
+            '#F87171', // rouge
+            '#60A5FA', // bleu
+            '#34D399', // vert
+            '#FBBF24', // jaune
+            '#A78BFA', // violet
+            '#F472B6', // rose
+            '#4ADE80', // vert clair
+            '#FB923C', // orange
+        ];
+        const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return colors[index % colors.length];
     };
 
     return (
@@ -108,7 +200,12 @@ const Feed = () => {
                                     onClick={() => handleResourceClick(resource._id)}
                                 >
                                     <div className="flex items-start">
-                                        <div className="w-12 h-12 rounded-full bg-gray-200 mr-2 sm:mr-3"></div>
+                                        <div 
+                                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg mr-2 sm:mr-3"
+                                            style={{ backgroundColor: getBackgroundColor(user?.nom || '') }}
+                                        >
+                                            {getUserInitials(user?.nom || '')}
+                                        </div>
                                         <div className="flex-1">
                                             <h3 className="font-semibold text-sm sm:text-base">{user?.nom || 'Anonyme'}</h3>
                                             <p className="text-xs text-gray-500">{user?.role?.nom_role || 'Utilisateur'}</p>
