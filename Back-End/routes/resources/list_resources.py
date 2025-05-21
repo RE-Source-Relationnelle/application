@@ -3,9 +3,11 @@ from config.database import get_db
 from . import resources_bp
 from bson import ObjectId
 from datetime import datetime
+from flask_cors import cross_origin
 
 
 @resources_bp.route('/', methods=['GET'])
+@cross_origin(supports_credentials=True, origins=["http://localhost:3000"])
 def list_resources():
     """
     Route pour lister toutes les ressources

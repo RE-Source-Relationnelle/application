@@ -52,16 +52,30 @@ def create_resource():
         resource = {
             "titre": data['title'],
             "contenu": data['content'],
-            "categorie": data['categorie'],
+            "id_categorie": ObjectId(data['categorie']) if data['categorie'] else None,
             "id_publieur": ObjectId(user_id) if isinstance(user_id, str) else user_id,
             "date_publication": {
                 "date": now.isoformat() + "Z"
-            }
+            },
+            "createdAt": now,
+            "approved": False  # Par défaut, la ressource n'est pas approuvée
         }
 
-        result = db.ressources_en_attente.insert_one(resource)
-        resource['_id'] = result.inserted_id
+        # Si une catégorie est spécifiée, vérifier qu'elle existe
+        if data['categorie']:
+            category = db.categories.find_one({"_id": ObjectId(data['categorie'])})
+            if not category:
+                print(f"❌ Catégorie non trouvée pour l'ID: {data['categorie']}")
+                return jsonify({"error": "Catégorie non trouvée"}), 404
 
+        # Insérer dans la collection des ressources en attente
+        result = db.ressource.insert_one(resource)
+        resource['_id'] = result.inserted_id
+        
+        # Copier la ressource dans la collection des ressources en attente
+        resource_en_attente = resource.copy()
+        db.ressources_en_attente.insert_one(resource_en_attente)
+        
         # Sanitize
         def sanitize(doc):
             for key, value in doc.items():

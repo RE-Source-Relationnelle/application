@@ -9,7 +9,13 @@ from routes.categories import categories_bp
 from routes.admin_center import admin_bp
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, 
+     supports_credentials=True, 
+     origins=["http://localhost:3000"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization", "Accept", "token"],
+     expose_headers=["Content-Type", "Authorization"],
+     max_age=600)
 
 print("Initializing database connection...")
 db = get_db()
