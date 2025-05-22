@@ -46,3 +46,13 @@ export interface Category {
     description?: string;
     resourceCount?: number;
 }
+
+export interface Comment {
+    _id: string;
+    id_user: string;
+    id_ressource: string;
+    contenu: string;
+    format: string;
+    date_publication: string;
+    createdAt: string;
+}
