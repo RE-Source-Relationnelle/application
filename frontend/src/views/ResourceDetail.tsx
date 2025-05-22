@@ -209,6 +209,7 @@ const ResourceDetail = () => {
             console.log('URL:', `http://localhost:5001/resources/comments/${id}`);
             console.log('Données envoyées:', { content: newComment });
             
+
             const response = await axios.post(`http://localhost:5001/resources/comments/${id}`, 
                 { content: newComment },
                 {
@@ -427,11 +428,13 @@ const ResourceDetail = () => {
                                                     <span className="font-semibold text-sm">{user?.nom || 'Anonyme'}</span>
                                                     <span className="text-xs text-gray-500">{user?.role?.nom_role || 'Utilisateur'}</span>
                                                     <span className="text-xs text-gray-500">•</span>
+
                                                     <span className="text-xs text-gray-500">
                                                         {formatDate(comment.date_publication || comment.created_at)}
                                                     </span>
                                                 </div>
                                                 <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
+
                                             </div>
                                         </div>
                                     </div>

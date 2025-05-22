@@ -65,4 +65,5 @@ def add_comment(resource_id):
         print(f"❌ Erreur lors de la création du commentaire: {str(e)}")
         import traceback
         print(f"Stack trace: {traceback.format_exc()}")
+
         return jsonify({"error": f"Erreur lors de la création du commentaire: {str(e)}"}), 500 
