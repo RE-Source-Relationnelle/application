@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import useAuthStore from '../store/authStore';
-import { Resource } from '../types/types';
+import { Resource, Comment } from '../types/types';
 import axios from 'axios';
 
 const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
+    const { id_resource } = useParams<{ id_resource: string }>();
     const navigate = useNavigate();
     const [resource, setResource] = useState<Resource | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [newComment, setNewComment] = useState('');
     const { user } = useAuthStore();
+    const [comments, setComments] = useState<Comment[]>([]);
+    const [loadingComments, setLoadingComments] = useState(false);
+    const [commentError, setCommentError] = useState<string | null>(null);
 
     // Fonction pour obtenir les initiales de l'utilisateur
     const getUserInitials = (name: string) => {
@@ -84,32 +88,155 @@ const ResourceDetail = () => {
         fetchResource();
     }, [id]);
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-        
-        if (diffInHours < 24) {
-            return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
-        } else {
-            return date.toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
+    // Charger les commentaires quand la ressource est chargée
+    useEffect(() => {
+        console.log('useEffect resource changed:', resource);
+        if (resource) {
+            console.log('Fetching comments for resource:', resource._id);
+            fetchComments();
+        }
+    }, [resource]);
+
+    // Fonction pour charger les commentaires
+    const fetchComments = async () => {
+        try {
+            console.log('Fetching comments for resource:', id);
+            setLoadingComments(true);
+            setCommentError(null);
+            const response = await axios.get(`http://localhost:5001/resources/comments/${id}`, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
             });
+            console.log('Comments response complète:', JSON.stringify(response.data, null, 2));
+            // Log pour déboguer les dates
+            response.data.forEach((comment: Comment, index: number) => {
+                console.log(`Comment ${index}:`, {
+                    id: comment._id,
+                    date: comment.date_publication || comment.created_at,
+                    type: typeof (comment.date_publication || comment.created_at),
+                    raw: JSON.stringify(comment.date_publication || comment.created_at)
+                });
+            });
+            setComments(response.data);
+        } catch (err: any) {
+            console.error('Erreur lors de la récupération des commentaires:', err);
+            setCommentError('Impossible de charger les commentaires');
+        } finally {
+            setLoadingComments(false);
+        }
+    };
+
+    // Charger les commentaires au chargement du composant
+    useEffect(() => {
+        console.log('Component mounted, fetching comments');
+        fetchComments();
+    }, []);
+
+    const formatDate = (dateObj: { $date: string } | string | undefined) => {
+        console.log('Formatting date input (raw):', JSON.stringify(dateObj));
+        console.log('Type of date input:', typeof dateObj);
+        
+        if (!dateObj) {
+            console.log('Date object is null or undefined');
+            return 'À l\'instant';
+        }
+        
+        try {
+            // Extraire la date du format MongoDB
+            let dateString: string;
+            if (typeof dateObj === 'object' && dateObj !== null) {
+                console.log('Date is an object:', JSON.stringify(dateObj));
+                if ('$date' in dateObj) {
+                    dateString = dateObj.$date;
+                    console.log('Extracted $date:', dateString);
+                } else {
+                    console.log('No $date property found in object');
+                    return 'À l\'instant';
+                }
+            } else {
+                dateString = dateObj as string;
+                console.log('Date is a string:', dateString);
+            }
+
+            // Gérer le format ISO avec fuseau horaire
+            const date = new Date(dateString);
+            console.log('Parsed date:', date.toISOString());
+            
+            if (isNaN(date.getTime())) {
+                console.error('Invalid date:', dateString);
+                return 'À l\'instant';
+            }
+
+            const now = new Date();
+            const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+            
+            if (diffInHours < 24) {
+                if (diffInHours < 1) {
+                    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+                    return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+                }
+                return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+            } else {
+                return date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors du formatage de la date:', error);
+            return 'À l\'instant';
         }
     };
 
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || !id) return;
 
         try {
-            // TODO: Implémenter l'envoi du commentaire à l'API
-            console.log('Nouveau commentaire:', newComment);
+            // Vérifier si l'utilisateur est connecté
+            if (!user) {
+                setCommentError('Vous devez être connecté pour commenter');
+                return;
+            }
+
+            console.log('Envoi du commentaire avec le token...');
+            console.log('URL:', `http://localhost:5001/resources/comments/${id}`);
+            console.log('Données envoyées:', { content: newComment });
+            
+            const response = await axios.post(`http://localhost:5001/resources/comments/${id}`, 
+                { content: newComment },
+                {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                }
+            );
+
+            console.log('Réponse complète du serveur:', response.data);
+            console.log('Status:', response.status);
+            console.log('Headers:', response.headers);
+
+            // Ajouter le nouveau commentaire à la liste
+            setComments(prev => [response.data, ...prev]);
             setNewComment('');
-        } catch (err) {
+            setCommentError(null);
+        } catch (err: any) {
             console.error('Erreur lors de l\'envoi du commentaire:', err);
+            console.error('Status:', err.response?.status);
+            console.error('Data:', err.response?.data);
+            if (err.response?.status === 401) {
+                setCommentError('Vous devez être connecté pour commenter');
+            } else {
+                setCommentError('Impossible d\'envoyer le commentaire');
+            }
         }
     };
 
@@ -272,11 +399,45 @@ const ResourceDetail = () => {
                         </form>
 
                         {/* Liste des commentaires */}
-                        <div className="space-y-4">
+                        {loadingComments ? (
+                            <div className="flex justify-center items-center h-32">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                            </div>
+                        ) : commentError ? (
+                            <div className="text-red-500 text-center py-4">
+                                {commentError}
+                            </div>
+                        ) : comments.length === 0 ? (
                             <div className="text-center text-gray-500 py-4">
                                 Aucun commentaire pour le moment
                             </div>
-                        </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {comments.map((comment) => (
+                                    <div key={comment._id} className="flex space-x-4">
+                                        <div 
+                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-base flex-shrink-0"
+                                            style={{ backgroundColor: getBackgroundColor(user?.nom || '') }}
+                                        >
+                                            {getUserInitials(user?.nom || '')}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="bg-gray-50 rounded-lg p-3">
+                                                <div className="flex items-center space-x-2 mb-1">
+                                                    <span className="font-semibold text-sm">{user?.nom || 'Anonyme'}</span>
+                                                    <span className="text-xs text-gray-500">{user?.role?.nom_role || 'Utilisateur'}</span>
+                                                    <span className="text-xs text-gray-500">•</span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {formatDate(comment.date_publication || comment.created_at)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -285,3 +446,4 @@ const ResourceDetail = () => {
 };
 
 export default ResourceDetail;
+
