@@ -18,7 +18,7 @@ interface ResourceDetailsState {
   resetState: () => void;
 }
 
-const useResourceDetailsStore = create<ResourceDetailsState>((set, get) => ({
+const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
   // États initiaux
   resource: null,
   comments: [],
