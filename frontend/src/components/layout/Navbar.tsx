@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, User, PlusCircle, Settings, ChevronDown, Menu } from 'lucide-react';
+import { Search, User, PlusCircle, Settings, ChevronDown, Menu, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../../store/authStore';
 import ResourceModal from '../features/ResourceModal';
@@ -175,6 +175,15 @@ const Navbar = () => {
                     </button>
                   </div>
                 </div>
+                
+                {/* Logout Button */}
+                <button 
+                  onClick={handleLogout} 
+                  className="p-2 text-gray-600 hover:text-primary" 
+                  title="Déconnexion"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
               </div>
             ) : (
               <div className="hidden md:block">
@@ -186,17 +195,6 @@ const Navbar = () => {
                 </Link>
               </div>
             )}
-
-            {/* Mobile Menu Button */}
-            <button
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Ouvrir le menu principal</span>
-              <Menu className="block h-6 w-6" aria-hidden="true" />
-            </button>
           </div>
         </div>
       </div>
@@ -207,6 +205,44 @@ const Navbar = () => {
           <SearchBar isMobile={true} />
         </div>
       )}
+      
+      {/* Mobile Menu (conditionally rendered) */}
+      <div className="md:hidden border-t border-gray-200 py-2 px-4" id="mobile-menu">
+        {isAuthenticated ? (
+          <div className="space-y-1 pt-2 pb-3">
+            <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Mon profil
+            </Link>
+            {isAdmin && (
+              <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+                Administration
+              </Link>
+            )}
+            <button 
+              onClick={() => setIsResourceModalOpen(true)}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary"
+            >
+              Créer une ressource
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary flex items-center"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-1 pt-2 pb-3">
+            <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Connexion
+            </Link>
+            <Link to="/inscription" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Inscription
+            </Link>
+          </div>
+        )}
+      </div>
       
       {/* Modal de création de ressource */}
       <ResourceModal 
