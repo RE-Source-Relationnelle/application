@@ -169,10 +169,9 @@ const ResourceDetail = () => {
                     <div className="px-4 sm:px-4 pb-2">
                         <h2 className="text-2xl font-semibold mb-4">{resource.titre}</h2>
                         <div 
-                            className="text-sm sm:text-base mb-3 prose prose-lg max-w-none"
-                        >
-                            {resource.contenu}
-                        </div>
+                            className="text-sm sm:text-base mb-3 content-container"
+                            dangerouslySetInnerHTML={{ __html: resource.contenu }}
+                        />
                         {resource.approved && (
                             <div className="text-xs text-green-600 mb-2">
                                 ✓ Ressource validée
