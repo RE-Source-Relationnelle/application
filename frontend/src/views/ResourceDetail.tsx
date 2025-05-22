@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
-import useAuthStore from '../store/authStore';
+import useAuthStore, { api } from '../store/authStore';
 import { Resource, Comment } from '../types/types';
 import axios from 'axios';
 
@@ -25,24 +25,7 @@ const ResourceDetail = () => {
             .map(word => word[0])
             .join('')
             .toUpperCase()
-            .slice(0, 2);
-    };
-
-    // Fonction pour générer une couleur de fond basée sur le nom
-    const getBackgroundColor = (name: string) => {
-        if (!name) return '#E5E7EB';
-        const colors = [
-            '#F87171', // rouge
-            '#60A5FA', // bleu
-            '#34D399', // vert
-            '#FBBF24', // jaune
-            '#A78BFA', // violet
-            '#F472B6', // rose
-            '#4ADE80', // vert clair
-            '#FB923C', // orange
-        ];
-        const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return colors[index % colors.length];
+            .slice(0, 1);
     };
 
     useEffect(() => {
@@ -195,8 +178,10 @@ const ResourceDetail = () => {
 
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newComment.trim() || !id) return;
+        if (!newComment.trim()) return;
 
+        setCommentError(null);
+        
         try {
             // Vérifier si l'utilisateur est connecté
             if (!user) {
@@ -205,19 +190,13 @@ const ResourceDetail = () => {
             }
 
             console.log('Envoi du commentaire avec le token...');
-            console.log('URL:', `http://localhost:5001/resources/comments/${id}`);
+            console.log('URL:', `resources/comments/${id}`);
             console.log('Données envoyées:', { content: newComment });
             
-
-            const response = await axios.post(`http://localhost:5001/resources/comments/${id}`, 
-                { content: newComment },
-                {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                }
+            // Utiliser l'instance API configurée dans authStore
+            // qui inclut automatiquement les tokens et les intercepteurs
+            const response = await api.post(`resources/comments/${id}`, 
+                { content: newComment }
             );
 
             console.log('Réponse complète du serveur:', response.data);
@@ -273,7 +252,7 @@ const ResourceDetail = () => {
 
     return (
         <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
-            <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto px-4 pb-4">
                 <div className="bg-white rounded-lg ring-gray-200 ring-1 sm:rounded-lg w-full">
                     {/* En-tête du post */}
                     <div className="p-3 px-4 sm:p-4">
@@ -443,4 +422,3 @@ const ResourceDetail = () => {
 };
 
 export default ResourceDetail;
-
