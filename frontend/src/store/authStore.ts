@@ -76,13 +76,11 @@ api.interceptors.response.use(
     
     // Si l'erreur est 401 (non autorisé) et que la requête n'a pas déjà été retentée
     if (error.response?.status === 401 && !originalRequest._retry) {
-      console.log('Erreur 401 interceptée, tentative de rafraîchissement du token...');
+      console.log('Erreur 401 interceptée, tentative de rafraîchissement du token...', originalRequest.url);
       
       // Marquer la requête comme étant retentée
       originalRequest._retry = true;
       
-      // Utiliser la fonction refreshToken du store pour éviter la duplication de code
-      // et assurer une gestion cohérente du rafraîchissement
       try {
         // Si un rafraîchissement est déjà en cours, attendre qu'il se termine
         if (refreshingPromise) {
@@ -91,6 +89,14 @@ api.interceptors.response.use(
           
           if (result) {
             console.log('Token rafraîchi avec succès par un autre processus, nouvelle tentative de la requête originale');
+            
+            // Récupérer le nouveau token depuis les cookies
+            const newToken = getCookie('access_token');
+            if (newToken && originalRequest.headers) {
+              // Mettre à jour le token dans la requête originale
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            }
+            
             return api(originalRequest);
           } else {
             console.log('Échec du rafraîchissement du token par un autre processus');
@@ -103,6 +109,14 @@ api.interceptors.response.use(
         
         if (result) {
           console.log('Token rafraîchi avec succès, nouvelle tentative de la requête originale');
+          
+          // Récupérer le nouveau token depuis les cookies
+          const newToken = getCookie('access_token');
+          if (newToken && originalRequest.headers) {
+            // Mettre à jour le token dans la requête originale
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          }
+          
           return api(originalRequest);
         } else {
           console.log('Échec du rafraîchissement du token');

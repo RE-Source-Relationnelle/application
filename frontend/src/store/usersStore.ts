@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from './authStore';
 
 // Définition des types
 export interface User {
@@ -25,12 +25,6 @@ interface UserStore {
   updateUser: (userId: string, userData: Partial<User>) => Promise<User>;
   deleteUser: (userId: string) => Promise<void>;
 }
-
-// Configuration de l'API
-const api = axios.create({
-  baseURL: "http://localhost:5001",
-  withCredentials: true,
-});
 
 // Création du store
 const useUsersStore = create<UserStore>((set) => ({
