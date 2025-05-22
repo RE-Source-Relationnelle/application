@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import useCategoryStore from '../../../store/categoryStore';
 
 const CategoriesPanel = () => {
-    const { categories, loading: loadingCategories, error, fetchCategories, updateCategory, deleteCategory, createCategory } = useCategoryStore();
+    const { categories, loading: loadingCategories, error, fetchCategories, updateCategory, createCategory } = useCategoryStore();
     const [newCategory, setNewCategory] = useState("");
     const [newCategoryDescription, setNewCategoryDescription] = useState("");
     const [showDescriptionField, setShowDescriptionField] = useState(false);
@@ -38,9 +38,16 @@ const CategoriesPanel = () => {
         }
         
         if (confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
-            await deleteCategory(id);
-            // Rafraîchir les catégories après la suppression
-            fetchCategories();
+            try {
+                const { api } = await import('../../../store/authStore');
+                await api.delete(`/categories/delete_category/${id}`);
+                
+                alert("Catégorie supprimée avec succès");
+                fetchCategories();
+            } catch (error: any) {
+                console.error("Erreur lors de la suppression:", error);
+                alert(`Erreur lors de la suppression: ${error.message}`);
+            }
         }
     };
     
