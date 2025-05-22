@@ -133,7 +133,7 @@ const Feed = () => {
         }
     }
 
-    const handleResourceClick = (id: string) => navigate(`/feed/ResourceDetail/${id}`);
+    const handleResourceClick = (id: string) => navigate(`/feed/ressource/${id}`);
     const openPostModal = () => setIsPostModalOpen(true);
     const closePostModal = () => setIsPostModalOpen(false);
 

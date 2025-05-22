@@ -20,7 +20,7 @@ function App() {
           <Route path="/inscription" element={<Register />} />
           <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
           <Route path="/feed" element={<Feed />} />
-          <Route path="/feed/ResourceDetail/:id" element={<ResourceDetail />} />
+          <Route path="/feed/ressource/:id" element={<ResourceDetail />} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
