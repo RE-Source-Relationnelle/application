@@ -12,16 +12,18 @@ interface ToastProps {
 
 const Toast = ({ message, type = 'info', duration = 5000, onClose }: ToastProps) => {
   const [isVisible, setIsVisible] = useState(true);
-
+  
+  // MODE DESIGN : Commentez ce useEffect pour désactiver le timeout automatique
+  // et décommentez-le quand vous avez terminé le design
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Attendre la fin de l'animation avant de fermer
+      setTimeout(onClose, 300);
     }, duration);
 
     return () => clearTimeout(timer);
   }, [duration, onClose]);
-
+  
   const bgColor = {
     success: 'bg-green-100 border-green-500 text-green-800',
     error: 'bg-red-100 border-red-500 text-red-800',

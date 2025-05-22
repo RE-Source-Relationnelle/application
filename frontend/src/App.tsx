@@ -10,7 +10,9 @@ import AdminDashboard from './views/admin/AdminDashboard'
 import AdminRoute from './components/features/auth/AdminRoute'
 import ResourceDetail from './views/ResourceDetail'
 import { ToastProvider } from './contexts/ToastContext'
+import ToastTester from './components/ui/ToastTester'
 
+const SHOW_TOAST_TESTER = false;
 
 function App() {
   return (
@@ -26,6 +28,9 @@ function App() {
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>
+          
+          {/* Testeur de toasts - à supprimer en production */}
+          {SHOW_TOAST_TESTER && <ToastTester />}
         </BaseLayout>
       </ToastProvider>
     </Router>
