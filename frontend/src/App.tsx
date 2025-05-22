@@ -11,6 +11,7 @@ import AdminRoute from './components/features/auth/AdminRoute'
 import ResourceDetail from './views/ResourceDetail'
 import { ToastProvider } from './contexts/ToastContext'
 import ToastTester from './components/ui/ToastTester'
+import './styles/content-styles.css' // Importer les styles pour le contenu WYSIWYG
 
 const SHOW_TOAST_TESTER = false;
 
