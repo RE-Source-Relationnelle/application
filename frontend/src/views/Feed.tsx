@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import MainLayout from '../components/layout/MainLayout'
 import PostModal from '../components/features/PostModal'
 import useAuthStore from '../store/authStore'
-import useResourceRandomStore from '../store/resourceRandom'
+import useResourceRandomStore from '../store/resourceRandomStore'
 import { Heart, MessageSquareText, Share2, ChevronDown } from 'lucide-react'
 
 // Fonction pour formater la date

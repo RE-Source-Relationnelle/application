@@ -96,14 +96,12 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     if (!publisherId) return;
     
     try {
-      // Vérifier si nous sommes en mode développement
       const isDev = process.env.NODE_ENV === 'development';
       
       if (isDev) {
         console.log(`Tentative de récupération de l'auteur avec ID: ${publisherId}`);
       }
       
-      // Vérifier si l'utilisateur est admin pour utiliser la route admin
       const currentUser = localStorage.getItem('auth-store');
       let isAdmin = false;
       
@@ -119,13 +117,10 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         }
       }
       
-      // Si l'utilisateur est admin, on peut essayer d'utiliser la route admin
       if (isAdmin) {
         try {
-          // Utiliser la route admin qui liste tous les utilisateurs
           const response = await api.get('/admin/get_users');
           if (response.data && Array.isArray(response.data)) {
-            // Trouver l'utilisateur correspondant à l'ID du publieur
             const authorData = response.data.find(user => user._id === publisherId);
             
             if (authorData) {
@@ -138,8 +133,6 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         }
       }
       
-      // Si on n'a pas pu récupérer l'auteur via la route admin ou si l'utilisateur n'est pas admin,
-      // on utilise un auteur par défaut avec l'ID du publieur
       set({ 
         author: {
           id: publisherId,
@@ -152,7 +145,6 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     } catch (error) {
       console.error(`Erreur lors de la récupération de l'auteur:`, error);
       
-      // Définir un auteur par défaut en cas d'erreur
       set({ 
         author: {
           id: publisherId,
@@ -169,21 +161,17 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     if (!categoryId) return;
     
     try {
-      // Récupérer les catégories depuis le store
       const categoryStore = useCategoryStore.getState();
       
-      // Si les catégories ne sont pas encore chargées, les récupérer
       if (categoryStore.categories.length === 0) {
         await categoryStore.fetchCategories();
       }
       
-      // Chercher la catégorie correspondante
       const category = categoryStore.categories.find(cat => cat._id === categoryId);
       
       if (category) {
         set({ category });
       } else {
-        // Si la catégorie n'est pas trouvée dans le store, essayer de la récupérer directement
         try {
           const response = await api.get(`/categories/category/${categoryId}`);
           if (response.data) {
@@ -213,21 +201,17 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
       
       console.log('Commentaires récupérés:', response.data);
       
-      // Trier les commentaires par date (les plus récents d'abord)
       const sortedComments = response.data.sort((a: Comment, b: Comment) => {
-        // Fonction pour extraire la date à partir de différents formats
         const getTimestamp = (comment: Comment): number => {
           const dateValue = comment.date_publication || comment.created_at;
           
           if (!dateValue) return 0;
           
           if (typeof dateValue === 'object' && '$date' in dateValue) {
-            // Format MongoDB { $date: string }
             return new Date(dateValue.$date).getTime();
           }
           
           if (typeof dateValue === 'string') {
-            // Format string
             return new Date(dateValue).getTime();
           }
           
@@ -277,7 +261,6 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
       
       console.log('Réponse complète du serveur:', response.data);
       
-      // Ajouter le nouveau commentaire à la liste
       set(state => ({ 
         comments: [response.data, ...state.comments],
         commentError: null
