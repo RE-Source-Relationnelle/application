@@ -7,7 +7,6 @@ import axios from 'axios';
 
 const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
-    const { id_resource } = useParams<{ id_resource: string }>();
     const navigate = useNavigate();
     const [resource, setResource] = useState<Resource | null>(null);
     const [loading, setLoading] = useState(true);
@@ -280,8 +279,7 @@ const ResourceDetail = () => {
                     <div className="p-3 px-4 sm:p-4">
                         <div className="flex items-start">
                             <div 
-                                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg mr-2 sm:mr-3"
-                                style={{ backgroundColor: getBackgroundColor(user?.nom || '') }}
+                                className="w-12 h-12 rounded-full flex items-center justify-center bg-primary/20 text-primary font-semibold text-lg mr-2 sm:mr-3"
                             >
                                 {getUserInitials(user?.nom || '')}
                             </div>
@@ -374,23 +372,22 @@ const ResourceDetail = () => {
                         <form onSubmit={handleCommentSubmit} className="mb-6">
                             <div className="flex items-start space-x-4">
                                 <div 
-                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-base flex-shrink-0"
-                                    style={{ backgroundColor: getBackgroundColor(user?.nom || '') }}
+                                    className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/20 text-primary font-semibold text-base flex-shrink-0"
                                 >
                                     {getUserInitials(user?.nom || '')}
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 ring-1 ring-gray-200 rounded-md">
                                     <textarea
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Ajouter un commentaire..."
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                        rows={3}
+                                        className="w-full p-3 focus:outline-none bg-transparent"
+                                        rows={0}
                                     />
-                                    <div className="mt-2 flex justify-end">
+                                    <div className="mt-2 flex justify-end pr-2 pb-2">
                                         <button
                                             type="submit"
-                                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                                         >
                                             Commenter
                                         </button>
@@ -417,17 +414,14 @@ const ResourceDetail = () => {
                                 {comments.map((comment) => (
                                     <div key={comment._id} className="flex space-x-4">
                                         <div 
-                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-base flex-shrink-0"
-                                            style={{ backgroundColor: getBackgroundColor(user?.nom || '') }}
+                                            className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold text-base flex-shrink-0"
                                         >
                                             {getUserInitials(user?.nom || '')}
                                         </div>
                                         <div className="flex-1">
                                             <div className="bg-gray-50 rounded-lg p-3">
                                                 <div className="flex items-center space-x-2 mb-1">
-                                                    <span className="font-semibold text-sm">{user?.nom || 'Anonyme'}</span>
-                                                    <span className="text-xs text-gray-500">{user?.role?.nom_role || 'Utilisateur'}</span>
-                                                    <span className="text-xs text-gray-500">•</span>
+                                                    <span className="font-semibold text-sm">{user?.nom || 'Anonyme'}</span>                                                    <span className="text-xs text-gray-500">•</span>
 
                                                     <span className="text-xs text-gray-500">
                                                         {formatDate(comment.date_publication || comment.created_at)}
