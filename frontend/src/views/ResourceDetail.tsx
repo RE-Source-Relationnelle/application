@@ -1,224 +1,97 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
-import useAuthStore, { api } from '../store/authStore';
-import { Resource, Comment } from '../types/types';
-import axios from 'axios';
+import useAuthStore from '../store/authStore';
+import useResourceDetailsStore from '../store/resourceDetailsStore';
+import { Heart, Share2, MessageSquareText } from 'lucide-react';
 
 const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
-    const [resource, setResource] = useState<Resource | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [newComment, setNewComment] = useState('');
     const { user } = useAuthStore();
-    const [comments, setComments] = useState<Comment[]>([]);
-    const [loadingComments, setLoadingComments] = useState(false);
-    const [commentError, setCommentError] = useState<string | null>(null);
+    
+    // Utiliser le store pour les détails de la ressource et les commentaires
+    const { 
+        resource, 
+        comments, 
+        loading, 
+        loadingComments, 
+        error, 
+        commentError,
+        fetchResource,
+        fetchComments,
+        addComment,
+        resetState
+    } = useResourceDetailsStore();
 
-    // Fonction pour obtenir les initiales de l'utilisateur
-    const getUserInitials = (name: string) => {
-        if (!name) return '?';
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 1);
-    };
-
+    // Charger la ressource si l'ID est disponible
     useEffect(() => {
-        const fetchResource = async () => {
-            if (!id) {
-                setError('ID de ressource manquant');
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const response = await axios.get(`http://localhost:5001/resources/ressource=${id}`, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (response.data) {
-                    console.log('Ressource récupérée:', response.data);
-                    setResource(response.data);
-                    setError(null);
-                } else {
-                    setError('Ressource non trouvée');
-                }
-            } catch (err: any) {
-                console.error('Erreur lors de la récupération de la ressource:', err);
-                if (err.response) {
-                    setError(err.response.data?.error || 'Erreur lors de la récupération de la ressource');
-                } else if (err.request) {
-                    setError('Impossible de se connecter au serveur. Veuillez vérifier que le serveur est en cours d\'exécution.');
-                } else {
-                    setError('Une erreur est survenue lors de la récupération de la ressource');
-                }
-            } finally {
-                setLoading(false);
-            }
+        if (id) {
+            fetchResource(id);
+        }
+        
+        return () => {
+            resetState();
         };
-
-        fetchResource();
-    }, [id]);
+    }, [id, fetchResource, resetState]);
 
     // Charger les commentaires quand la ressource est chargée
     useEffect(() => {
-        console.log('useEffect resource changed:', resource);
-        if (resource) {
-            console.log('Fetching comments for resource:', resource._id);
-            fetchComments();
+        if (resource && id) {
+            fetchComments(id);
         }
-    }, [resource]);
+    }, [resource, id, fetchComments]);
 
-    // Fonction pour charger les commentaires
-    const fetchComments = async () => {
-        try {
-            console.log('Fetching comments for resource:', id);
-            setLoadingComments(true);
-            setCommentError(null);
-            const response = await axios.get(`http://localhost:5001/resources/comments/${id}`, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
+    // Formater la date pour l'affichage
+    const formatDate = (dateValue: string | { $date: string } | undefined) => {
+        if (!dateValue) return 'Date inconnue';
+        
+        let dateString: string;
+        if (typeof dateValue === 'object' && '$date' in dateValue) {
+            dateString = dateValue.$date;
+        } else {
+            dateString = dateValue as string;
+        }
+        
+        const date = new Date(dateString);
+        
+        if (isNaN(date.getTime())) {
+            return 'Date invalide';
+        }
+        
+        const now = new Date();
+        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+        
+        if (diffInHours < 24) {
+            return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+        } else {
+            return date.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            console.log('Comments response complète:', JSON.stringify(response.data, null, 2));
-            // Log pour déboguer les dates
-            response.data.forEach((comment: Comment, index: number) => {
-                console.log(`Comment ${index}:`, {
-                    id: comment._id,
-                    date: comment.date_publication || comment.created_at,
-                    type: typeof (comment.date_publication || comment.created_at),
-                    raw: JSON.stringify(comment.date_publication || comment.created_at)
-                });
-            });
-            setComments(response.data);
-        } catch (err: any) {
-            console.error('Erreur lors de la récupération des commentaires:', err);
-            setCommentError('Impossible de charger les commentaires');
-        } finally {
-            setLoadingComments(false);
         }
     };
 
-    // Charger les commentaires au chargement du composant
-    useEffect(() => {
-        console.log('Component mounted, fetching comments');
-        fetchComments();
-    }, []);
-
-    const formatDate = (dateObj: { $date: string } | string | undefined) => {
-        console.log('Formatting date input (raw):', JSON.stringify(dateObj));
-        console.log('Type of date input:', typeof dateObj);
-        
-        if (!dateObj) {
-            console.log('Date object is null or undefined');
-            return 'À l\'instant';
-        }
-        
-        try {
-            // Extraire la date du format MongoDB
-            let dateString: string;
-            if (typeof dateObj === 'object' && dateObj !== null) {
-                console.log('Date is an object:', JSON.stringify(dateObj));
-                if ('$date' in dateObj) {
-                    dateString = dateObj.$date;
-                    console.log('Extracted $date:', dateString);
-                } else {
-                    console.log('No $date property found in object');
-                    return 'À l\'instant';
-                }
-            } else {
-                dateString = dateObj as string;
-                console.log('Date is a string:', dateString);
-            }
-
-            // Gérer le format ISO avec fuseau horaire
-            const date = new Date(dateString);
-            console.log('Parsed date:', date.toISOString());
-            
-            if (isNaN(date.getTime())) {
-                console.error('Invalid date:', dateString);
-                return 'À l\'instant';
-            }
-
-            const now = new Date();
-            const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-            
-            if (diffInHours < 24) {
-                if (diffInHours < 1) {
-                    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-                    return `Il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
-                }
-                return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
-            } else {
-                return date.toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-        } catch (error) {
-            console.error('Erreur lors du formatage de la date:', error);
-            return 'À l\'instant';
-        }
-    };
-
+    // Gestion de soumission du commentaire
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newComment.trim()) return;
-
-        setCommentError(null);
         
-        try {
-            // Vérifier si l'utilisateur est connecté
-            if (!user) {
-                setCommentError('Vous devez être connecté pour commenter');
-                return;
-            }
-
-            console.log('Envoi du commentaire avec le token...');
-            console.log('URL:', `resources/comments/${id}`);
-            console.log('Données envoyées:', { content: newComment });
-            
-            // Utiliser l'instance API configurée dans authStore
-            // qui inclut automatiquement les tokens et les intercepteurs
-            const response = await api.post(`resources/comments/${id}`, 
-                { content: newComment }
-            );
-
-            console.log('Réponse complète du serveur:', response.data);
-            console.log('Status:', response.status);
-            console.log('Headers:', response.headers);
-
-            // Ajouter le nouveau commentaire à la liste
-            setComments(prev => [response.data, ...prev]);
+        if (!user) {
+            return;
+        }
+        
+        const result = await addComment(id || '', newComment);
+        
+        if (result) {
             setNewComment('');
-            setCommentError(null);
-        } catch (err: any) {
-            console.error('Erreur lors de l\'envoi du commentaire:', err);
-            console.error('Status:', err.response?.status);
-            console.error('Data:', err.response?.data);
-            if (err.response?.status === 401) {
-                setCommentError('Vous devez être connecté pour commenter');
-            } else {
-                setCommentError('Impossible d\'envoyer le commentaire');
-            }
         }
     };
 
+    // Gestion de chargement
     if (loading) {
         return (
             <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
@@ -229,6 +102,7 @@ const ResourceDetail = () => {
         );
     }
 
+    // Gestion d'erreur
     if (error) {
         return (
             <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
@@ -240,16 +114,19 @@ const ResourceDetail = () => {
         );
     }
 
+    // Gestion de ressource non trouvée
     if (!resource) {
         return (
             <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
-                <div className="text-center py-8 text-gray-500">
-                    Ressource non trouvée
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded relative mx-4 my-4" role="alert">
+                    <strong className="font-bold">Attention ! </strong>
+                    <span className="block sm:inline">Ressource non trouvée.</span>
                 </div>
             </MainLayout>
         );
     }
 
+    // Affichage du post
     return (
         <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
             <div className="max-w-4xl mx-auto px-4 pb-4">
@@ -260,11 +137,10 @@ const ResourceDetail = () => {
                             <div 
                                 className="w-12 h-12 rounded-full flex items-center justify-center bg-primary/20 text-primary font-semibold text-lg mr-2 sm:mr-3"
                             >
-                                {getUserInitials(user?.nom || '')}
+                                {user?.prenom?.charAt(0) || user?.username?.charAt(0) || "U"}
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-sm sm:text-base">{user?.nom || 'Anonyme'}</h3>
-                                <p className="text-xs text-gray-500">{user?.role?.nom_role || 'Utilisateur'}</p>
+                                <h3 className="font-semibold text-sm sm:text-base">{user?.prenom} {user?.nom}</h3>
                                 <p className="text-xs text-gray-500 flex items-center">
                                     <span>{formatDate(resource.createdAt)}</span>
                                     <span className="mx-1">•</span>
@@ -273,14 +149,6 @@ const ResourceDetail = () => {
                                     </svg>
                                 </p>
                             </div>
-                            <button 
-                                className="text-gray-500 hover:text-gray-700"
-                                onClick={() => navigate('/feed')}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
                         </div>
                     </div>
                     
@@ -289,8 +157,9 @@ const ResourceDetail = () => {
                         <h2 className="text-2xl font-semibold mb-4">{resource.titre}</h2>
                         <div 
                             className="text-sm sm:text-base mb-3 prose prose-lg max-w-none"
-                            dangerouslySetInnerHTML={{ __html: resource.contenu }}
-                        />
+                        >
+                            {resource.contenu}
+                        </div>
                         {resource.approved && (
                             <div className="text-xs text-green-600 mb-2">
                                 ✓ Ressource validée
@@ -307,38 +176,20 @@ const ResourceDetail = () => {
                     <div className="px-4 py-1 flex justify-between border-t border-gray-200">
                         <button 
                             className="flex-1 flex items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // TODO: Implémenter la fonctionnalité "J'aime"
-                            }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                            </svg>
-                            <span className="text-sm">J'aime</span>
+                            <Heart className="h-4 w-4" />
+                            <span className="text-sm">Favoris</span>
                         </button>
                         <button 
                             className="flex-1 flex items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // TODO: Implémenter la fonctionnalité de commentaire
-                            }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                            </svg>
+                            <MessageSquareText className="h-4 w-4" />
                             <span className="text-sm">Commenter</span>
                         </button>
                         <button 
                             className="flex-1 flex items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                // TODO: Implémenter la fonctionnalité de partage
-                            }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                            </svg>
+                            <Share2 className="h-4 w-4" />
                             <span className="text-sm">Partager</span>
                         </button>
                     </div>
@@ -353,7 +204,7 @@ const ResourceDetail = () => {
                                 <div 
                                     className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/20 text-primary font-semibold text-base flex-shrink-0"
                                 >
-                                    {getUserInitials(user?.nom || '')}
+                                    {user?.prenom?.charAt(0) || user?.username?.charAt(0) || "U"}
                                 </div>
                                 <div className="flex-1 ring-1 ring-gray-200 rounded-md">
                                     <textarea
@@ -361,18 +212,25 @@ const ResourceDetail = () => {
                                         onChange={(e) => setNewComment(e.target.value)}
                                         placeholder="Ajouter un commentaire..."
                                         className="w-full p-3 focus:outline-none bg-transparent"
-                                        rows={0}
+                                        rows={3}
                                     />
                                     <div className="mt-2 flex justify-end pr-2 pb-2">
                                         <button
                                             type="submit"
                                             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                                            disabled={!newComment.trim()}
                                         >
                                             Commenter
                                         </button>
                                     </div>
                                 </div>
                             </div>
+                            
+                            {commentError && (
+                                <div className="mt-2 text-red-500 text-sm">
+                                    {commentError}
+                                </div>
+                            )}
                         </form>
 
                         {/* Liste des commentaires */}
@@ -380,38 +238,38 @@ const ResourceDetail = () => {
                             <div className="flex justify-center items-center h-32">
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                             </div>
-                        ) : commentError ? (
-                            <div className="text-red-500 text-center py-4">
-                                {commentError}
-                            </div>
                         ) : comments.length === 0 ? (
                             <div className="text-center text-gray-500 py-4">
                                 Aucun commentaire pour le moment
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {comments.map((comment) => (
-                                    <div key={comment._id} className="flex space-x-4">
-                                        <div 
-                                            className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold text-base flex-shrink-0"
-                                        >
-                                            {getUserInitials(user?.nom || '')}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="bg-gray-50 rounded-lg p-3">
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                    <span className="font-semibold text-sm">{user?.nom || 'Anonyme'}</span>                                                    <span className="text-xs text-gray-500">•</span>
-
-                                                    <span className="text-xs text-gray-500">
-                                                        {formatDate(comment.date_publication || comment.created_at)}
-                                                    </span>
+                                {comments.map((comment) => {
+                                    const prenom = comment.prenom_utilisateur || (comment.id_user === user?.id ? user?.prenom : '');
+                                    const nom = comment.nom_utilisateur || (comment.id_user === user?.id ? user?.nom : 'Anonyme');
+                                    
+                                    return (
+                                        <div key={comment._id} className="flex space-x-4">
+                                            <div 
+                                                className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold text-base flex-shrink-0"
+                                            >
+                                                {prenom?.charAt(0) || "?"}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="bg-gray-50 rounded-lg p-3">
+                                                    <div className="flex items-center space-x-2 mb-1">
+                                                        <span className="font-semibold text-sm">{prenom} {nom}</span>
+                                                        <span className="text-xs text-gray-500">•</span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {formatDate(comment.date_publication || comment.created_at)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
                                                 </div>
-                                                <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
-
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

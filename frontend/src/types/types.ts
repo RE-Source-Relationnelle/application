@@ -61,5 +61,7 @@ export interface Comment {
     created_at?: string;
     resource_id?: string;
     user_id?: string;
+    // Informations utilisateur
+    nom_utilisateur?: string;
+    prenom_utilisateur?: string;
 }
-
