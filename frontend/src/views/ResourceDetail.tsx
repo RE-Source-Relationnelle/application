@@ -13,6 +13,8 @@ const ResourceDetail = () => {
     // Utiliser le store pour les détails de la ressource et les commentaires
     const { 
         resource, 
+        author,
+        category,
         comments, 
         loading, 
         loadingComments, 
@@ -137,10 +139,16 @@ const ResourceDetail = () => {
                             <div 
                                 className="w-12 h-12 rounded-full flex items-center justify-center bg-primary/20 text-primary font-semibold text-lg mr-2 sm:mr-3"
                             >
-                                {user?.prenom?.charAt(0) || user?.username?.charAt(0) || "U"}
+                                {author 
+                                    ? (author.prenom?.charAt(0) || author.username?.charAt(0) || "U") 
+                                    : "A"}
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-sm sm:text-base">{user?.prenom} {user?.nom}</h3>
+                                <h3 className="font-semibold text-sm sm:text-base">
+                                    {author 
+                                        ? `${author.prenom || ''} ${author.nom || ''}` 
+                                        : 'Anonyme'}
+                                </h3>
                                 <p className="text-xs text-gray-500 flex items-center">
                                     <span>{formatDate(resource.createdAt)}</span>
                                     <span className="mx-1">•</span>
@@ -148,6 +156,11 @@ const ResourceDetail = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </p>
+                                {category && (
+                                    <p className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full inline-block mt-1">
+                                        {category.nom}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>

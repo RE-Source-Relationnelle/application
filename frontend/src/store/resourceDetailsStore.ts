@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { api } from './authStore';
-import { Resource, Comment } from '../types/types';
+import { Resource, Comment, User, Category } from '../types/types';
+import useCategoryStore from './categoryStore';
 
 interface ResourceDetailsState {
   // États
   resource: Resource | null;
+  author: User | null;
+  category: Category | null;
   comments: Comment[];
   loading: boolean;
   loadingComments: boolean;
@@ -14,6 +17,8 @@ interface ResourceDetailsState {
   // Actions
   fetchResource: (resourceId: string) => Promise<void>;
   fetchComments: (resourceId: string) => Promise<void>;
+  fetchAuthor: (publisherId: string) => Promise<void>;
+  fetchCategory: (categoryId: string) => Promise<void>;
   addComment: (resourceId: string, content: string) => Promise<Comment | null>;
   resetState: () => void;
 }
@@ -21,6 +26,8 @@ interface ResourceDetailsState {
 const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
   // États initiaux
   resource: null,
+  author: null,
+  category: null,
   comments: [],
   loading: false,
   loadingComments: false,
@@ -47,6 +54,18 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
           loading: false,
           error: null
         });
+        
+        // Si la ressource a un id_publieur, récupérer les informations de l'auteur
+        if (response.data.id_publieur) {
+          const store = useResourceDetailsStore.getState();
+          store.fetchAuthor(response.data.id_publieur);
+        }
+        
+        // Si la ressource a un id_categorie, récupérer les informations de la catégorie
+        if (response.data.id_categorie) {
+          const store = useResourceDetailsStore.getState();
+          store.fetchCategory(response.data.id_categorie);
+        }
       } else {
         set({ 
           resource: null,
@@ -57,12 +76,11 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     } catch (err: any) {
       console.error('Erreur lors de la récupération de la ressource:', err);
       
-      let errorMessage = 'Erreur lors de la récupération de la ressource';
-      
+      let errorMessage = 'Une erreur est survenue.';
       if (err.response) {
-        errorMessage = err.response.data?.error || errorMessage;
+        errorMessage = err.response.data?.error || 'Erreur lors de la récupération de la ressource';
       } else if (err.request) {
-        errorMessage = 'Impossible de se connecter au serveur. Veuillez vérifier que le serveur est en cours d\'exécution.';
+        errorMessage = 'Impossible de se connecter au serveur.';
       }
       
       set({ 
@@ -70,6 +88,101 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         loading: false,
         error: errorMessage
       });
+    }
+  },
+  
+  // Récupérer l'auteur d'une ressource
+  fetchAuthor: async (publisherId: string) => {
+    if (!publisherId) return;
+    
+    try {
+      const isDev = process.env.NODE_ENV === 'development';
+      
+      if (isDev) {
+        console.log(`Tentative de récupération de l'auteur avec ID: ${publisherId}`);
+      }
+      
+      const currentUser = localStorage.getItem('auth-store');
+      let isAdmin = false;
+      
+      if (currentUser) {
+        try {
+          const userData = JSON.parse(currentUser);
+          if (userData.state?.user?.role?.nom_role === 'administrateur' || 
+              userData.state?.user?.role?.nom_role === 'super-administrateur') {
+            isAdmin = true;
+          }
+        } catch (e) {
+          console.warn('Impossible de parser les données utilisateur du localStorage');
+        }
+      }
+      
+      if (isAdmin) {
+        try {
+          const response = await api.get('/admin/get_users');
+          if (response.data && Array.isArray(response.data)) {
+            const authorData = response.data.find(user => user._id === publisherId);
+            
+            if (authorData) {
+              set({ author: authorData });
+              return;
+            }
+          }
+        } catch (adminError) {
+          console.warn('Impossible d\'utiliser la route admin pour récupérer les utilisateurs:', adminError);
+        }
+      }
+      
+      set({ 
+        author: {
+          id: publisherId,
+          email: '',
+          nom: 'Utilisateur',
+          prenom: '',
+        } 
+      });
+      
+    } catch (error) {
+      console.error(`Erreur lors de la récupération de l'auteur:`, error);
+      
+      set({ 
+        author: {
+          id: publisherId,
+          email: '',
+          nom: 'Utilisateur',
+          prenom: '',
+        } 
+      });
+    }
+  },
+
+  // Récupérer la catégorie d'une ressource
+  fetchCategory: async (categoryId: string) => {
+    if (!categoryId) return;
+    
+    try {
+      const categoryStore = useCategoryStore.getState();
+      
+      if (categoryStore.categories.length === 0) {
+        await categoryStore.fetchCategories();
+      }
+      
+      const category = categoryStore.categories.find(cat => cat._id === categoryId);
+      
+      if (category) {
+        set({ category });
+      } else {
+        try {
+          const response = await api.get(`/categories/category/${categoryId}`);
+          if (response.data) {
+            set({ category: response.data });
+          }
+        } catch (directError) {
+          console.warn(`Impossible de récupérer directement la catégorie ${categoryId}:`, directError);
+        }
+      }
+    } catch (error) {
+      console.error(`Erreur lors de la récupération de la catégorie:`, error);
     }
   },
   
@@ -88,21 +201,17 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
       
       console.log('Commentaires récupérés:', response.data);
       
-      // Trier les commentaires par date (les plus récents d'abord)
       const sortedComments = response.data.sort((a: Comment, b: Comment) => {
-        // Fonction pour extraire la date à partir de différents formats
         const getTimestamp = (comment: Comment): number => {
           const dateValue = comment.date_publication || comment.created_at;
           
           if (!dateValue) return 0;
           
           if (typeof dateValue === 'object' && '$date' in dateValue) {
-            // Format MongoDB { $date: string }
             return new Date(dateValue.$date).getTime();
           }
           
           if (typeof dateValue === 'string') {
-            // Format string
             return new Date(dateValue).getTime();
           }
           
@@ -152,7 +261,6 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
       
       console.log('Réponse complète du serveur:', response.data);
       
-      // Ajouter le nouveau commentaire à la liste
       set(state => ({ 
         comments: [response.data, ...state.comments],
         commentError: null
@@ -181,6 +289,8 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
   resetState: () => {
     set({
       resource: null,
+      author: null,
+      category: null,
       comments: [],
       loading: false,
       loadingComments: false,
