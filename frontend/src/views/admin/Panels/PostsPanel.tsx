@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import useResourcesStore from '../../../store/resourcesStore';
 import { Resource } from '../../../types/types';
 import { Trash2, SquarePen, Eye, Plus, Filter } from 'lucide-react';
+import ResourceModal from '../../../components/features/ResourceModal';
+import { useToast } from '../../../contexts/ToastContext';
 
 const PostsPanel = () => {
     const { resources, loading, error, categories, fetchResources, fetchCategories, deleteResource, approveResource, updateResourceCategory, updateResource, createResource } = useResourcesStore();
     const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
-    const [editingResource, setEditingResource] = useState<{ id: string, titre: string, contenu: string, id_categorie?: string } | null>(null);
-    const [showEditModal, setShowEditModal] = useState<boolean>(false);
-    const [newResource, setNewResource] = useState<{ titre: string, contenu: string, id_categorie?: string } | null>(null);
-    const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingResource, setEditingResource] = useState<{ id?: string; titre: string; contenu: string; id_categorie?: string } | null>(null);
     const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved'>('all');
+    const { showToast } = useToast();
 
     // Charger les ressources et les catégories au montage du composant
     useEffect(() => {
@@ -39,11 +41,10 @@ const PostsPanel = () => {
             // Rafraîchir la liste des ressources pour s'assurer que tout est à jour
             fetchResources();
             
-            // Afficher un message de succès (vous pourriez utiliser une bibliothèque de toast notifications ici)
-            alert('La ressource a été approuvée avec succès !');
+            showToast('La ressource a été approuvée avec succès !', 'success');
         } catch (error) {
             console.error('Erreur lors de l\'approbation:', error);
-            alert('Une erreur est survenue lors de l\'approbation de la ressource.');
+            showToast('Une erreur est survenue lors de l\'approbation de la ressource.', 'error');
         }
     };
 
@@ -55,42 +56,42 @@ const PostsPanel = () => {
     };
 
     const handleEditResource = (resource: Resource) => {
-        console.log("Catégories disponibles lors de l'édition:", categories);
         setEditingResource({
             id: resource._id,
             titre: resource.titre,
             contenu: resource.contenu,
             id_categorie: resource.id_categorie
         });
-        setShowEditModal(true);
+        setIsEditModalOpen(true);
     };
 
-    const handleSaveResource = async () => {
-        if (editingResource) {
-            await updateResource(editingResource.id, {
-                titre: editingResource.titre,
-                contenu: editingResource.contenu,
-                id_categorie: editingResource.id_categorie
-            });
-            setEditingResource(null);
-            setShowEditModal(false);
+    const handleSubmitEditResource = async (data: { id?: string; titre: string; contenu: string; id_categorie?: string }) => {
+        try {
+            if (data.id) {
+                await updateResource(data.id, data);
+                showToast('La ressource a été mise à jour avec succès !', 'success');
+                fetchResources(); // Rafraîchir la liste des ressources
+            }
+            setIsEditModalOpen(false);
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+            showToast('Une erreur est survenue lors de la mise à jour de la ressource.', 'error');
         }
     };
 
     const handleCreateResource = () => {
-        setNewResource({
-            titre: '',
-            contenu: '',
-            id_categorie: ''
-        });
-        setShowCreateModal(true);
+        setIsCreateModalOpen(true);
     };
 
-    const handleSaveNewResource = async () => {
-        if (newResource) {
-            await createResource(newResource);
-            setNewResource(null);
-            setShowCreateModal(false);
+    const handleSubmitCreateResource = async (data: { titre: string; contenu: string; id_categorie?: string }) => {
+        try {
+            await createResource(data);
+            showToast('La ressource a été créée avec succès !', 'success');
+            fetchResources(); // Rafraîchir la liste des ressources
+            setIsCreateModalOpen(false);
+        } catch (error) {
+            console.error('Erreur lors de la création:', error);
+            showToast('Une erreur est survenue lors de la création de la ressource.', 'error');
         }
     };
 
@@ -275,14 +276,6 @@ const PostsPanel = () => {
                                         >
                                             <SquarePen />
                                         </button>
-                                        {editingResource && editingResource.id === resource._id && (
-                                            <button
-                                                className="text-green-600 hover:text-green-800"
-                                                onClick={handleSaveResource}
-                                            >
-                                                Sauvegarder
-                                            </button>
-                                        )}
                                     </td>
                                 </tr>
                             ))
@@ -291,122 +284,24 @@ const PostsPanel = () => {
                 </table>
             </div>
 
-            {/* Modale d'édition de ressource */}
-            {showEditModal && editingResource && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-                        <h3 className="text-lg font-medium mb-4">Modifier la ressource</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-                                <input
-                                    type="text"
-                                    value={editingResource.titre}
-                                    onChange={(e) => setEditingResource({ ...editingResource, titre: e.target.value })}
-                                    className="w-full p-2 border rounded"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
-                                <textarea
-                                    value={editingResource.contenu}
-                                    onChange={(e) => setEditingResource({ ...editingResource, contenu: e.target.value })}
-                                    className="w-full p-2 border rounded h-40"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                                <select
-                                    className="w-full p-2 border rounded"
-                                    value={editingResource.id_categorie || ''}
-                                    onChange={(e) => setEditingResource({ ...editingResource, id_categorie: e.target.value })}
-                                >
-                                    <option value="">Non catégorisé</option>
-                                    {categories.map(cat => (
-                                        <option key={cat._id} value={cat._id}>{cat.nom}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex justify-end space-x-2 pt-4">
-                                <button
-                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                                    onClick={() => {
-                                        setEditingResource(null);
-                                        setShowEditModal(false);
-                                    }}
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-primary text-white rounded hover:bg-secondary"
-                                    onClick={handleSaveResource}
-                                >
-                                    Sauvegarder
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {isCreateModalOpen && (
+                <ResourceModal
+                    isOpen={isCreateModalOpen}
+                    mode="create"
+                    initialData={{ titre: '', contenu: '', id_categorie: '' }}
+                    onSubmit={handleSubmitCreateResource}
+                    onClose={() => setIsCreateModalOpen(false)}
+                />
             )}
 
-            {/* Modale de création de ressource */}
-            {showCreateModal && newResource && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
-                        <h3 className="text-lg font-medium mb-4">Créer une nouvelle ressource</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-                                <input
-                                    type="text"
-                                    value={newResource.titre}
-                                    onChange={(e) => setNewResource({ ...newResource, titre: e.target.value })}
-                                    className="w-full p-2 border rounded"
-                                    placeholder="Titre de la ressource"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Contenu</label>
-                                <textarea
-                                    value={newResource.contenu}
-                                    onChange={(e) => setNewResource({ ...newResource, contenu: e.target.value })}
-                                    className="w-full p-2 border rounded h-40"
-                                    placeholder="Contenu de la ressource"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                                <select
-                                    className="w-full p-2 border rounded"
-                                    value={newResource.id_categorie || ''}
-                                    onChange={(e) => setNewResource({ ...newResource, id_categorie: e.target.value })}
-                                >
-                                    <option value="">Non catégorisé</option>
-                                    {categories.map(cat => (
-                                        <option key={cat._id} value={cat._id}>{cat.nom}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex justify-end space-x-2 pt-4">
-                                <button
-                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                                    onClick={() => {
-                                        setNewResource(null);
-                                        setShowCreateModal(false);
-                                    }}
-                                >
-                                    Annuler
-                                </button>
-                                <button
-                                    className="px-4 py-2 bg-primary text-white rounded hover:bg-secondary"
-                                    onClick={handleSaveNewResource}
-                                >
-                                    Créer
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            {isEditModalOpen && editingResource && (
+                <ResourceModal
+                    isOpen={isEditModalOpen}
+                    mode="edit"
+                    initialData={editingResource}
+                    onSubmit={handleSubmitEditResource}
+                    onClose={() => setIsEditModalOpen(false)}
+                />
             )}
         </div>
     );
