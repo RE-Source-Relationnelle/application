@@ -102,25 +102,25 @@ const ResourceDetail = () => {
             dateString = dateValue as string;
         }
         
-        const date = new Date(dateString);
-        
-        if (isNaN(date.getTime())) {
+            const date = new Date(dateString);
+            
+            if (isNaN(date.getTime())) {
             return 'Date invalide';
-        }
-        
-        const now = new Date();
-        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-        
-        if (diffInHours < 24) {
-            return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
-        } else {
-            return date.toLocaleDateString('fr-FR', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            }
+
+            const now = new Date();
+            const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+            
+            if (diffInHours < 24) {
+                return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+            } else {
+                return date.toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
         }
     };
 
@@ -128,11 +128,11 @@ const ResourceDetail = () => {
     const handleCommentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newComment.trim()) return;
-        
-        if (!user) {
-            return;
-        }
-        
+
+            if (!user) {
+                return;
+            }
+
         const result = await addComment(id || '', newComment);
         
         if (result) {
@@ -369,22 +369,22 @@ const ResourceDetail = () => {
                                     const nom = comment.nom_utilisateur || (comment.id_user === user?.id ? user?.nom : 'Anonyme');
                                     
                                     return (
-                                        <div key={comment._id} className="flex space-x-4">
-                                            <div 
+                                    <div key={comment._id} className="flex space-x-4">
+                                        <div 
                                                 className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold text-base flex-shrink-0"
-                                            >
+                                        >
                                                 {prenom?.charAt(0) || "?"}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="bg-gray-50 rounded-lg p-3">
-                                                    <div className="flex items-center space-x-2 mb-1">
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="bg-gray-50 rounded-lg p-3">
+                                                <div className="flex items-center space-x-2 mb-1">
                                                         <span className="font-semibold text-sm">{prenom} {nom}</span>
-                                                        <span className="text-xs text-gray-500">•</span>
-                                                        <span className="text-xs text-gray-500">
-                                                            {formatDate(comment.date_publication || comment.created_at)}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
+                                                    <span className="text-xs text-gray-500">•</span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {formatDate(comment.date_publication || comment.created_at)}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
                                                 </div>
                                             </div>
                                         </div>

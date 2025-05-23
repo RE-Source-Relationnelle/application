@@ -8,8 +8,10 @@ interface Favorite {
     created_at: string;
 }
 
-interface FavoriteWithDetails extends Favorite {
-    resource?: {
+interface FavoriteWithDetails {
+    favorite_id: string;
+    created_at: string;
+    resource: {
         id: string;
         titre: string;
         contenu: string;
@@ -43,7 +45,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
     // Vérifier si une ressource est en favoris
     isFavorite: (resourceId: string) => {
         const { favorites } = get();
-        return favorites.some(fav => fav.resource_id === resourceId);
+        return favorites.some(fav => fav.resource.id === resourceId);
     },
 
     // Récupérer tous les favoris de l'utilisateur
@@ -87,19 +89,9 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
             });
 
             if (response.status === 201) {
-                // Ajouter le nouveau favori à la liste locale
-                const newFavorite: Favorite = {
-                    _id: response.data._id,
-                    user_id: response.data.user_id,
-                    resource_id: response.data.resource_id,
-                    created_at: response.data.created_at
-                };
-                
-                set(state => ({
-                    favorites: [...state.favorites, newFavorite],
-                    loading: false,
-                    error: null
-                }));
+                // Rafraîchir la liste des favoris pour obtenir les détails complets
+                await get().fetchFavorites();
+                set({ loading: false, error: null });
                 return true;
             }
             return false;
@@ -138,7 +130,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
             if (response.status === 200) {
                 // Supprimer le favori de la liste locale
                 set(state => ({
-                    favorites: state.favorites.filter(fav => fav.resource_id !== resourceId),
+                    favorites: state.favorites.filter(fav => fav.resource.id !== resourceId),
                     loading: false,
                     error: null
                 }));
@@ -167,7 +159,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
             });
 
             const favorites = response.data;
-            const isFavorite = favorites.some((fav: any) => fav.resource_id === resourceId);
+            const isFavorite = favorites.some((fav: any) => fav.resource.id === resourceId);
             
             // Mettre à jour la liste locale si elle n'est pas à jour
             set({ favorites: response.data });
