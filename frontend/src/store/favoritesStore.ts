@@ -88,7 +88,13 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
 
             if (response.status === 201) {
                 // Ajouter le nouveau favori à la liste locale
-                const newFavorite: Favorite = response.data;
+                const newFavorite: Favorite = {
+                    _id: response.data._id,
+                    user_id: response.data.user_id,
+                    resource_id: response.data.resource_id,
+                    created_at: response.data.created_at
+                };
+                
                 set(state => ({
                     favorites: [...state.favorites, newFavorite],
                     loading: false,
@@ -103,7 +109,8 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
             if (error.response?.status === 400 && 
                 error.response?.data?.error === 'Cette ressource est déjà dans vos favoris') {
                 // La ressource est déjà en favoris, récupérer la liste mise à jour
-                get().fetchFavorites();
+                await get().fetchFavorites();
+                set({ loading: false, error: null });
                 return true;
             }
             
