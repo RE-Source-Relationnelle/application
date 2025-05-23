@@ -1,40 +1,7 @@
 import { create } from 'zustand';
-import axios from 'axios';
 import { Resource, Category } from '../types/types';
 import useCategoryStore from './categoryStore';
-
-// Configuration de l'API
-const api = axios.create({
-  baseURL: 'http://localhost:5001',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
-  }
-});
-
-// Intercepteur pour ajouter le token à chaque requête
-api.interceptors.request.use(config => {
-  // Récupérer le token depuis les cookies
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
-  
-  const token = cookies['access_token'];
-  
-  if (token && config.headers) {
-    // Ajouter le token dans l'en-tête Authorization
-    config.headers['Authorization'] = `Bearer ${token}`;
-    // Ne pas ajouter l'en-tête 'token' qui cause des problèmes CORS
-    // config.headers['token'] = token;
-  }
-  
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+import { api } from './authStore';
 
 interface ResourcesState {
   // État
@@ -154,18 +121,7 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   approveResource: async (id: string, comment?: string) => {
     set({ loading: true });
     try {
-      // Créer une instance Axios spécifique pour cette requête sans l'intercepteur qui ajoute le token
-      const approveApi = axios.create({
-        baseURL: 'http://localhost:5001',
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
-      
-      // Utiliser cette instance pour faire la requête
-      const response = await approveApi.post(`/resources/approve/${id}`, { comment });
+      const response = await api.post(`/resources/approve/${id}`, { comment });
       
       const updatedResources = get().resources.map(resource => {
         if (resource._id === id) {

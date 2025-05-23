@@ -1,35 +1,6 @@
 import { create } from 'zustand';
-import axios from 'axios';
 import { Category } from '../types/types';
-
-// Configuration de l'API
-const api = axios.create({
-  baseURL: 'http://localhost:5001',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Intercepteur pour ajouter le token à chaque requête
-api.interceptors.request.use(config => {
-  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-    const [key, value] = cookie.trim().split('=');
-    acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
-  
-  const token = cookies['access_token'];
-  
-  if (token && config.headers) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-    config.headers['token'] = token;
-  }
-  
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
+import { api, getCookie } from './authStore'; // Importer l'instance API partagée et la fonction getCookie
 
 interface CategoryState {
   // État
@@ -45,7 +16,7 @@ interface CategoryState {
   clearError: () => void;
 }
 
-const useCategoryStore = create<CategoryState>((set) => ({
+const useCategoryStore = create<CategoryState>((set, get) => ({
   // État initial
   categories: [],
   loading: false,
@@ -136,7 +107,16 @@ const useCategoryStore = create<CategoryState>((set) => ({
   deleteCategory: async (id: string) => {
     set({ loading: true, error: null });
     try {
-      await api.delete(`/categories/delete_category/${id}`);
+      console.log(`Tentative de suppression de la catégorie avec ID: ${id}`);
+      
+      // Vérifier que le token est bien présent
+      const accessToken = getCookie('access_token');
+      console.log('Token utilisé:', accessToken ? 'présent' : 'absent');
+      
+      // Utiliser la méthode DELETE avec l'ID dans l'URL
+      const response = await api.delete(`/categories/delete_category/${id}`);
+      
+      console.log('Réponse de suppression:', response.data);
       
       // Mettre à jour l'état local en supprimant la catégorie
       set(state => ({ 
@@ -147,6 +127,22 @@ const useCategoryStore = create<CategoryState>((set) => ({
       console.error('Erreur lors de la suppression de la catégorie:', err);
       console.error('Status:', err.response?.status);
       console.error('Message:', err.response?.data || err.message);
+      
+      // Si l'erreur est 401, essayer de rafraîchir le token manuellement
+      if (err.response?.status === 401) {
+        try {
+          // Tenter de rafraîchir le token manuellement
+          const refreshResult = await import('./authStore').then(module => module.default.getState().refreshToken());
+          
+          if (refreshResult) {
+            console.log('Token rafraîchi manuellement, nouvelle tentative...');
+            // Réessayer la requête après le rafraîchissement
+            return await get().deleteCategory(id);
+          }
+        } catch (refreshError) {
+          console.error('Échec du rafraîchissement manuel:', refreshError);
+        }
+      }
       
       set({ 
         error: err.response?.data?.error || 'Erreur lors de la suppression de la catégorie', 

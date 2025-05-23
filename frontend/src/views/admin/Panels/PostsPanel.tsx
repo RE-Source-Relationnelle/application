@@ -259,7 +259,7 @@ const PostsPanel = () => {
                                         )}
                                         <button
                                             className="text-primary hover:text-secondary mr-2"
-                                            onClick={() => window.open(`/resources/${resource._id}`, '_blank')}
+                                            onClick={() => window.open(`/feed/ressource/${resource._id}`, '_blank')}
                                         >
                                             <Eye />
                                         </button>

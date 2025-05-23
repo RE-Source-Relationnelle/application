@@ -5,7 +5,8 @@ import { User, RegisterFormData } from '../types/types';
 
 const API_URL = 'http://localhost:5001';
 
-const api = axios.create({
+// Créer et exporter l'instance API pour qu'elle puisse être utilisée ailleurs
+export const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
   headers: {
@@ -14,7 +15,7 @@ const api = axios.create({
 });
 
 // Fonction pour extraire un cookie spécifique
-const getCookie = (name: string): string | null => {
+export const getCookie = (name: string): string | null => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) {
@@ -75,38 +76,61 @@ api.interceptors.response.use(
     
     // Si l'erreur est 401 (non autorisé) et que la requête n'a pas déjà été retentée
     if (error.response?.status === 401 && !originalRequest._retry) {
-      console.log('Erreur 401 interceptée, tentative de rafraîchissement du token...');
+      console.log('Erreur 401 interceptée, tentative de rafraîchissement du token...', originalRequest.url);
       
       // Marquer la requête comme étant retentée
       originalRequest._retry = true;
       
       try {
-        // Tenter de rafraîchir le token directement sans vérifier si le refresh_token existe
-        // (car c'est un cookie httpOnly que JavaScript ne peut pas lire)
-        const response = await axios.post(
-          `${API_URL}/auth/refresh_token`,
-          {}, // Corps vide
-          { withCredentials: true } // Important pour envoyer les cookies
-        );
+        // Si un rafraîchissement est déjà en cours, attendre qu'il se termine
+        if (refreshingPromise) {
+          console.log('Rafraîchissement déjà en cours, attente...');
+          const result = await refreshingPromise;
+          
+          if (result) {
+            console.log('Token rafraîchi avec succès par un autre processus, nouvelle tentative de la requête originale');
+            
+            // Récupérer le nouveau token depuis les cookies
+            const newToken = getCookie('access_token');
+            if (newToken && originalRequest.headers) {
+              // Mettre à jour le token dans la requête originale
+              originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+            }
+            
+            return api(originalRequest);
+          } else {
+            console.log('Échec du rafraîchissement du token par un autre processus');
+            throw new Error('Échec du rafraîchissement du token');
+          }
+        }
         
-        console.log('Token rafraîchi avec succès, nouvelle tentative de la requête originale');
+        // Sinon, lancer un nouveau rafraîchissement
+        const result = await useAuthStore.getState().refreshToken();
         
-        // Le backend a défini les nouveaux cookies, pas besoin de les extraire manuellement
-        
-        // Retenter la requête originale
-        return api(originalRequest);
+        if (result) {
+          console.log('Token rafraîchi avec succès, nouvelle tentative de la requête originale');
+          
+          // Récupérer le nouveau token depuis les cookies
+          const newToken = getCookie('access_token');
+          if (newToken && originalRequest.headers) {
+            // Mettre à jour le token dans la requête originale
+            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          }
+          
+          return api(originalRequest);
+        } else {
+          console.log('Échec du rafraîchissement du token');
+          throw new Error('Échec du rafraîchissement du token');
+        }
       } catch (refreshError) {
-        console.error('Échec du rafraîchissement du token:', refreshError);
+        console.error('Erreur lors du rafraîchissement du token:', refreshError);
         
-        // Si le rafraîchissement échoue, déconnecter l'utilisateur
-        const authStore = useAuthStore.getState();
-        authStore.logout();
-        
+        // Si le rafraîchissement échoue, propager l'erreur
         return Promise.reject(error);
       }
     }
     
-    // Pour toutes les autres erreurs, rejeter la promesse
+    // Si ce n'est pas une erreur 401 ou si la requête a déjà été retentée, propager l'erreur
     return Promise.reject(error);
   }
 );
