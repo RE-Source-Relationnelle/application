@@ -72,4 +72,3 @@ export interface Favorite {
     id_ressource: string;
     created_at: string;
 }
-
