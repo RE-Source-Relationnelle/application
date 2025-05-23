@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from './authStore';
 
 // Type pour un rôle
 export interface Role {
@@ -23,22 +23,12 @@ export interface UpdateRoleData {
   permissions?: string[];
 }
 
-// Configuration de l'API
-const api = axios.create({
-  baseURL: 'http://localhost:5001',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
 // Interface du store
 interface RoleState {
   roles: Role[];
   loading: boolean;
   error: string | null;
   
-  // Actions
   fetchRoles: () => Promise<Role[]>;
   createRole: (roleData: CreateRoleData) => Promise<Role>;
   updateRole: (id: string, roleData: UpdateRoleData) => Promise<Role>;
@@ -86,7 +76,6 @@ const useRoleStore = create<RoleState>((set, get) => ({
       const response = await api.post('/admin/create_role', roleData);
       console.log('Rôle créé:', response.data);
       
-      // Mettre à jour la liste des rôles
       const { roles } = get();
       set({ 
         roles: [...roles, response.data],
@@ -114,7 +103,6 @@ const useRoleStore = create<RoleState>((set, get) => ({
       const response = await api.put(`/admin/update_role/${id}`, roleData);
       console.log('Rôle mis à jour:', response.data);
       
-      // Mettre à jour la liste des rôles
       const { roles } = get();
       const updatedRoles = roles.map(role => 
         role._id === id ? { ...role, ...response.data } : role
@@ -146,7 +134,6 @@ const useRoleStore = create<RoleState>((set, get) => ({
       await api.delete(`/admin/delete_role/${id}`);
       console.log('Rôle supprimé:', id);
       
-      // Mettre à jour la liste des rôles
       const { roles } = get();
       const filteredRoles = roles.filter(role => role._id !== id);
       
@@ -168,7 +155,6 @@ const useRoleStore = create<RoleState>((set, get) => ({
     }
   },
   
-  // Effacer les erreurs
   clearError: () => set({ error: null })
 }));
 

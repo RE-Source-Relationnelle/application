@@ -1,13 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, User, PlusCircle, Settings, LogOut, ChevronDown, Menu, X } from 'lucide-react';
+import { Search, User, PlusCircle, Settings, ChevronDown, Menu, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import useAuthStore from '../../store/authStore';
-
+import ResourceModal from '../features/ResourceModal';
+import useResourcesStore from '../../store/resourcesStore';
+import { useToast } from '../../contexts/ToastContext';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const { logout, isAuthenticated, user } = useAuthStore();
+  const { createResource } = useResourcesStore();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
@@ -23,6 +28,30 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+  
+  const handleCreateResource = async (data: { titre: string, contenu: string, id_categorie?: string }) => {
+    console.log('Création d\'une nouvelle ressource avec les données suivantes:', data);
+    
+    try {
+      const result = await createResource(data);
+      console.log('Ressource créée avec succès:', result);
+      
+      // Afficher un toast de succès
+      showToast(
+        'Votre ressource a été créée avec succès et est en attente de validation par un modérateur.',
+        'success'
+      );
+      
+      // Optionnel : rediriger vers le feed après création
+      // navigate('/feed');
+    } catch (error) {
+      console.error('Erreur lors de la création de la ressource:', error);
+      showToast(
+        'Une erreur est survenue lors de la création de la ressource. Veuillez réessayer.',
+        'error'
+      );
+    }
   };
 
   // Composant réutilisable pour la barre de recherche
@@ -90,65 +119,79 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="hidden md:flex items-center space-x-4">
                 {/* Créer un post */}
-                <Link to="/create-post" className="p-2 text-gray-600 hover:text-primary" title="Créer un post">
+                <button 
+                  onClick={() => setIsResourceModalOpen(true)} 
+                  className="p-2 text-gray-600 hover:text-primary" 
+                  title="Créer une ressource"
+                >
                   <PlusCircle className="h-5 w-5" />
-                </Link>
+                </button>
                 
                 {/* Menu des catégories */}
                 <div className="relative">
                   <button 
                     onClick={toggleCategoryMenu}
                     className="p-2 text-gray-600 hover:text-primary flex items-center"
-                    title="Catégories"
+                    aria-expanded={isCategoryMenuOpen}
+                    aria-haspopup="true"
                   >
-                    <Menu className="h-5 w-5" />
-                    <ChevronDown className="h-4 w-4 ml-1" />
+                    <span className="mr-1">Catégories</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
-                  {/* Menu déroulant des catégories */}
+                  {/* Dropdown Menu */}
                   {isCategoryMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-                      <Link to="/category/famille" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Famille
-                      </Link>
-                      <Link to="/category/sante" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Santé
-                      </Link>
-                      <Link to="/category/education" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Éducation
-                      </Link>
-                      <Link to="/category/environnement" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        Environnement
-                      </Link>
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
+                      <Link to="/categories/1" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 1</Link>
+                      <Link to="/categories/2" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 2</Link>
+                      <Link to="/categories/3" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 3</Link>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <Link to="/categories" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100">Toutes les catégories</Link>
                     </div>
                   )}
                 </div>
                 
-                {/* Accès backoffice (si admin) */}
+                {/* Admin Link (if admin) */}
                 {isAdmin && (
                   <Link to="/admin" className="p-2 text-gray-600 hover:text-primary" title="Administration">
                     <Settings className="h-5 w-5" />
                   </Link>
                 )}
                 
-                {/* Mon compte */}
-                <Link to="/profile" className="p-2 text-gray-600 hover:text-primary" title="Mon compte">
-                  <User className="h-5 w-5" />
-                </Link>
+                {/* User Menu */}
+                <div className="relative ml-3">
+                  <div>
+                    <button
+                      type="button"
+                      className="flex text-sm rounded-full focus:outline-none"
+                      id="user-menu-button"
+                      aria-expanded="false"
+                      aria-haspopup="true"
+                    >
+                      <span className="sr-only">Ouvrir le menu utilisateur</span>
+                      <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
+                        <User className="h-5 w-5" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
                 
-                {/* Se déconnecter */}
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-gray-600 hover:text-primary"
-                  title="Se déconnecter"
+                {/* Logout Button */}
+                <button 
+                  onClick={handleLogout} 
+                  className="p-2 text-gray-600 hover:text-primary" 
+                  title="Déconnexion"
                 >
                   <LogOut className="h-5 w-5" />
                 </button>
               </div>
             ) : (
               <div className="hidden md:block">
-                <Link to="/" className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary">
-                  Se connecter →
+                <Link
+                  to="/login"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  Connexion
                 </Link>
               </div>
             )}
@@ -156,20 +199,59 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Search Modal */}
+      {/* Mobile Search Bar (conditionally rendered) */}
       {isSearchOpen && (
-        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 flex items-start justify-center pt-20">
-          <div className="bg-white w-11/12 p-4 rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Rechercher</h3>
-              <button onClick={toggleSearch} aria-label="Fermer la recherche">
-                <X className="h-5 w-5 text-gray-600" />
-              </button>
-            </div>
-            <SearchBar isMobile={true} />
-          </div>
+        <div className="md:hidden border-t border-gray-200 py-3 px-6">
+          <SearchBar isMobile={true} />
         </div>
       )}
+      
+      {/* Mobile Menu (conditionally rendered) */}
+      <div className="md:hidden border-t border-gray-200 py-2 px-4" id="mobile-menu">
+        {isAuthenticated ? (
+          <div className="space-y-1 pt-2 pb-3">
+            <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Mon profil
+            </Link>
+            {isAdmin && (
+              <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+                Administration
+              </Link>
+            )}
+            <button 
+              onClick={() => setIsResourceModalOpen(true)}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary"
+            >
+              Créer une ressource
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary flex items-center"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-1 pt-2 pb-3">
+            <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Connexion
+            </Link>
+            <Link to="/inscription" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
+              Inscription
+            </Link>
+          </div>
+        )}
+      </div>
+      
+      {/* Modal de création de ressource */}
+      <ResourceModal 
+        isOpen={isResourceModalOpen}
+        onClose={() => setIsResourceModalOpen(false)}
+        mode="create"
+        onSubmit={handleCreateResource}
+        initialData={{ titre: '', contenu: '', id_categorie: '' }}
+      />
     </nav>
   )
 }

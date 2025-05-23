@@ -1,0 +1,11 @@
+/* Styles minimalistes pour l'éditeur Quill - juste pour ajouter un border-radius */
+
+/* Conteneur principal */
+.quill-container .ql-container {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Barre d'outils */
+.quill-container .ql-toolbar {
+  border-radius: 8px 8px 0 0;
+}
