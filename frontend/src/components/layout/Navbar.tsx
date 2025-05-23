@@ -206,44 +206,6 @@ const Navbar = () => {
         </div>
       )}
       
-      {/* Mobile Menu (conditionally rendered) */}
-      <div className="md:hidden border-t border-gray-200 py-2 px-4" id="mobile-menu">
-        {isAuthenticated ? (
-          <div className="space-y-1 pt-2 pb-3">
-            <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
-              Mon profil
-            </Link>
-            {isAdmin && (
-              <Link to="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
-                Administration
-              </Link>
-            )}
-            <button 
-              onClick={() => setIsResourceModalOpen(true)}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary"
-            >
-              Créer une ressource
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary flex items-center"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Déconnexion
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-1 pt-2 pb-3">
-            <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
-              Connexion
-            </Link>
-            <Link to="/inscription" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-primary">
-              Inscription
-            </Link>
-          </div>
-        )}
-      </div>
-      
       {/* Modal de création de ressource */}
       <ResourceModal 
         isOpen={isResourceModalOpen}
