@@ -2,12 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import useAuthStore from '../../store/authStore';
+import useFavoritesStore from '../../store/favoritesStore';
+import { Eye, Trash2, Heart } from 'lucide-react';
 
 const Profile = () => {
     const navigate = useNavigate();
     const { user, logout, updateProfile } = useAuthStore();
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('informations');
+
+    // Store des favoris
+    const { favorites, loading: favoritesLoading, fetchFavorites, removeFavorite } = useFavoritesStore();
 
     // États pour le formulaire d'informations personnelles
     const [formData, setFormData] = useState({
@@ -46,11 +51,18 @@ const Profile = () => {
         }
     }, [user]);
 
+    // Charger les favoris quand l'onglet activité est sélectionné
+    useEffect(() => {
+        if (activeTab === 'activite' && user) {
+            fetchFavorites();
+        }
+    }, [activeTab, user, fetchFavorites]);
+
     const openPostModal = () => {
         setIsPostModalOpen(true);
     };
 
-    const handleTabChange = (tab: 'informations' | 'securite' | 'compte') => {
+    const handleTabChange = (tab: 'informations' | 'securite' | 'compte' | 'activite') => {
         setActiveTab(tab);
         setSuccessMessage('');
         setErrorMessage('');
@@ -136,6 +148,30 @@ const Profile = () => {
         }
     };
 
+    // Supprimer un favori
+    const handleRemoveFavorite = async (resourceId: string) => {
+        if (confirm('Êtes-vous sûr de vouloir supprimer cette ressource de vos favoris ?')) {
+            const success = await removeFavorite(resourceId);
+            if (success) {
+                setSuccessMessage('Ressource supprimée des favoris');
+                // Rafraîchir les favoris après suppression
+                fetchFavorites();
+            } else {
+                setErrorMessage('Erreur lors de la suppression du favori');
+            }
+        }
+    };
+
+    // Formater la date pour l'affichage
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
+
     return (
         <MainLayout onOpenPostModal={openPostModal} showSidebars={false}>
             <div className="bg-white ring-gray-200 ring-1 sm:rounded-lg overflow-hidden w-full">
@@ -170,6 +206,15 @@ const Profile = () => {
                             onClick={() => handleTabChange('compte')}
                         >
                             Gestion du compte
+                        </button>
+                        <button
+                            className={`py-3 px-6 text-sm font-medium focus:outline-none ${activeTab === 'activite'
+                                    ? 'text-primary border-b-2 border-primary'
+                                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                            onClick={() => handleTabChange('activite')}
+                        >
+                            Activité
                         </button>
                     </div>
 
@@ -401,6 +446,104 @@ const Profile = () => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Onglet Activité */}
+                    {activeTab === 'activite' && (
+                        <div className="space-y-4">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-xl font-semibold">Mes ressources favoris</h2>
+                                <div className="flex items-center space-x-2">
+                                    <Heart className="h-5 w-5 text-red-500 fill-current" />
+                                    <span className="text-sm text-gray-600">{favorites.length} ressource{favorites.length > 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+
+                            {favoritesLoading ? (
+                                <div className="flex justify-center p-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                                </div>
+                            ) : favorites.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <Heart className="mx-auto h-12 w-12 text-gray-400" />
+                                    <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun favori</h3>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Vous n'avez pas encore ajouté de ressources à vos favoris.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ressource</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ajouté le</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {favorites.map((favorite) => (
+                                                <tr key={favorite.favorite_id} className="hover:bg-gray-50">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-start space-x-3">
+                                                            <div className="flex-shrink-0">
+                                                                <Heart className="h-5 w-5 text-red-500 fill-current" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                {favorite.resource ? (
+                                                                    <>
+                                                                        <p className="text-sm font-medium text-gray-900 truncate max-w-md">
+                                                                            {favorite.resource.titre}
+                                                                        </p>
+                                                                        <div 
+                                                                            className="text-sm text-gray-500 truncate max-w-md"
+                                                                            dangerouslySetInnerHTML={{ 
+                                                                                __html: favorite.resource.contenu.length > 100 
+                                                                                    ? favorite.resource.contenu.substring(0, 100) + '...' 
+                                                                                    : favorite.resource.contenu 
+                                                                            }}
+                                                                        />
+                                                                    </>
+                                                                ) : (
+                                                                    <p className="text-sm text-gray-500 italic">
+                                                                        Ressource supprimée ou indisponible
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500">
+                                                            {formatDate(favorite.created_at)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex items-center space-x-2">
+                                                            {favorite.resource && (
+                                                                <button
+                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
+                                                                    className="text-primary hover:text-secondary"
+                                                                    title="Voir la ressource"
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </button>
+                                                            )}
+                                                            <button
+                                                                onClick={() => handleRemoveFavorite(favorite.resource.id)}
+                                                                className="text-red-600 hover:text-red-800"
+                                                                title="Supprimer des favoris"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

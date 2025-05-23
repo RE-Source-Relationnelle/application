@@ -65,3 +65,10 @@ export interface Comment {
     nom_utilisateur?: string;
     prenom_utilisateur?: string;
 }
+
+export interface Favorite {
+    _id: string;
+    id_user: string;
+    id_ressource: string;
+    created_at: string;
+}
