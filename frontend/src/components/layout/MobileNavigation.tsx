@@ -60,7 +60,7 @@ const MobileNavigation = ({ onOpenPostModal }: MobileNavigationProps) => {
                   categories.map((category) => (
                     <Link 
                       key={category._id} 
-                      to={`/categories/${category._id}`} 
+                      to={`/feed?category=${category._id}`} 
                       className="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-all duration-200"
                       onClick={() => setIsCategoryMenuOpen(false)}
                     >
@@ -88,11 +88,11 @@ const MobileNavigation = ({ onOpenPostModal }: MobileNavigationProps) => {
                 <>
                   <div className="border-t border-gray-100 my-1"></div>
                   <Link 
-                    to="/categories" 
+                    to="/feed" 
                     className="flex items-center justify-center px-4 py-3 text-sm font-medium text-primary hover:bg-primary/5 transition-all duration-200"
                     onClick={() => setIsCategoryMenuOpen(false)}
                   >
-                    <span>Voir toutes les catégories</span>
+                    <span>Voir toutes les ressources</span>
                     <ChevronDown className="h-4 w-4 ml-1 -rotate-90" />
                   </Link>
                 </>
