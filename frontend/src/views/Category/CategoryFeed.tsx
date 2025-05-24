@@ -4,7 +4,7 @@ import MainLayout from '../../components/layout/MainLayout';
 import ResourceCard from '../../components/features/ressources/ResourceCard';
 import ResourceModal from '../../components/features/ressources/ResourceModal';
 import useCategoryStore from '../../store/categoryStore';
-import useResourceRandomStore from '../../store/resourceRandomStore';
+import useCategoryResourcesStore from '../../store/categoryResourcesStore';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import { ArrowLeft, Filter } from 'lucide-react';
@@ -21,9 +21,9 @@ const CategoryFeed = () => {
     filteredResources, 
     loading: resourcesLoading, 
     setSelectedCategory, 
-    fetchRandomResources,
+    fetchAllResources,
     resetResources 
-  } = useResourceRandomStore();
+  } = useCategoryResourcesStore();
   const { createResource } = useResourcesStore();
 
   // Trouver la catégorie actuelle
@@ -39,19 +39,10 @@ const CategoryFeed = () => {
       
       // Réinitialiser les ressources et définir le filtre de catégorie
       resetResources();
+      fetchAllResources();
       setSelectedCategory(categoryId);
-      
-      // Charger quelques ressources initiales
-      for (let i = 0; i < 5; i++) {
-        fetchRandomResources();
-      }
     }
   }, [categoryId, categories.length]);
-
-  // Fonction pour charger plus de ressources
-  const handleLoadMore = () => {
-    fetchRandomResources();
-  };
 
   // Gestion de la création d'une ressource
   const handleCreateResource = async (data: { titre: string, contenu: string, id_categorie?: string }) => {
@@ -69,12 +60,8 @@ const CategoryFeed = () => {
         'success'
       );
       
-      // Recharger les ressources pour afficher la nouvelle ressource
-      resetResources();
-      setSelectedCategory(categoryId || null);
-      for (let i = 0; i < 3; i++) {
-        fetchRandomResources();
-      }
+      // Recharger les ressources pour afficher la nouvelle ressource (après validation)
+      fetchAllResources();
     } catch (error) {
       console.error('Erreur lors de la création de la ressource:', error);
       showToast(
@@ -164,17 +151,6 @@ const CategoryFeed = () => {
                     category={resource.category}
                   />
                 ))}
-                
-                {/* Bouton pour charger plus de ressources */}
-                <div className="text-center py-6">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={resourcesLoading}
-                    className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    {resourcesLoading ? 'Chargement...' : 'Charger plus de ressources'}
-                  </button>
-                </div>
               </>
             ) : (
               // Message quand aucune ressource n'est trouvée

@@ -26,7 +26,7 @@ export default function RightSidebar() {
           categories.slice(0, 5).map((category) => (
             <div key={category._id}>
               <Link 
-                to={`/feed?category=${category._id}`}
+                to={`/categories/${category._id}`}
                 className="hover:text-primary transition-colors"
               >
                 <h4 className="font-medium">{category.nom}</h4>
@@ -44,10 +44,10 @@ export default function RightSidebar() {
         {categories.length > 5 && (
           <div className="pt-2 border-t border-gray-100">
             <Link 
-              to="/feed" 
+              to="/categories" 
               className="text-sm text-primary hover:text-primary/80 transition-colors"
             >
-              Voir toutes les ressources ({categories.length} catégories)
+              Voir toutes les catégories ({categories.length})
             </Link>
           </div>
         )}
