@@ -119,8 +119,7 @@ const ResourceCard = ({ resource, author, category }: ResourceCardProps) => {
 
   return (
     <div
-      className="bg-white rounded-lg ring-gray-200 ring-1 sm:rounded-lg w-full cursor-pointer hover:ring-2 hover:ring-gray-300 transition-all"
-      onClick={handleResourceClick}
+      className="bg-white rounded-lg ring-gray-200 ring-1 sm:rounded-lg w-full"
     >
       <div className="p-4">
         <div className="flex items-start">
@@ -155,11 +154,10 @@ const ResourceCard = ({ resource, author, category }: ResourceCardProps) => {
         
         {isTruncated && (
           <button 
-            onClick={toggleExpand}
+            onClick={handleResourceClick}
             className="text-primary font-medium text-sm flex items-center mb-3 hover:underline"
           >
-            {isExpanded ? 'Voir moins' : 'Voir plus'}
-            <ChevronDown className={`h-4 w-4 ml-1 ${isExpanded ? 'transform rotate-180' : ''}`} />
+            Voir plus
           </button>
         )}
         
