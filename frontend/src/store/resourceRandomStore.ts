@@ -186,8 +186,6 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           }
         }
         
-        // Si on n'a pas pu récupérer l'auteur via la route admin ou si l'utilisateur n'est pas admin,
-        // on utilise un auteur par défaut avec l'ID du publieur
         set(state => ({
           resources: state.resources.map(resource => 
             resource._id === resourceId 

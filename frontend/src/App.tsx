@@ -9,6 +9,7 @@ import ProtectedRoute from './components/features/auth/ProtectedRoute'
 import AdminDashboard from './views/admin/AdminDashboard'
 import AdminRoute from './components/features/auth/AdminRoute'
 import ResourceDetail from './views/ResourceDetail'
+import SearchResults from './views/SearchResults'
 import { ToastProvider } from './contexts/ToastContext'
 import ToastTester from './components/ui/ToastTester'
 import './styles/content-styles.css' // Importer les styles pour le contenu WYSIWYG
@@ -26,6 +27,7 @@ function App() {
             <Route path="/oubli-mot-de-passe" element={<ForgotPassword />} />
             <Route path="/feed" element={<Feed />} />
             <Route path="/feed/ressource/:id" element={<ResourceDetail />} />
+            <Route path="/search" element={<SearchResults />} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>
