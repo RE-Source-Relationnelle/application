@@ -5,12 +5,13 @@ import useAuthStore from '../store/authStore';
 import useResourceDetailsStore from '../store/resourceDetailsStore';
 import useFavoritesStore from '../store/favoritesStore';
 import { Heart, Share2, MessageSquareText } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
     const [newComment, setNewComment] = useState('');
-    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const { user } = useAuthStore();
+    const { showToast } = useToast();
     
     // Utiliser le store pour les détails de la ressource et les commentaires
     const { 
@@ -111,12 +112,12 @@ const ResourceDetail = () => {
     // Gestion de l'ajout/suppression des favoris
     const handleFavoriteClick = async () => {
         if (!user) {
-            setNotification({ message: 'Vous devez être connecté pour ajouter aux favoris', type: 'error' });
+            showToast('Vous devez être connecté pour ajouter aux favoris', 'error');
             return;
         }
 
         if (!id) {
-            setNotification({ message: 'ID de ressource manquant', type: 'error' });
+            showToast('ID de ressource manquant', 'error');
             return;
         }
 
@@ -127,20 +128,20 @@ const ResourceDetail = () => {
             if (isCurrentlyFavorite) {
                 success = await removeFavorite(id);
                 if (success) {
-                    setNotification({ message: 'Ressource supprimée des favoris', type: 'success' });
+                    showToast('Ressource supprimée des favoris', 'success');
                 }
             } else {
                 success = await addFavorite(id);
                 if (success) {
-                    setNotification({ message: 'Ressource ajoutée aux favoris', type: 'success' });
+                    showToast('Ressource ajoutée aux favoris', 'success');
                 }
             }
 
             if (!success && favoriteError) {
-                setNotification({ message: favoriteError, type: 'error' });
+                showToast(favoriteError, 'error');
             }
         } catch (error) {
-            setNotification({ message: 'Une erreur est survenue', type: 'error' });
+            showToast('Une erreur est survenue', 'error');
         }
     };
 
@@ -149,9 +150,9 @@ const ResourceDetail = () => {
         const url = window.location.href;
         try {
             await navigator.clipboard.writeText(url);
-            setNotification({ message: 'Lien copié dans le presse-papier', type: 'success' });
+            showToast('Lien copié dans le presse-papier', 'success');
         } catch (err) {
-            setNotification({ message: 'Impossible de copier le lien', type: 'error' });
+            showToast('Impossible de copier le lien', 'error');
         }
     };
 
