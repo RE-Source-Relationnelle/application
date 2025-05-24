@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import useResourcesStore from '../../../store/resourcesStore';
 import { Resource } from '../../../types/types';
 import { Trash2, SquarePen, Eye, Plus, Filter } from 'lucide-react';
-import ResourceModal from '../../../components/features/ResourceModal';
+import ResourceModal from '../../../components/features/ressources/ResourceModal';
 import { useToast } from '../../../contexts/ToastContext';
 
 const PostsPanel = () => {

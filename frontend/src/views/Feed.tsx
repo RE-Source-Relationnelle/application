@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../components/layout/MainLayout'
-import PostModal from '../components/features/PostModal'
+import PostModal from '../components/features/ressources/PostModal'
 import useAuthStore from '../store/authStore'
 import useResourceRandomStore from '../store/resourceRandomStore'
-import ResourceCard from '../components/features/ResourceCard'
+import ResourceCard from '../components/features/ressources/ResourceCard'
 
 const Feed = () => {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);

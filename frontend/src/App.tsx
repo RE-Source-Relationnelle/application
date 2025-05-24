@@ -12,7 +12,7 @@ import ResourceDetail from './views/ResourceDetail'
 import SearchResults from './views/SearchResults'
 import { ToastProvider } from './contexts/ToastContext'
 import ToastTester from './components/ui/ToastTester'
-import './styles/content-styles.css' // Importer les styles pour le contenu WYSIWYG
+import './styles/content-styles.css'
 
 const SHOW_TOAST_TESTER = false;
 

@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
 import useCategoryStore from '../../../store/categoryStore';
 
+// Panel de gestion des catégories
 const CategoriesPanel = () => {
     const { categories, loading: loadingCategories, error, fetchCategories, updateCategory, createCategory } = useCategoryStore();
     const [newCategory, setNewCategory] = useState("");
     const [newCategoryDescription, setNewCategoryDescription] = useState("");
     const [showDescriptionField, setShowDescriptionField] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
-    
-    // État pour la modification d'une catégorie
     const [editingCategory, setEditingCategory] = useState<{id: string, nom: string, description: string} | null>(null);
 
-    // Charger les catégories au montage du composant
     useEffect(() => {
         fetchCategories();
     }, [fetchCategories]);
@@ -22,14 +20,12 @@ const CategoriesPanel = () => {
             setNewCategory("");
             setNewCategoryDescription("");
             setShowDescriptionField(false);
-            setShowAddForm(false); // Fermer le formulaire après ajout
-            // Rafraîchir les catégories après l'ajout
+            setShowAddForm(false); 
             fetchCategories();
         }
     };
 
     const handleDeleteCategory = async (id: string) => {
-        // Vérifier si la catégorie est utilisée par des ressources
         const categoryInUse = categories.find(cat => cat._id === id)?.resourceCount && categories.find(cat => cat._id === id)?.resourceCount! > 0;
         
         if (categoryInUse) {
@@ -71,12 +67,9 @@ const CategoriesPanel = () => {
                 editingCategory.description
             );
             setEditingCategory(null);
-            // Rafraîchir les catégories après la modification
             fetchCategories();
         }
     };
-
-    // Réinitialiser le formulaire d'ajout
     const cancelAddForm = () => {
         setShowAddForm(false);
         setNewCategory("");

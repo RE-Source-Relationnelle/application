@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageSquareText, Share2, ChevronDown } from 'lucide-react';
-import { Resource, User, Category } from '../../types/types';
-import { useToast } from '../../contexts/ToastContext';
-import useFavoritesStore from '../../store/favoritesStore';
+import { Resource, User, Category } from '../../../types/types';
+import { useToast } from '../../../contexts/ToastContext';
+import useFavoritesStore from '../../../store/favoritesStore';
 
 interface ResourceCardProps {
   resource: Resource;

@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, User, PlusCircle, Settings, ChevronDown, Menu, LogOut } from 'lucide-react';
+import { Search, User, PlusCircle, Settings, ChevronDown, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
-import ResourceModal from '../features/ResourceModal';
+import ResourceModal from '../features/ressources/ResourceModal';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import useSearchStore from '../../store/searchStore';
@@ -212,7 +212,7 @@ const Navbar = () => {
             ) : (
               <div className="hidden md:block">
                 <Link
-                  to="/login"
+                  to="/"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
                 >
                   Connexion
