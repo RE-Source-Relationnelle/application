@@ -38,8 +38,8 @@ def list_pending_resources():
 
         # Récupérer le rôle de l'utilisateur
         role = db.role.find_one({"_id": user.get("role_id")})
-        if not role or role.get("nom_role") != "modérateur":
-            print("❌ Accès refusé : l'utilisateur n'est pas modérateur")
+        if not role or (role.get("nom_role") != "modérateur" and role.get("nom_role") != "administrateur" and role.get("nom_role") != "super-administrateur"):
+            print("❌ Accès refusé : l'utilisateur n'a pas les droits suffisants")
             return jsonify({"error": "Accès non autorisé"}), 403
 
         # Récupérer toutes les ressources en attente
