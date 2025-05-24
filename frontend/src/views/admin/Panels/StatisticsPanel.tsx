@@ -13,7 +13,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
 import { fr } from 'date-fns/locale';
-import { api } from '../../../store/authStore';
+import { useStatisticsStore } from '../../../store/statisticsStore';
 import { User, Resource, Favorite } from '../../../types/types';
 
 // Enregistrer les composants nécessaires de Chart.js
@@ -31,8 +31,10 @@ ChartJS.register(
 // Options pour les périodes de temps
 type TimePeriod = '30d' | '3m' | '1y' | 'all';
 
+// Composant StatisticsPanel
 const StatisticsPanel = () => {
-  // État pour les données de statistiques
+  const { users, resources, pendingResources, favorites, loading: storeLoading, error: storeError, fetchAllData } = useStatisticsStore();
+  
   const [statData, setStatData] = useState({
     users: [] as { date: string; count: number }[],
     resources: [] as { date: string; count: number }[],
@@ -48,10 +50,8 @@ const StatisticsPanel = () => {
     favorites: true
   });
   
-  // État pour la période de temps sélectionnée
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('30d');
   
-  // État pour le chargement
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -61,28 +61,22 @@ const StatisticsPanel = () => {
     setError(null);
     
     try {
-      // Récupérer tous les utilisateurs
-      const usersResponse = await api.get('/admin/get_users');
+      await fetchAllData();
       
-      // Récupérer toutes les ressources
-      const resourcesResponse = await api.get('/resources/');
-      
-      // Récupérer les ressources en attente (pour calculer les validées)
-      const pendingResourcesResponse = await api.get('/resources/pending');
-      
-      // Récupérer les favoris
-      const favoritesResponse = await api.get('/resources/favorites');
-      
-      // Traiter les données pour obtenir les statistiques par date
-      const users = usersResponse.data || [] as User[];
-      const resources = resourcesResponse.data || [] as Resource[];
-      const pendingResources = pendingResourcesResponse.data || [] as any[];
-      const favorites = favoritesResponse.data || [] as Favorite[];
+      if (storeError) {
+        throw new Error(storeError);
+      }
       
       // Calculer le nombre de ressources validées (total - en attente)
-      const validatedResources = resources.filter((resource: Resource) => 
-        !pendingResources.some((pending: any) => pending.id === resource._id)
-      );
+      const validatedResources = resources.filter((resource: Resource) => {
+        // Vérifier si la ressource a une date_validation (ce qui indiquerait qu'elle est validée)
+        if (resource.date_validation) return true;
+        
+        // Sinon, vérifier si elle n'est pas dans les ressources en attente
+        return !pendingResources.some((pending: any) => 
+          pending._id === resource._id || pending.id === resource._id
+        );
+      });
       
       // Traiter les données pour les adapter au format attendu par le graphique
       const processedData = processDataByTimePeriod({
@@ -93,7 +87,6 @@ const StatisticsPanel = () => {
       }, period);
       
       setStatData(processedData);
-      
       setLoading(false);
     } catch (err) {
       console.error('Erreur lors de la récupération des statistiques:', err);
@@ -110,14 +103,20 @@ const StatisticsPanel = () => {
     
     // Filtrer les données par période
     const filteredUsers = users.filter((user: User) => new Date(user.created_at || '') >= periodStartDate);
-    const filteredResources = resources.filter((resource: Resource) => new Date(resource.createdAt || '') >= periodStartDate);
-    const filteredValidatedResources = validatedResources.filter((resource: Resource) => new Date(resource.createdAt || '') >= periodStartDate);
+    const filteredResources = resources.filter((resource: Resource) => {
+      const dateStr = resource.createdAt;
+      return new Date(dateStr) >= periodStartDate;
+    });
+    const filteredValidatedResources = validatedResources.filter((resource: Resource) => {
+      const dateStr = resource.createdAt;
+      return new Date(dateStr) >= periodStartDate;
+    });
     const filteredFavorites = favorites.filter((favorite: Favorite) => new Date(favorite.created_at || '') >= periodStartDate);
     
     // Grouper les données par jour/semaine/mois selon la période
     const groupedUsers = groupDataByDate(filteredUsers, 'created_at', period);
-    const groupedResources = groupDataByDate(filteredResources, 'date_creation', period);
-    const groupedValidatedResources = groupDataByDate(filteredValidatedResources, 'date_creation', period);
+    const groupedResources = groupDataByDate(filteredResources, 'createdAt', 'date_creation', period);
+    const groupedValidatedResources = groupDataByDate(filteredValidatedResources, 'createdAt', 'date_creation', period);
     const groupedFavorites = groupDataByDate(filteredFavorites, 'created_at', period);
     
     return {
@@ -143,7 +142,7 @@ const StatisticsPanel = () => {
         startDate.setFullYear(startDate.getFullYear() - 1);
         break;
       case 'all':
-        startDate.setFullYear(2000); // Date suffisamment ancienne pour tout inclure
+        startDate.setFullYear(2020);
         break;
     }
     
@@ -151,11 +150,9 @@ const StatisticsPanel = () => {
   };
   
   // Fonction pour grouper les données par date
-  const groupDataByDate = (items: any[], dateField: string, period: TimePeriod) => {
-    // Créer un dictionnaire pour regrouper les éléments par date
+  const groupDataByDate = (items: any[], primaryDateField: string, fallbackDateField?: string, period: TimePeriod = '30d') => {
     const groupedByDate: Record<string, number> = {};
     
-    // Déterminer le format de date en fonction de la période
     const getDateKey = (date: Date) => {
       if (period === '30d') {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -168,7 +165,10 @@ const StatisticsPanel = () => {
     
     // Compter les éléments par date
     items.forEach(item => {
-      const date = new Date(item[dateField] || '');
+      const dateValue = item[primaryDateField] || (fallbackDateField ? item[fallbackDateField] : '');
+      if (!dateValue) return;
+      
+      const date = new Date(dateValue);
       const dateKey = getDateKey(date);
       
       if (groupedByDate[dateKey]) {
@@ -178,12 +178,10 @@ const StatisticsPanel = () => {
       }
     });
     
-    // Générer des dates pour toute la période (pour avoir des points à 0)
     const now = new Date();
     const startDate = getPeriodStartDate(now, period);
     const result = [];
     
-    // Ajouter un jour/semaine/mois à la fois jusqu'à aujourd'hui
     let currentDate = new Date(startDate);
     while (currentDate <= now) {
       const dateKey = getDateKey(currentDate);
@@ -193,7 +191,6 @@ const StatisticsPanel = () => {
         count: groupedByDate[dateKey] || 0
       });
       
-      // Incrémenter la date selon la période
       if (period === '30d') {
         currentDate.setDate(currentDate.getDate() + 1);
       } else if (period === '3m') {
@@ -206,7 +203,6 @@ const StatisticsPanel = () => {
     return result;
   };
   
-  // Effet pour charger les données initiales
   useEffect(() => {
     fetchStatistics(timePeriod);
   }, [timePeriod]);
@@ -451,13 +447,13 @@ const StatisticsPanel = () => {
       <div className="bg-white p-4 rounded-lg ring-1 ring-gray-200">
         <h3 className="text-sm font-medium text-gray-500 mb-4">Évolution des statistiques</h3>
         
-        {loading ? (
+        {loading || storeLoading ? (
           <div className="h-64 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-        ) : error ? (
+        ) : error || storeError ? (
           <div className="h-64 flex items-center justify-center text-red-500">
-            <p>{error}</p>
+            <p>{error || storeError}</p>
           </div>
         ) : (
           <div className="h-64">
