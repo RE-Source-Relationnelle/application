@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, User, PlusCircle, Settings, ChevronDown, Menu, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import ResourceModal from '../features/ResourceModal';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
+import useSearchStore from '../../store/searchStore';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -13,23 +14,34 @@ const Navbar = () => {
   const { logout, isAuthenticated, user } = useAuthStore();
   const { createResource } = useResourcesStore();
   const { showToast } = useToast();
+  const { query, setQuery } = useSearchStore();
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
 
+  // Gestion de la barre de recherche
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
+    setTimeout(() => {
+      if (!isSearchOpen && searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    }, 100);
   };
 
+  // Gestion du menu des catégories
   const toggleCategoryMenu = () => {
     setIsCategoryMenuOpen(!isCategoryMenuOpen);
   };
 
+  // Gestion de la déconnexion
   const handleLogout = async () => {
     await logout();
     navigate('/');
   };
-  
+
+  // Gestion de la création d'une ressource
   const handleCreateResource = async (data: { titre: string, contenu: string, id_categorie?: string }) => {
     console.log('Création d\'une nouvelle ressource avec les données suivantes:', data);
     
@@ -37,14 +49,10 @@ const Navbar = () => {
       const result = await createResource(data);
       console.log('Ressource créée avec succès:', result);
       
-      // Afficher un toast de succès
       showToast(
         'Votre ressource a été créée avec succès et est en attente de validation par un modérateur.',
         'success'
       );
-      
-      // Optionnel : rediriger vers le feed après création
-      // navigate('/feed');
     } catch (error) {
       console.error('Erreur lors de la création de la ressource:', error);
       showToast(
@@ -54,26 +62,48 @@ const Navbar = () => {
     }
   };
 
+  // Fonction pour gérer la soumission de la recherche
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query)}`);
+      setIsSearchOpen(false);
+    }
+  };
+
   // Composant réutilisable pour la barre de recherche
-  const SearchBar = ({ isMobile = false }) => (
-    <div className={`${isMobile ? 'w-full' : 'max-w-sm w-full'}`}>
-      <div className="relative flex">
-        <input
-          type="text"
-          placeholder="Rechercher"
-          className={`w-full ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2 sm:text-sm'} border-b-2 border-primary rounded-tl-[4px] bg-gray-100 focus:outline-none focus:ring-0 focus:ring-transparent`}
-          aria-label="Champ de recherche"
-        />
-        <button
-          type="button"
-          className={`bg-primary hover:bg-secondary text-white ${isMobile ? 'px-2 py-1' : 'px-3 py-2'} rounded-tr-[4px] flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-transparent`}
-          aria-label="Rechercher"
-        >
-          <Search className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
-        </button>
+  const SearchBar = ({ isMobile = false }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    useEffect(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, []);
+    
+    return (
+      <div className={`${isMobile ? 'w-full' : 'max-w-sm w-full'}`}>
+        <form onSubmit={handleSearch} className="relative flex">
+          <input
+            ref={isMobile ? searchInputRef : inputRef}
+            type="text"
+            placeholder="Rechercher"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={`w-full ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2 sm:text-sm'} border-b-2 border-primary rounded-tl-[4px] bg-gray-100 focus:outline-none focus:ring-0 focus:ring-transparent`}
+            aria-label="Champ de recherche"
+          />
+          <button
+            type="submit"
+            className={`bg-primary hover:bg-secondary text-white ${isMobile ? 'px-2 py-1' : 'px-3 py-2'} rounded-tr-[4px] flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-transparent`}
+            aria-label="Rechercher"
+          >
+            <Search className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
+          </button>
+        </form>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <nav className="bg-white ring-gray-200 ring-1 relative z-10 sticky top-0">
@@ -89,7 +119,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Espace vide en mobile pour pousser les éléments vers la droite */}
           <div className="flex-grow md:hidden"></div>
 
           {/* Desktop Search Bar */}
@@ -115,10 +144,8 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </button>
 
-            {/* Desktop Actions */}
             {isAuthenticated ? (
               <div className="hidden md:flex items-center space-x-4">
-                {/* Créer un post */}
                 <button 
                   onClick={() => setIsResourceModalOpen(true)} 
                   className="p-2 text-gray-600 hover:text-primary" 
@@ -151,7 +178,7 @@ const Navbar = () => {
                   )}
                 </div>
                 
-                {/* Admin Link (if admin) */}
+                {/* Admin Link */}
                 {isAdmin && (
                   <Link to="/admin" className="p-2 text-gray-600 hover:text-primary" title="Administration">
                     <Settings className="h-5 w-5" />
@@ -160,20 +187,17 @@ const Navbar = () => {
                 
                 {/* User Menu */}
                 <div className="relative ml-3">
-                  <div>
+                  <Link to="/profile">
                     <button
                       type="button"
-                      className="flex text-sm rounded-full focus:outline-none"
-                      id="user-menu-button"
-                      aria-expanded="false"
-                      aria-haspopup="true"
+                      className="flex text-sm rounded-full focus:outline-none hover:ring-2 hover:ring-primary/20"
+                      aria-label="Accéder au profil"
                     >
-                      <span className="sr-only">Ouvrir le menu utilisateur</span>
                       <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">
                         <User className="h-5 w-5" />
                       </div>
                     </button>
-                  </div>
+                  </Link>
                 </div>
                 
                 {/* Logout Button */}

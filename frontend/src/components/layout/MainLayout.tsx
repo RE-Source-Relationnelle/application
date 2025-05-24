@@ -11,7 +11,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children, onOpenPostModal, showSidebars = false }: MainLayoutProps) {
   return (
     <>
-      <div className="container mx-auto px-0 sm:px-6 py-4 pb-16 sm:pb-4">
+      <div className="container mx-auto px-0 sm:px-6 pt-12 pb-16 sm:pb-4">
         <div className="grid grid-cols-12 gap-0 sm:gap-4">
           {showSidebars && (
             <div className="hidden lg:block lg:col-span-3">
