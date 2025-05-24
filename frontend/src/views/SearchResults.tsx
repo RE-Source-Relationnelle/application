@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
-import ResourceCard from '../components/features/ResourceCard';
+import ResourceCard from '../components/features/ressources/ResourceCard';
 import useSearchStore from '../store/searchStore';
 import { Search, Filter, X } from 'lucide-react';
 

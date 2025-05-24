@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, User, PlusCircle, Settings, ChevronDown, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
-import ResourceModal from '../features/ResourceModal';
+import ResourceModal from '../features/ressources/ResourceModal';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import useSearchStore from '../../store/searchStore';
