@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import useCategoryStore from '../../../store/categoryStore';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import '../../styles/quill-custom.css';
+import '../../../styles/quill-custom.css';
 
 interface ResourceModalProps {
   isOpen: boolean;
