@@ -178,6 +178,9 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
                       : resource
                   )
                 }));
+                
+                // Réappliquer le filtre de catégorie
+                get().filterResourcesByCategory();
                 return;
               }
             }
@@ -202,6 +205,9 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           )
         }));
         
+        // Réappliquer le filtre de catégorie
+        get().filterResourcesByCategory();
+        
       } catch (apiError: any) {
         // Si l'erreur est liée à CORS ou à un problème réseau, on ne fait rien
         // mais on évite de spammer la console avec des erreurs
@@ -225,6 +231,9 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
               : resource
           )
         }));
+        
+        // Réappliquer le filtre de catégorie
+        get().filterResourcesByCategory();
       }
     } catch (error) {
       console.error(`Erreur lors de la récupération de l'auteur pour la ressource ${resourceId}:`, error);
@@ -269,6 +278,9 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           console.warn(`Impossible de récupérer directement la catégorie ${categoryId}:`, directError);
         }
       }
+      
+      // Réappliquer le filtre de catégorie
+      get().filterResourcesByCategory();
     } catch (error) {
       console.error(`Erreur lors de la récupération de la catégorie pour la ressource ${resourceId}:`, error);
     }

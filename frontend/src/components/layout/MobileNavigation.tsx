@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Home, Menu, PlusCircle, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import useCategoryStore from '../../store/categoryStore';
+import useAuthStore from '../../store/authStore';
 
 interface MobileNavigationProps {
   onOpenPostModal: () => void;
@@ -8,10 +10,19 @@ interface MobileNavigationProps {
 
 const MobileNavigation = ({ onOpenPostModal }: MobileNavigationProps) => {
   const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
+  const { categories, fetchCategories } = useCategoryStore();
+  const { isAuthenticated } = useAuthStore();
   
   const toggleCategoryMenu = () => {
     setIsCategoryMenuOpen(!isCategoryMenuOpen);
   };
+
+  // Charger les catégories au montage du composant
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated, fetchCategories]);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 sm:hidden z-10">
@@ -35,17 +46,14 @@ const MobileNavigation = ({ onOpenPostModal }: MobileNavigationProps) => {
           {/* Menu déroulant des catégories */}
           {isCategoryMenuOpen && (
             <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-48 bg-white rounded-md shadow-lg py-1 z-20">
-              <Link to="/category/famille" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Famille
-              </Link>
-              <Link to="/category/sante" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Santé
-              </Link>
-              <Link to="/category/education" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Éducation
-              </Link>
-              <Link to="/category/environnement" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                Environnement
+              {categories.map((category) => (
+                <Link key={category._id} to={`/categories/${category._id}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  {category.nom}
+                </Link>
+              ))}
+              {categories.length > 0 && <div className="border-t border-gray-100 my-1"></div>}
+              <Link to="/categories" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100">
+                Toutes les catégories
               </Link>
             </div>
           )}

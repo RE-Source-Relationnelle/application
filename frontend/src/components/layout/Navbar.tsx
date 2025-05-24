@@ -6,6 +6,7 @@ import ResourceModal from '../features/ressources/ResourceModal';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import useSearchStore from '../../store/searchStore';
+import useCategoryStore from '../../store/categoryStore';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -15,10 +16,18 @@ const Navbar = () => {
   const { createResource } = useResourcesStore();
   const { showToast } = useToast();
   const { query, setQuery } = useSearchStore();
+  const { categories, fetchCategories } = useCategoryStore();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
+
+  // Charger les catégories au montage du composant
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated, fetchCategories]);
 
   // Gestion de la barre de recherche
   const toggleSearch = () => {
@@ -178,9 +187,11 @@ const Navbar = () => {
                   {/* Dropdown Menu */}
                   {isCategoryMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
-                      <Link to="/categories/1" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 1</Link>
-                      <Link to="/categories/2" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 2</Link>
-                      <Link to="/categories/3" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 3</Link>
+                      {categories.map((category) => (
+                        <Link key={category._id} to={`/categories/${category._id}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                          {category.nom}
+                        </Link>
+                      ))}
                       <div className="border-t border-gray-100 my-1"></div>
                       <Link to="/categories" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100">Toutes les catégories</Link>
                     </div>
