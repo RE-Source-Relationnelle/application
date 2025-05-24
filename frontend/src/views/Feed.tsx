@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import MainLayout from '../components/layout/MainLayout'
-import PostModal from '../components/features/ressources/PostModal'
+import ResourceModal from '../components/features/ressources/ResourceModal'
 import useAuthStore from '../store/authStore'
 import useResourceRandomStore from '../store/resourceRandomStore'
 import ResourceCard from '../components/features/ressources/ResourceCard'
+import useResourcesStore from '../store/resourcesStore'
 
 const Feed = () => {
-    const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
     const { user, fetchUserRole } = useAuthStore();
-    const navigate = useNavigate();
+    const { createResource } = useResourcesStore();
     
     // Utiliser le store pour les ressources aléatoires
     const { 
@@ -48,23 +48,26 @@ const Feed = () => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [hasMore]);
 
-    const handlePostSubmit = (content: string) => {
-        if (content.trim()) {
-            console.log('Nouveau post:', content);
+    const handleResourceSubmit = async (data: { titre: string, contenu: string, id_categorie?: string }) => {
+        try {
+            await createResource(data);
+            setIsResourceModalOpen(false);
+        } catch (error) {
+            console.error('Erreur lors de la création de la ressource:', error);
         }
-    }
+    };
 
-    const openPostModal = () => setIsPostModalOpen(true);
-    const closePostModal = () => setIsPostModalOpen(false);
+    const openResourceModal = () => setIsResourceModalOpen(true);
+    const closeResourceModal = () => setIsResourceModalOpen(false);
 
     return (
         <>
-            <MainLayout onOpenPostModal={openPostModal} showSidebars={true}>
+            <MainLayout onOpenPostModal={openResourceModal} showSidebars={true}>
                 <div className="w-full mx-auto space-y-4 sm:px-0">
                     <div className="bg-white rounded-lg ring-gray-200 ring-1 p-3 sm:p-4 hidden sm:block">
                         <div className="flex items-center space-x-2 sm:space-x-3 mb-3">
                             <div
-                                onClick={openPostModal}
+                                onClick={openResourceModal}
                                 className="flex-1 py-2.5 px-3 bg-gray-100 hover:bg-gray-200 rounded-full text-sm sm:text-base text-gray-500 cursor-pointer"
                             >
                                 Commencer un post
@@ -79,6 +82,8 @@ const Feed = () => {
                     </div>
 
                     <div className="space-y-4">
+                        {/* Logs de débogage */}
+
                         {loading && resources.length === 0 ? (
                             <div className="flex justify-center items-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -105,19 +110,23 @@ const Feed = () => {
                             </div>
                         )}
 
-                        {!loading && !hasMore && resources.length > 0 && (
-                            <div className="text-center py-6 text-gray-500">
-                                Vous avez atteint la fin des publications
+                        {!loading && (!hasMore || resources.length === 0) && (
+                            <div className="text-center py-6 px-6 bg-white rounded-lg ring-gray-200 ring-1">
+                                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm">
+                                    <h3 className="text-lg font-medium text-gray-700 mb-2">Vous avez consulté toutes les dernières ressources</h3>
+                                    <p className="text-gray-500 mb-4">Revenez plus tard pour découvrir de nouveaux contenus ou explorez d'autres catégories</p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
             </MainLayout>
 
-            <PostModal 
-                isOpen={isPostModalOpen}
-                onClose={closePostModal}
-                onSubmit={handlePostSubmit}
+            <ResourceModal 
+                isOpen={isResourceModalOpen}
+                onClose={closeResourceModal}
+                onSubmit={handleResourceSubmit}
+                mode="create"
             />
         </>
     );

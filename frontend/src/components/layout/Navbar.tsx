@@ -76,10 +76,19 @@ const Navbar = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     
     useEffect(() => {
-      if (inputRef.current) {
+      if (!isMobile && inputRef.current) {
         inputRef.current.focus();
       }
-    }, []);
+    }, [isMobile]);
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setQuery(e.target.value);
+      if (isMobile && searchInputRef.current) {
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 0);
+      }
+    };
     
     return (
       <div className={`${isMobile ? 'w-full' : 'max-w-sm w-full'}`}>
@@ -89,7 +98,7 @@ const Navbar = () => {
             type="text"
             placeholder="Rechercher"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleInputChange}
             className={`w-full ${isMobile ? 'px-3 py-1 text-sm' : 'px-4 py-2 sm:text-sm'} border-b-2 border-primary rounded-tl-[4px] bg-gray-100 focus:outline-none focus:ring-0 focus:ring-transparent`}
             aria-label="Champ de recherche"
           />
