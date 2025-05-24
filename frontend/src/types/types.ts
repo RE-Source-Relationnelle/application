@@ -16,6 +16,7 @@ export interface User {
         role_id: string | null;
         nom_role: string;
     };
+    created_at?: string;
 }
 
 export interface RegisterFormData {
