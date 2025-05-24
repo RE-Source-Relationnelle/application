@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import useCategoryStore from '../../store/categoryStore';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css'; // Importer les styles CSS de Quill
-import '../../styles/quill-custom.css'; // Importer nos styles personnalisés
+import 'react-quill/dist/quill.snow.css';
+import '../../styles/quill-custom.css';
 
 interface ResourceModalProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ interface ResourceModalProps {
   }) => Promise<void>;
 }
 
+// Composant modal pour la création ou la modification d'une ressource
 const ResourceModal = ({ isOpen, onClose, initialData, mode, onSubmit }: ResourceModalProps) => {
   const [formData, setFormData] = useState({
     titre: '',
@@ -56,19 +57,16 @@ const ResourceModal = ({ isOpen, onClose, initialData, mode, onSubmit }: Resourc
 
   useEffect(() => {
     if (isOpen) {
-      // Réinitialiser le formulaire avec les données initiales ou des valeurs par défaut
       setFormData({
         titre: initialData?.titre || '',
         contenu: initialData?.contenu || '',
         id_categorie: initialData?.id_categorie || ''
       });
       
-      // Charger les catégories si elles ne sont pas déjà chargées
       if (categories.length === 0) {
         fetchCategories();
       }
       
-      // Réinitialiser les erreurs
       setError(null);
     }
   }, [isOpen, initialData, categories.length, fetchCategories]);
@@ -111,7 +109,6 @@ const ResourceModal = ({ isOpen, onClose, initialData, mode, onSubmit }: Resourc
         ...formData
       });
       
-      // Fermer la modal après soumission réussie
       onClose();
     } catch (err: any) {
       console.error('Erreur lors de la soumission:', err);
@@ -175,7 +172,7 @@ const ResourceModal = ({ isOpen, onClose, initialData, mode, onSubmit }: Resourc
                   modules={modules}
                   formats={formats}
                   placeholder="Contenu de la ressource"
-                  className="h-64 mb-12" // Hauteur fixe avec marge pour la barre d'outils
+                  className="h-64 mb-12"
                 />
               </div>
             </div>
