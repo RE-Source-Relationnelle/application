@@ -79,6 +79,8 @@ const Feed = () => {
                     </div>
 
                     <div className="space-y-4">
+                        {/* Logs de débogage */}
+
                         {loading && resources.length === 0 ? (
                             <div className="flex justify-center items-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -105,9 +107,18 @@ const Feed = () => {
                             </div>
                         )}
 
-                        {!loading && !hasMore && resources.length > 0 && (
-                            <div className="text-center py-6 text-gray-500">
-                                Vous avez atteint la fin des publications
+                        {!loading && (!hasMore || resources.length === 0) && (
+                            <div className="text-center py-6 px-6 bg-white rounded-lg ring-gray-200 ring-1">
+                                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm">
+                                    <h3 className="text-lg font-medium text-gray-700 mb-2">Vous avez consulté toutes les dernières ressources</h3>
+                                    <p className="text-gray-500 mb-4">Revenez plus tard pour découvrir de nouveaux contenus ou explorez d'autres catégories</p>
+                                    <button 
+                                        onClick={() => loadInitialResources(5)}
+                                        className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors"
+                                    >
+                                        Rafraîchir
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
