@@ -17,6 +17,7 @@ interface ResourceDetailsState {
   // Actions
   fetchResource: (resourceId: string) => Promise<void>;
   fetchComments: (resourceId: string) => Promise<void>;
+  fetchSubComments: (resourceId: string, commentId: string) => Promise<Comment[]>;
   fetchAuthor: (publisherId: string) => Promise<void>;
   fetchCategory: (categoryId: string) => Promise<void>;
   addComment: (resourceId: string, content: string) => Promise<Comment | null>;
@@ -221,9 +222,30 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         
         return getTimestamp(b) - getTimestamp(a);
       });
+
+      // Pour chaque commentaire, récupérer ses sous-commentaires
+      const commentsWithReplies = await Promise.all(
+        sortedComments.map(async (comment: Comment) => {
+          try {
+            const replies = await useResourceDetailsStore.getState().fetchSubComments(resourceId, comment._id);
+            return {
+              ...comment,
+              replies: replies,
+              replies_count: replies.length
+            };
+          } catch (error) {
+            console.warn(`Impossible de récupérer les sous-commentaires pour ${comment._id}:`, error);
+            return {
+              ...comment,
+              replies: [],
+              replies_count: 0
+            };
+          }
+        })
+      );
       
       set({ 
-        comments: sortedComments,
+        comments: commentsWithReplies,
         loadingComments: false,
         commentError: null
       });
@@ -242,6 +264,23 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         loadingComments: false,
         commentError: errorMessage
       });
+    }
+  },
+  
+  // Récupérer les sous-commentaires d'un commentaire spécifique
+  fetchSubComments: async (resourceId: string, commentId: string) => {
+    try {
+      console.log(`Récupération des sous-commentaires pour commentaire ${commentId} dans ressource ${resourceId}`);
+      const response = await api.get(`/resources/sous_comments/${resourceId}/replies/${commentId}`);
+      console.log('Sous-commentaires récupérés:', response.data);
+      return response.data || [];
+    } catch (err: any) {
+      console.error(`Erreur lors de la récupération des sous-commentaires pour ${commentId}:`, err);
+      if (err.response) {
+        console.error('Status:', err.response.status);
+        console.error('Data:', err.response.data);
+      }
+      return [];
     }
   },
   
@@ -296,23 +335,35 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     try {
       set({ commentError: null });
       console.log('Envoi de la réponse avec le token...');
-      console.log('URL:', `resources/comments/${resourceId}/reply`);
-      console.log('Données envoyées:', { content, parent_comment_id: parentCommentId });
+      console.log('URL:', `resources/sous_comments/${resourceId}/replies/${parentCommentId}`);
+      console.log('Données envoyées:', { content });
       
-      const response = await api.post(`resources/comments/${resourceId}/reply`, { 
-        content, 
-        parent_comment_id: parentCommentId 
+      const response = await api.post(`resources/sous_comments/${resourceId}/replies/${parentCommentId}`, { 
+        content
       });
       
       console.log('Réponse complète du serveur:', response.data);
       
+      // Adapter la réponse au format attendu par le frontend
+      const adaptedReply = {
+        _id: response.data._id,
+        contenu: response.data.content, // content -> contenu
+        content: response.data.content,
+        id_user: response.data.user_id,
+        user_id: response.data.user_id,
+        comment_id: response.data.comment_id,
+        created_at: response.data.created_at,
+        nom_utilisateur: response.data.nom_utilisateur || '',
+        prenom_utilisateur: response.data.prenom_utilisateur || ''
+      };
+      
       // Mettre à jour les commentaires avec la nouvelle réponse
       set(state => {
-        const updatedComments = state.comments.map(comment => {
+        const updatedComments = state.comments.map((comment: Comment) => {
           if (comment._id === parentCommentId) {
             return {
               ...comment,
-              replies: [...(comment.replies || []), response.data],
+              replies: [...(comment.replies || []), adaptedReply],
               replies_count: (comment.replies_count || 0) + 1
             };
           }
@@ -325,7 +376,7 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         };
       });
       
-      return response.data;
+      return adaptedReply;
     } catch (err: any) {
       console.error('Erreur lors de l\'envoi de la réponse:', err);
       console.error('Status:', err.response?.status);

@@ -65,10 +65,22 @@ export interface Comment {
     // Informations utilisateur
     nom_utilisateur?: string;
     prenom_utilisateur?: string;
-    // Nouveau: Support pour les réponses aux commentaires
+    // Support pour les réponses aux commentaires
     parent_comment_id?: string | null; // null = commentaire racine, string = réponse à un commentaire
     replies?: Comment[]; // Liste des réponses (pour le frontend)
     replies_count?: number; // Nombre de réponses (pour l'affichage)
+}
+
+export interface SubComment {
+    _id: string;
+    content: string;
+    user_id: string;
+    resource_id: string;
+    comment_id: string; // ID du commentaire parent
+    created_at: string | { $date: string };
+    // Informations utilisateur enrichies
+    nom_utilisateur?: string;
+    prenom_utilisateur?: string;
 }
 
 export interface Favorite {
