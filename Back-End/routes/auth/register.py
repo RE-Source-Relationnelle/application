@@ -5,6 +5,7 @@ from bson import ObjectId
 from config.database import get_db
 from config.config import SECRET_KEY
 from . import auth_bp
+import bcrypt
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -43,7 +44,7 @@ def register():
             }
             db.role.insert_one(citoyen_role)
             print(f"Rôle 'citoyen' créé avec l'ID: {citoyen_role['_id']}")
-
+        data['password'] = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
         # Création de l'utilisateur
         user = {
             '_id': ObjectId(),
