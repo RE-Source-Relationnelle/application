@@ -5,11 +5,13 @@ import useAuthStore from '../store/authStore'
 import useResourceRandomStore from '../store/resourceRandomStore'
 import ResourceCard from '../components/features/ressources/ResourceCard'
 import useResourcesStore from '../store/resourcesStore'
+import useFavoritesStore from '../store/favoritesStore'
 
 const Feed = () => {
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
-    const { user, fetchUserRole } = useAuthStore();
+    const { user, fetchUserRole, isAuthenticated } = useAuthStore();
     const { createResource } = useResourcesStore();
+    const { fetchFavorites } = useFavoritesStore();
     
     // Utiliser le store pour les ressources aléatoires
     const { 
@@ -25,13 +27,19 @@ const Feed = () => {
         if (!user?.role) {
             fetchUserRole();
         }
+        
+        // Charger les favoris si l'utilisateur est connecté
+        if (isAuthenticated) {
+            fetchFavorites();
+        }
+        
         loadInitialResources(5);
         
         // Nettoyage lors du démontage du composant
         return () => {
             useResourceRandomStore.getState().resetResources();
         };
-    }, []);
+    }, [isAuthenticated, fetchFavorites]);
 
     // Gestion du scroll infini
     useEffect(() => {

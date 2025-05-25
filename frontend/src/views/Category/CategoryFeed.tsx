@@ -6,6 +6,8 @@ import ResourceModal from '../../components/features/ressources/ResourceModal';
 import useCategoryStore from '../../store/categoryStore';
 import useCategoryResourcesStore from '../../store/categoryResourcesStore';
 import useResourcesStore from '../../store/resourcesStore';
+import useFavoritesStore from '../../store/favoritesStore';
+import useAuthStore from '../../store/authStore';
 import { useToast } from '../../contexts/ToastContext';
 import { ArrowLeft, Filter } from 'lucide-react';
 
@@ -16,6 +18,7 @@ const CategoryFeed = () => {
   const { showToast } = useToast();
   
   // Stores
+  const { isAuthenticated } = useAuthStore();
   const { categories, fetchCategories, loading: categoriesLoading } = useCategoryStore();
   const { 
     filteredResources, 
@@ -25,6 +28,7 @@ const CategoryFeed = () => {
     resetResources 
   } = useCategoryResourcesStore();
   const { createResource } = useResourcesStore();
+  const { fetchFavorites } = useFavoritesStore();
 
   // Trouver la catégorie actuelle
   const currentCategory = categories.find(cat => cat._id === categoryId);
@@ -37,12 +41,17 @@ const CategoryFeed = () => {
         fetchCategories();
       }
       
+      // Charger les favoris si l'utilisateur est connecté
+      if (isAuthenticated) {
+        fetchFavorites();
+      }
+      
       // Réinitialiser les ressources et définir le filtre de catégorie
       resetResources();
       fetchAllResources();
       setSelectedCategory(categoryId);
     }
-  }, [categoryId, categories.length]);
+  }, [categoryId, categories.length, isAuthenticated, fetchCategories, fetchFavorites]);
 
   // Gestion de la création d'une ressource
   const handleCreateResource = async (data: { titre: string, contenu: string, id_categorie?: string }) => {
