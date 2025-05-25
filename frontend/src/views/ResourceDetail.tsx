@@ -1,43 +1,36 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Clock, User, Calendar, Tag, Heart, MessageSquareText, Share2 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import useAuthStore from '../store/authStore';
 import useResourceDetailsStore from '../store/resourceDetailsStore';
 import useFavoritesStore from '../store/favoritesStore';
-import { Heart, Share2, MessageSquareText } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import CommentItem from '../components/features/ressources/CommentItem';
 
 const ResourceDetail = () => {
     const { id } = useParams<{ id: string }>();
-    const [newComment, setNewComment] = useState('');
-    const { user } = useAuthStore();
+    const navigate = useNavigate();
     const { showToast } = useToast();
-    
-    // Utiliser le store pour les détails de la ressource et les commentaires
+    const { user } = useAuthStore();
     const { 
         resource, 
-        author,
-        category,
-        comments, 
-        loading, 
-        loadingComments, 
-        error, 
+        author, 
+        category, 
+        comments,
+        loading,
+        loadingComments,
+        error,
         commentError,
         fetchResource,
         fetchComments,
         addComment,
+        addReply,
         resetState
     } = useResourceDetailsStore();
-
-    // Utiliser le store pour les favoris
-    const {
-        isFavorite,
-        addFavorite,
-        removeFavorite,
-        fetchFavorites,
-        loading: favoriteLoading,
-        error: favoriteError
-    } = useFavoritesStore();
+    
+    const { isFavorite, addFavorite, removeFavorite, fetchFavorites } = useFavoritesStore();
+    const [newComment, setNewComment] = useState('');
 
     // Charger la ressource et les favoris si l'ID est disponible
     useEffect(() => {
@@ -98,15 +91,22 @@ const ResourceDetail = () => {
         e.preventDefault();
         if (!newComment.trim()) return;
 
-            if (!user) {
-                return;
-            }
+        if (!user) {
+            return;
+        }
 
         const result = await addComment(id || '', newComment);
         
         if (result) {
             setNewComment('');
         }
+    };
+
+    // Gestion des réponses aux commentaires
+    const handleReply = async (parentCommentId: string, content: string): Promise<void> => {
+        if (!id) return;
+        
+        await addReply(id, parentCommentId, content);
     };
 
     // Gestion de l'ajout/suppression des favoris
@@ -137,8 +137,8 @@ const ResourceDetail = () => {
                 }
             }
 
-            if (!success && favoriteError) {
-                showToast(favoriteError, 'error');
+            if (!success && commentError) {
+                showToast(commentError, 'error');
             }
         } catch (error) {
             showToast('Une erreur est survenue', 'error');
@@ -254,7 +254,7 @@ const ResourceDetail = () => {
                                 id && isFavorite(id) ? 'text-red-500' : 'text-gray-500'
                             } hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105`}
                             onClick={handleFavoriteClick}
-                            disabled={favoriteLoading}
+                            disabled={loading}
                         >
                             <Heart 
                                 className={`h-5 w-5 transition-all duration-300 ${
@@ -262,7 +262,7 @@ const ResourceDetail = () => {
                                 }`}
                             />
                             <span className="text-sm transition-all duration-300">
-                                {favoriteLoading 
+                                {loading 
                                     ? 'Chargement...' 
                                     : (id && isFavorite(id) ? 'Favori' : 'Ajouter aux favoris')
                                 }
@@ -333,32 +333,17 @@ const ResourceDetail = () => {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {comments.map((comment) => {
-                                    const prenom = comment.prenom_utilisateur || (comment.id_user === user?.id ? user?.prenom : '');
-                                    const nom = comment.nom_utilisateur || (comment.id_user === user?.id ? user?.nom : 'Anonyme');
-                                    
-                                    return (
-                                    <div key={comment._id} className="flex space-x-4">
-                                        <div 
-                                                className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center text-primary font-semibold text-base flex-shrink-0"
-                                        >
-                                                {prenom?.charAt(0) || "?"}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="bg-gray-50 rounded-lg p-3">
-                                                <div className="flex items-center space-x-2 mb-1">
-                                                        <span className="font-semibold text-sm">{prenom} {nom}</span>
-                                                    <span className="text-xs text-gray-500">•</span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {formatDate(comment.date_publication || comment.created_at)}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-700">{comment.contenu || comment.content}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {comments
+                                    .filter(comment => !comment.parent_comment_id) // Afficher seulement les commentaires racines
+                                    .map((comment) => (
+                                        <CommentItem
+                                            key={comment._id}
+                                            comment={comment}
+                                            onReply={handleReply}
+                                            canReply={true} // Activer les réponses sur la page détail
+                                            level={0}
+                                        />
+                                    ))}
                             </div>
                         )}
                     </div>
