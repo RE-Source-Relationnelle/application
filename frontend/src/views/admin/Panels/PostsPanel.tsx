@@ -155,133 +155,256 @@ const PostsPanel = () => {
             </div>
 
             <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auteur</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredResources().length === 0 ? (
+                {/* Version desktop : tableau */}
+                <div className="hidden md:block">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    {filterStatus === 'pending' 
-                                        ? 'Aucune ressource en attente d\'approbation' 
-                                        : filterStatus === 'approved' 
-                                            ? 'Aucune ressource approuvée'
-                                            : 'Aucune ressource trouvée'}
-                                </td>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auteur</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
-                        ) : (
-                            filteredResources().map((resource) => (
-                                <tr key={resource._id} className={!isResourceApproved(resource) ? 'bg-yellow-50' : ''}>
-                                    <td className="px-6 py-4 whitespace-nowrap max-w-[200px]">
-                                        {editingResource && editingResource.id === resource._id ? (
-                                            <input
-                                                type="text"
-                                                value={editingResource.titre}
-                                                onChange={(e) => setEditingResource({ ...editingResource, titre: e.target.value })}
-                                                className="w-full p-2 text-sm border rounded"
-                                            />
-                                        ) : (
-                                            <div className="text-sm font-medium text-gray-900 truncate max-w-full" title={resource.titre}>
-                                                {resource.titre}
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredResources().length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        {filterStatus === 'pending' 
+                                            ? 'Aucune ressource en attente d\'approbation' 
+                                            : filterStatus === 'approved' 
+                                                ? 'Aucune ressource approuvée'
+                                                : 'Aucune ressource trouvée'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredResources().map((resource) => (
+                                    <tr key={resource._id} className={!isResourceApproved(resource) ? 'bg-yellow-50' : ''}>
+                                        <td className="px-6 py-4 whitespace-nowrap max-w-[200px]">
+                                            {editingResource && editingResource.id === resource._id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editingResource.titre}
+                                                    onChange={(e) => setEditingResource({ ...editingResource, titre: e.target.value })}
+                                                    className="w-full p-2 text-sm border rounded"
+                                                />
+                                            ) : (
+                                                <div className="text-sm font-medium text-gray-900 truncate max-w-full" title={resource.titre}>
+                                                    {resource.titre}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500">
+                                                {resource.id_publieur ? 'ID: ' + resource.id_publieur.substring(0, 8) + '...' : 'Anonyme'}
                                             </div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">
-                                            {resource.id_publieur ? 'ID: ' + resource.id_publieur.substring(0, 8) + '...' : 'Anonyme'}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {editingCategoryId === resource._id ? (
-                                            <div className="flex items-center space-x-2">
-                                                <select
-                                                    className="text-sm border rounded px-2 py-1"
-                                                    value={selectedCategoryId}
-                                                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                                                >
-                                                    <option value="">Non catégorisé</option>
-                                                    {categories.map(cat => (
-                                                        <option key={cat._id} value={cat._id}>{cat.nom}</option>
-                                                    ))}
-                                                </select>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {editingCategoryId === resource._id ? (
+                                                <div className="flex items-center space-x-2">
+                                                    <select
+                                                        className="text-sm border rounded px-2 py-1"
+                                                        value={selectedCategoryId}
+                                                        onChange={(e) => setSelectedCategoryId(e.target.value)}
+                                                    >
+                                                        <option value="">Non catégorisé</option>
+                                                        {categories.map(cat => (
+                                                            <option key={cat._id} value={cat._id}>{cat.nom}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        className="text-green-600 hover:text-green-800 text-sm"
+                                                        onClick={() => handleSaveCategory(resource._id)}
+                                                    >
+                                                        ✓
+                                                    </button>
+                                                    <button
+                                                        className="text-red-600 hover:text-red-800 text-sm"
+                                                        onClick={() => setEditingCategoryId(null)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm text-gray-500 flex items-center">
+                                                    {getCategoryName(resource.id_categorie)}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-500">
+                                                {new Date(resource.createdAt).toLocaleDateString('fr-FR')}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${isResourceApproved(resource)
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {isResourceApproved(resource) ? 'Approuvé' : 'En attente'}
+                                            </span>
+                                            {resource.commentaire_validation && (
+                                                <div className="mt-1 text-xs text-gray-500 max-w-xs truncate" title={resource.commentaire_validation}>
+                                                    Commentaire: {resource.commentaire_validation}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="flex items-center px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {!isResourceApproved(resource) && (
                                                 <button
-                                                    className="text-green-600 hover:text-green-800 text-sm"
-                                                    onClick={() => handleSaveCategory(resource._id)}
+                                                    className="text-green-600 hover:text-green-800 mr-2"
+                                                    onClick={() => handleApproveResource(resource._id)}
                                                 >
-                                                    ✓
+                                                    Approuver
                                                 </button>
-                                                <button
-                                                    className="text-red-600 hover:text-red-800 text-sm"
-                                                    onClick={() => setEditingCategoryId(null)}
-                                                >
-                                                    ✕
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="text-sm text-gray-500 flex items-center">
-                                                {getCategoryName(resource.id_categorie)}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-500">
-                                            {new Date(resource.createdAt).toLocaleDateString('fr-FR')}
+                                            )}
+                                            <button
+                                                className="text-primary hover:text-secondary mr-2"
+                                                onClick={() => window.open(`/feed/ressource/${resource._id}`, '_blank')}
+                                            >
+                                                <Eye />
+                                            </button>
+                                            <button
+                                                className="text-red-600 hover:text-red-800 mr-2"
+                                                onClick={() => handleDeleteResource(resource._id)}
+                                            >
+                                                <Trash2 />
+                                            </button>
+                                            <button
+                                                className="text-blue-600 hover:text-blue-800"
+                                                onClick={() => handleEditResource(resource)}
+                                            >
+                                                <SquarePen />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {/* Version mobile : cartes */}
+                <div className="md:hidden">
+                    {filteredResources().length === 0 ? (
+                        <div className="px-4 py-6 text-center text-sm text-gray-500">
+                            {filterStatus === 'pending' 
+                                ? 'Aucune ressource en attente d\'approbation' 
+                                : filterStatus === 'approved' 
+                                    ? 'Aucune ressource approuvée'
+                                    : 'Aucune ressource trouvée'}
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-200">
+                            {filteredResources().map((resource) => (
+                                <div key={resource._id} className={`p-4 space-y-3 ${!isResourceApproved(resource) ? 'bg-yellow-50' : ''}`}>
+                                    {/* Titre */}
+                                    <div className="space-y-1">
+                                        <h3 className="text-base font-medium text-gray-900 break-words">
+                                            {resource.titre}
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                                {resource.id_publieur ? 'ID: ' + resource.id_publieur.substring(0, 8) + '...' : 'Anonyme'}
+                                            </span>
+                                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                                {new Date(resource.createdAt).toLocaleDateString()}
+                                            </span>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${isResourceApproved(resource)
-                                                ? 'bg-green-100 text-green-800'
+                                    </div>
+                                    
+                                    {/* Catégorie */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <span className="text-xs text-gray-500">Catégorie:</span>
+                                            {editingCategoryId === resource._id ? (
+                                                <div className="flex mt-1 space-x-2">
+                                                    <select
+                                                        value={selectedCategoryId}
+                                                        onChange={(e) => setSelectedCategoryId(e.target.value)}
+                                                        className="text-sm border rounded px-2 py-1"
+                                                    >
+                                                        <option value="">Non catégorisé</option>
+                                                        {categories.map(cat => (
+                                                            <option key={cat._id} value={cat._id}>{cat.nom}</option>
+                                                        ))}
+                                                    </select>
+                                                    <button
+                                                        onClick={() => handleSaveCategory(resource._id)}
+                                                        className="px-2 py-1 bg-primary text-white text-xs rounded"
+                                                    >
+                                                        OK
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setEditingCategoryId(null)}
+                                                        className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded"
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div 
+                                                    className="text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full inline-block mt-1 cursor-pointer"
+                                                    onClick={() => {
+                                                        setEditingCategoryId(resource._id);
+                                                        setSelectedCategoryId(resource.id_categorie || '');
+                                                    }}
+                                                >
+                                                    {getCategoryName(resource.id_categorie)}
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Statut */}
+                                        <div className={`px-2 py-1 text-xs rounded-full ${
+                                            isResourceApproved(resource) 
+                                                ? 'bg-green-100 text-green-800' 
                                                 : 'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {isResourceApproved(resource) ? 'Approuvé' : 'En attente'}
-                                        </span>
-                                        {resource.commentaire_validation && (
-                                            <div className="mt-1 text-xs text-gray-500 max-w-xs truncate" title={resource.commentaire_validation}>
-                                                Commentaire: {resource.commentaire_validation}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="flex items-center px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        }`}>
+                                            {isResourceApproved(resource) ? 'Approuvée' : 'En attente'}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Actions */}
+                                    <div className="flex justify-end space-x-2 pt-2 border-t border-gray-100">
+                                        <button
+                                            onClick={() => window.open(`/feed/ressource/${resource._id}`, '_blank')}
+                                            className="p-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                                            title="Voir"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleEditResource(resource)}
+                                            className="p-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                                            title="Modifier"
+                                        >
+                                            <SquarePen size={16} />
+                                        </button>
                                         {!isResourceApproved(resource) && (
                                             <button
-                                                className="text-green-600 hover:text-green-800 mr-2"
                                                 onClick={() => handleApproveResource(resource._id)}
+                                                className="p-2 bg-green-50 text-green-700 rounded hover:bg-green-100"
+                                                title="Approuver"
                                             >
-                                                Approuver
+                                                ✓
                                             </button>
                                         )}
                                         <button
-                                            className="text-primary hover:text-secondary mr-2"
-                                            onClick={() => window.open(`/feed/ressource/${resource._id}`, '_blank')}
-                                        >
-                                            <Eye />
-                                        </button>
-                                        <button
-                                            className="text-red-600 hover:text-red-800 mr-2"
                                             onClick={() => handleDeleteResource(resource._id)}
+                                            className="p-2 bg-red-50 text-red-700 rounded hover:bg-red-100"
+                                            title="Supprimer"
                                         >
-                                            <Trash2 />
+                                            <Trash2 size={16} />
                                         </button>
-                                        <button
-                                            className="text-blue-600 hover:text-blue-800"
-                                            onClick={() => handleEditResource(resource)}
-                                        >
-                                            <SquarePen />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {isCreateModalOpen && (

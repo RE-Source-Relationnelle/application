@@ -179,95 +179,184 @@ const CategoriesPanel = () => {
                 )}
 
                 <div className="overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ressources</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {categories.length === 0 ? (
+                    {/* Version desktop : tableau */}
+                    <div className="hidden md:block">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                                        Aucune catégorie trouvée
-                                    </td>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ressources</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ) : (
-                                categories.map((category) => (
-                                    <tr key={category._id}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {editingCategory && editingCategory.id === category._id ? (
-                                                <input
-                                                    type="text"
-                                                    value={editingCategory.nom}
-                                                    onChange={(e) => setEditingCategory({...editingCategory, nom: e.target.value})}
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                                                />
-                                            ) : (
-                                                <div className="text-sm font-medium text-gray-900">{category.nom}</div>
-                                            )}
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {categories.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                                            Aucune catégorie trouvée
                                         </td>
-                                        <td className="px-6 py-4">
-                                            {editingCategory && editingCategory.id === category._id ? (
-                                                <textarea
-                                                    value={editingCategory.description}
-                                                    onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
-                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                                                    rows={2}
-                                                />
-                                            ) : (
-                                                <div className="text-sm text-gray-500 max-w-md truncate">
-                                                    {category.description || <span className="text-gray-400 italic">Aucune description</span>}
+                                    </tr>
+                                ) : (
+                                    categories.map((category) => (
+                                        <tr key={category._id}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {editingCategory && editingCategory.id === category._id ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editingCategory.nom}
+                                                        onChange={(e) => setEditingCategory({...editingCategory, nom: e.target.value})}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                                    />
+                                                ) : (
+                                                    <div className="text-sm font-medium text-gray-900">{category.nom}</div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                {editingCategory && editingCategory.id === category._id ? (
+                                                    <textarea
+                                                        value={editingCategory.description}
+                                                        onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                                                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                                                        rows={2}
+                                                    />
+                                                ) : (
+                                                    <div className="text-sm text-gray-500 max-w-md truncate">
+                                                        {category.description || <span className="text-gray-400 italic">Aucune description</span>}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-500">{category.resourceCount || 0}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {editingCategory && editingCategory.id === category._id ? (
+                                                    <div className="flex space-x-2">
+                                                        <button
+                                                            onClick={saveCategory}
+                                                            className="text-green-600 hover:text-green-800"
+                                                            disabled={!editingCategory.nom.trim()}
+                                                        >
+                                                            Enregistrer
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEditing}
+                                                            className="text-gray-600 hover:text-gray-800"
+                                                        >
+                                                            Annuler
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex space-x-3">
+                                                        <button
+                                                            onClick={() => startEditing(category)}
+                                                            className="text-blue-600 hover:text-blue-800"
+                                                        >
+                                                            Modifier
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteCategory(category._id)}
+                                                            className="text-red-600 hover:text-red-800"
+                                                            disabled={Boolean(category.resourceCount && category.resourceCount > 0)}
+                                                            title={category.resourceCount && category.resourceCount > 0 ? "Impossible de supprimer une catégorie utilisée par des ressources" : ""}
+                                                        >
+                                                            Supprimer
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {/* Version mobile : cartes */}
+                    <div className="md:hidden">
+                        {categories.length === 0 ? (
+                            <div className="px-4 py-6 text-center text-sm text-gray-500">
+                                Aucune catégorie trouvée
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-gray-200">
+                                {categories.map((category) => (
+                                    <div key={category._id} className="p-4 space-y-3">
+                                        {editingCategory && editingCategory.id === category._id ? (
+                                            <div className="space-y-3">
+                                                <div className="space-y-1">
+                                                    <label className="block text-xs font-medium text-gray-500">Nom</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingCategory.nom}
+                                                        onChange={(e) => setEditingCategory({...editingCategory, nom: e.target.value})}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                    />
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-500">{category.resourceCount || 0}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {editingCategory && editingCategory.id === category._id ? (
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={saveCategory}
-                                                        className="text-green-600 hover:text-green-800"
-                                                        disabled={!editingCategory.nom.trim()}
-                                                    >
-                                                        Enregistrer
-                                                    </button>
+                                                <div className="space-y-1">
+                                                    <label className="block text-xs font-medium text-gray-500">Description</label>
+                                                    <textarea
+                                                        value={editingCategory.description}
+                                                        onChange={(e) => setEditingCategory({...editingCategory, description: e.target.value})}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                                                        rows={3}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end space-x-2 pt-2">
                                                     <button
                                                         onClick={cancelEditing}
-                                                        className="text-gray-600 hover:text-gray-800"
+                                                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                                                     >
                                                         Annuler
                                                     </button>
+                                                    <button
+                                                        onClick={saveCategory}
+                                                        className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary/90"
+                                                    >
+                                                        Enregistrer
+                                                    </button>
                                                 </div>
-                                            ) : (
-                                                <div className="flex space-x-3">
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h3 className="text-base font-medium text-gray-900">
+                                                            {category.nom}
+                                                        </h3>
+                                                        {category.description && (
+                                                            <p className="text-sm text-gray-500 mt-1">
+                                                                {category.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="bg-blue-50 text-blue-700 px-2 py-1 text-xs rounded-full">
+                                                        {category.resourceCount || 0} ressource{(category.resourceCount !== 1) ? 's' : ''}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex justify-end space-x-2 pt-2 border-t border-gray-100">
                                                     <button
                                                         onClick={() => startEditing(category)}
-                                                        className="text-blue-600 hover:text-blue-800"
+                                                        className="px-3 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 text-xs"
                                                     >
                                                         Modifier
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteCategory(category._id)}
-                                                        className="text-red-600 hover:text-red-800"
-                                                        disabled={!!(category.resourceCount && category.resourceCount > 0)}
-                                                        title={category.resourceCount && category.resourceCount > 0 ? "Impossible de supprimer une catégorie utilisée par des ressources" : ""}
+                                                        className="px-3 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100 text-xs"
+                                                        disabled={Boolean(category.resourceCount && category.resourceCount > 0)}
                                                     >
                                                         Supprimer
                                                     </button>
                                                 </div>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -118,12 +118,6 @@ const CategoryFeed = () => {
                     : `${filteredResources.length} ressource${filteredResources.length > 1 ? 's' : ''} trouvée${filteredResources.length > 1 ? 's' : ''}`
                   }
                 </p>
-                <button
-                  onClick={() => setIsResourceModalOpen(true)}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-sm"
-                >
-                  Ajouter une ressource
-                </button>
               </div>
             </div>
           ) : (
