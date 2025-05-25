@@ -20,6 +20,7 @@ interface ResourceDetailsState {
   fetchAuthor: (publisherId: string) => Promise<void>;
   fetchCategory: (categoryId: string) => Promise<void>;
   addComment: (resourceId: string, content: string) => Promise<Comment | null>;
+  addReply: (resourceId: string, parentCommentId: string, content: string) => Promise<Comment | null>;
   resetState: () => void;
 }
 
@@ -276,6 +277,64 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
       
       if (err.response?.status === 401) {
         errorMessage = 'Vous devez être connecté pour commenter';
+      } else if (err.response) {
+        errorMessage = err.response.data?.error || errorMessage;
+      }
+      
+      set({ commentError: errorMessage });
+      return null;
+    }
+  },
+  
+  // Ajouter une réponse à un commentaire
+  addReply: async (resourceId: string, parentCommentId: string, content: string) => {
+    if (!content.trim()) {
+      set({ commentError: 'La réponse ne peut pas être vide' });
+      return null;
+    }
+    
+    try {
+      set({ commentError: null });
+      console.log('Envoi de la réponse avec le token...');
+      console.log('URL:', `resources/comments/${resourceId}/reply`);
+      console.log('Données envoyées:', { content, parent_comment_id: parentCommentId });
+      
+      const response = await api.post(`resources/comments/${resourceId}/reply`, { 
+        content, 
+        parent_comment_id: parentCommentId 
+      });
+      
+      console.log('Réponse complète du serveur:', response.data);
+      
+      // Mettre à jour les commentaires avec la nouvelle réponse
+      set(state => {
+        const updatedComments = state.comments.map(comment => {
+          if (comment._id === parentCommentId) {
+            return {
+              ...comment,
+              replies: [...(comment.replies || []), response.data],
+              replies_count: (comment.replies_count || 0) + 1
+            };
+          }
+          return comment;
+        });
+        
+        return {
+          comments: updatedComments,
+          commentError: null
+        };
+      });
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Erreur lors de l\'envoi de la réponse:', err);
+      console.error('Status:', err.response?.status);
+      console.error('Data:', err.response?.data);
+      
+      let errorMessage = 'Impossible d\'envoyer la réponse';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Vous devez être connecté pour répondre';
       } else if (err.response) {
         errorMessage = err.response.data?.error || errorMessage;
       }
