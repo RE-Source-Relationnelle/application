@@ -174,12 +174,12 @@ const Profile = () => {
 
     return (
         <MainLayout onOpenPostModal={openPostModal} showSidebars={false}>
-            <div className="bg-white ring-gray-200 ring-1 sm:rounded-lg overflow-hidden w-full">
+            <div className="bg-white ring-gray-200 ring-1 rounded-lg overflow-hidden w-full">
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-6">Paramètres du compte</h1>
 
                     {/* Navigation des onglets */}
-                    <div className="flex border-b border-gray-200 mb-6">
+                    <div className="flex flex-col md:flex-row border-b border-gray-200 mb-6">
                         <button
                             className={`py-3 px-6 text-sm font-medium focus:outline-none ${activeTab === 'informations'
                                     ? 'text-primary border-b-2 border-primary'
@@ -484,7 +484,7 @@ const Profile = () => {
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {favorites.map((favorite) => (
-                                                <tr key={favorite._id} className="hover:bg-gray-50">
+                                                <tr key={favorite.favorite_id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-start space-x-3">
                                                             <div className="flex-shrink-0">
@@ -522,7 +522,7 @@ const Profile = () => {
                                                         <div className="flex items-center space-x-2">
                                                             {favorite.resource && (
                                                                 <button
-                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource_id}`, '_blank')}
+                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
                                                                     className="text-primary hover:text-secondary"
                                                                     title="Voir la ressource"
                                                                 >
@@ -530,7 +530,7 @@ const Profile = () => {
                                                                 </button>
                                                             )}
                                                             <button
-                                                                onClick={() => handleRemoveFavorite(favorite.resource_id)}
+                                                                onClick={() => handleRemoveFavorite(favorite.resource.id)}
                                                                 className="text-red-600 hover:text-red-800"
                                                                 title="Supprimer des favoris"
                                                             >

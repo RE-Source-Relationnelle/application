@@ -66,9 +66,9 @@ export interface Comment {
     nom_utilisateur?: string;
     prenom_utilisateur?: string;
     // Nouveau: Support pour les réponses aux commentaires
-    parent_comment_id?: string | null; // null = commentaire racine, string = réponse à un commentaire
-    replies?: Comment[]; // Liste des réponses (pour le frontend)
-    replies_count?: number; // Nombre de réponses (pour l'affichage)
+    parent_comment_id?: string | null; 
+    replies?: Comment[];
+    replies_count?: number; 
 }
 
 export interface Favorite {

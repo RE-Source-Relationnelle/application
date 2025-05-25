@@ -8,7 +8,7 @@ interface Favorite {
     created_at: string;
 }
 
-interface FavoriteWithDetails {
+export interface FavoriteWithDetails {
     favorite_id: string;
     created_at: string;
     resource: {

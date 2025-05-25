@@ -52,31 +52,25 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   fetchCategories: async () => {
     set({ loadingCategories: true });
     try {
-      // Utiliser le categoryStore pour récupérer les catégories
       const categoryStore = useCategoryStore.getState();
       await categoryStore.fetchCategories();
       
-      // Récupérer les catégories du categoryStore
       const categories = categoryStore.categories;
       console.log("Catégories récupérées du categoryStore:", categories);
       
       if (categories.length === 0) {
         console.log("Aucune catégorie trouvée dans le categoryStore, tentative de récupération directe");
-        // Tentative de récupération directe
         const response = await api.get('/categories/all_categories');
         console.log("Réponse directe de l'API:", response.data);
         
         if (response.data && response.data.length > 0) {
-          // Utiliser directement les catégories de l'API
           set({ categories: response.data, loadingCategories: false });
           return;
         }
       }
       
-      // Calculer le nombre de ressources par catégorie
       const resources = get().resources;
       const categoriesWithCount = categories.map(category => {
-        // Convertir les ID en chaînes pour la comparaison
         const categoryId = category._id.toString();
         const count = resources.filter(r => {
           const resourceCategoryId = r.id_categorie ? r.id_categorie.toString() : '';
