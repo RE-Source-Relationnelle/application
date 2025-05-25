@@ -105,37 +105,51 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
         console.log(`Tentative de récupération de l'auteur avec ID: ${publisherId}`);
       }
       
-      const currentUser = localStorage.getItem('auth-store');
-      let isAdmin = false;
-      
-      if (currentUser) {
-        try {
-          const userData = JSON.parse(currentUser);
-          if (userData.state?.user?.role?.nom_role === 'administrateur' || 
-              userData.state?.user?.role?.nom_role === 'super-administrateur') {
-            isAdmin = true;
-          }
-        } catch (e) {
-          console.warn('Impossible de parser les données utilisateur du localStorage');
+      // Essayer d'abord la nouvelle route accessible à tous les utilisateurs
+      try {
+        const response = await api.get(`/users/public_info/${publisherId}`);
+        if (response.data) {
+          console.log("Informations de l'auteur récupérées avec succès:", response.data);
+          set({ author: response.data });
+          return;
         }
-      }
-      
-      if (isAdmin) {
-        try {
-          const response = await api.get('/admin/get_users');
-          if (response.data && Array.isArray(response.data)) {
-            const authorData = response.data.find(user => user._id === publisherId);
-            
-            if (authorData) {
-              set({ author: authorData });
-              return;
+      } catch (publicInfoError) {
+        console.warn("Impossible d'utiliser la route public_info pour récupérer les informations de l'utilisateur:", publicInfoError);
+        
+        // Fallback pour les administrateurs (utilisation de la route admin existante)
+        const currentUser = localStorage.getItem('auth-store');
+        let isAdmin = false;
+        
+        if (currentUser) {
+          try {
+            const userData = JSON.parse(currentUser);
+            if (userData.state?.user?.role?.nom_role === 'administrateur' || 
+                userData.state?.user?.role?.nom_role === 'super-administrateur') {
+              isAdmin = true;
             }
+          } catch (e) {
+            console.warn('Impossible de parser les données utilisateur du localStorage');
           }
-        } catch (adminError) {
-          console.warn('Impossible d\'utiliser la route admin pour récupérer les utilisateurs:', adminError);
+        }
+        
+        if (isAdmin) {
+          try {
+            const response = await api.get('/admin/get_users');
+            if (response.data && Array.isArray(response.data)) {
+              const authorData = response.data.find(user => user._id === publisherId);
+              
+              if (authorData) {
+                set({ author: authorData });
+                return;
+              }
+            }
+          } catch (adminError) {
+            console.warn('Impossible d\'utiliser la route admin pour récupérer les utilisateurs:', adminError);
+          }
         }
       }
       
+      // Fallback si aucune des méthodes précédentes n'a fonctionné
       set({ 
         author: {
           id: publisherId,

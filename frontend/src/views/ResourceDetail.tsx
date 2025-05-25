@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, User, Calendar, Tag, Heart, MessageSquareText, Share2 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, User, Heart, MessageSquareText, Share2 } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import useAuthStore from '../store/authStore';
 import useResourceDetailsStore from '../store/resourceDetailsStore';
@@ -209,8 +209,8 @@ const ResourceDetail = () => {
                             <div className="flex-1">
                                 <h3 className="font-semibold text-sm sm:text-base">
                                     {author 
-                                        ? `${author.prenom || ''} ${author.nom || ''}` 
-                                        : 'Anonyme'}
+                                        ? `${author.prenom || ''} ${author.nom || ''}`.trim() || 'Utilisateur' 
+                                        : 'Utilisateur'}
                                 </h3>
                                 <p className="text-xs text-gray-500 flex items-center">
                                     <span>{formatDate(resource.createdAt)}</span>

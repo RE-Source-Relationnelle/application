@@ -124,8 +124,8 @@ const ResourceCard = ({ resource, author, category }: ResourceCardProps) => {
           <div className="flex-1">
             <h3 className="font-semibold text-sm sm:text-base">
               {author 
-                ? `${author.prenom || ''} ${author.nom || ''}` 
-                : 'Anonyme'}
+                ? `${author.prenom || ''} ${author.nom || ''}`.trim() || 'Utilisateur'
+                : 'Utilisateur'}
             </h3>
             <p className="text-xs text-gray-500">{formatDate(resource.createdAt)}</p>
             {category && (
