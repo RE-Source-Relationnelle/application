@@ -8,6 +8,8 @@ import Profile from './views/user/Profile'
 import ProtectedRoute from './components/features/auth/ProtectedRoute'
 import AdminDashboard from './views/admin/AdminDashboard'
 import AdminRoute from './components/features/auth/AdminRoute'
+import ModeratorDashboard from './views/admin/ModeratorDashboard'
+import ModeratorRoute from './components/features/auth/ModeratorRoute'
 import ResourceDetail from './views/ResourceDetail'
 import SearchResults from './views/SearchResults'
 import CategoryFeed from './views/Category/CategoryFeed'
@@ -34,6 +36,7 @@ function App() {
             <Route path="/categories" element={<ProtectedRoute><AllCategories /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/moderator" element={<ModeratorRoute><ModeratorDashboard /></ModeratorRoute>} />
           </Routes>
           
           {/* Testeur de toasts - à supprimer en production */}

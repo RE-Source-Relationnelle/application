@@ -131,7 +131,7 @@ const AdminsPanel = () => {
             )}
 
             <div className="bg-white p-4 rounded-lg ring-1 ring-gray-200">
-                <div className="flex mb-4 space-x-2">
+                <div className="flex flex-col md:flex-row gap-2 mb-4">
                     <input
                         type="email"
                         value={newAdmin.email}
