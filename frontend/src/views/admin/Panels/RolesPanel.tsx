@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import useRoleStore, { Role, CreateRoleData, UpdateRoleData } from '../../../store/roleStore';
-import useAuthStore from '../../../store/authStore';
 import { PlusCircle, Edit, Trash2, X, Check } from 'lucide-react';
 
 const RolesPanel = () => {
     const { roles, loading, error, fetchRoles, createRole, updateRole, deleteRole } = useRoleStore();
-    const { user } = useAuthStore();
-    
-    // Vérifier si l'utilisateur est administrateur ou super-administrateur
-    const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
     
     // État local pour le formulaire de création
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -184,107 +179,207 @@ const RolesPanel = () => {
             
             {/* Liste des rôles */}
             <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Nom du rôle
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Description
-                            </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                {/* Version desktop : tableau */}
+                <div className="hidden md:block">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Nom du rôle
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Description
+                                </th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {roles.map((role) => (
+                                <tr key={role._id}>
+                                    {editingRoleId === role._id ? (
+                                        // Mode édition
+                                        <>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <input
+                                                    type="text"
+                                                    value={editingRole.nom_role || ''}
+                                                    onChange={(e) => setEditingRole({ ...editingRole, nom_role: e.target.value })}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    required
+                                                />
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <textarea
+                                                    value={editingRole.description || ''}
+                                                    onChange={(e) => setEditingRole({ ...editingRole, description: e.target.value })}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                    rows={2}
+                                                />
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={handleUpdateRole}
+                                                    className="text-green-600 hover:text-green-900 mr-2"
+                                                    disabled={loading}
+                                                >
+                                                    <Check className="h-5 w-5" />
+                                                </button>
+                                                <button
+                                                    onClick={cancelEditing}
+                                                    className="text-gray-600 hover:text-gray-900"
+                                                >
+                                                    <X className="h-5 w-5" />
+                                                </button>
+                                            </td>
+                                        </>
+                                    ) : (
+                                        // Mode affichage
+                                        <>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm font-medium text-gray-900">{role.nom_role}</div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm text-gray-500">{role.description || '-'}</div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <button
+                                                    onClick={() => startEditing(role)}
+                                                    className="text-indigo-600 hover:text-indigo-900 mr-2"
+                                                    disabled={loading}
+                                                >
+                                                    <Edit className="h-5 w-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteRole(role._id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                    disabled={loading || role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur'}
+                                                    title={role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur' ? 'Les rôles système ne peuvent pas être supprimés' : ''}
+                                                >
+                                                    <Trash2 className="h-5 w-5" />
+                                                </button>
+                                            </td>
+                                        </>
+                                    )}
+                                </tr>
+                            ))}
+                            
+                            {roles.length === 0 && !loading && (
+                                <tr>
+                                    <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Aucun rôle trouvé
+                                    </td>
+                                </tr>
+                            )}
+                            
+                            {loading && (
+                                <tr>
+                                    <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Chargement...
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {/* Version mobile : cartes */}
+                <div className="md:hidden">
+                    {roles.length === 0 && !loading && (
+                        <div className="px-4 py-6 text-center text-sm text-gray-500">
+                            Aucun rôle trouvé
+                        </div>
+                    )}
+                    
+                    {loading && (
+                        <div className="px-4 py-6 text-center text-sm text-gray-500">
+                            Chargement...
+                        </div>
+                    )}
+                    
+                    <div className="divide-y divide-gray-200">
                         {roles.map((role) => (
-                            <tr key={role._id}>
+                            <div key={role._id} className="p-4">
                                 {editingRoleId === role._id ? (
-                                    // Mode édition
-                                    <>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                    // Mode édition - mobile
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">
+                                                Nom du rôle
+                                            </label>
                                             <input
                                                 type="text"
                                                 value={editingRole.nom_role || ''}
                                                 onChange={(e) => setEditingRole({ ...editingRole, nom_role: e.target.value })}
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                                                 required
                                             />
-                                        </td>
-                                        <td className="px-6 py-4">
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 mb-1">
+                                                Description
+                                            </label>
                                             <textarea
                                                 value={editingRole.description || ''}
                                                 onChange={(e) => setEditingRole({ ...editingRole, description: e.target.value })}
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                                rows={2}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                                rows={3}
                                             />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button
-                                                onClick={handleUpdateRole}
-                                                className="text-green-600 hover:text-green-900 mr-2"
-                                                disabled={loading}
-                                            >
-                                                <Check className="h-5 w-5" />
-                                            </button>
+                                        </div>
+                                        
+                                        <div className="flex justify-end space-x-2 pt-2">
                                             <button
                                                 onClick={cancelEditing}
-                                                className="text-gray-600 hover:text-gray-900"
+                                                className="flex items-center px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                                             >
-                                                <X className="h-5 w-5" />
+                                                <X className="h-4 w-4 mr-1" />
+                                                Annuler
                                             </button>
-                                        </td>
-                                    </>
-                                ) : (
-                                    // Mode affichage
-                                    <>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900">{role.nom_role}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm text-gray-500">{role.description || '-'}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button
-                                                onClick={() => startEditing(role)}
-                                                className="text-indigo-600 hover:text-indigo-900 mr-2"
+                                                onClick={handleUpdateRole}
+                                                className="flex items-center px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark"
                                                 disabled={loading}
                                             >
-                                                <Edit className="h-5 w-5" />
+                                                <Check className="h-4 w-4 mr-1" />
+                                                Enregistrer
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    // Mode affichage - mobile
+                                    <div>
+                                        <div className="mb-2">
+                                            <h3 className="text-base font-medium text-gray-900">{role.nom_role}</h3>
+                                            <p className="text-sm text-gray-500 mt-1">{role.description || '-'}</p>
+                                        </div>
+                                        
+                                        <div className="flex justify-end space-x-2 pt-2 border-t border-gray-100">
+                                            <button
+                                                onClick={() => startEditing(role)}
+                                                className="flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 text-xs"
+                                                disabled={loading}
+                                            >
+                                                <Edit className="h-3 w-3 mr-1" />
+                                                Modifier
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteRole(role._id)}
-                                                className="text-red-600 hover:text-red-900"
+                                                className="flex items-center px-3 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100 text-xs"
                                                 disabled={loading || role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur'}
                                                 title={role.nom_role === 'super-administrateur' || role.nom_role === 'administrateur' ? 'Les rôles système ne peuvent pas être supprimés' : ''}
                                             >
-                                                <Trash2 className="h-5 w-5" />
+                                                <Trash2 className="h-3 w-3 mr-1" />
+                                                Supprimer
                                             </button>
-                                        </td>
-                                    </>
+                                        </div>
+                                    </div>
                                 )}
-                            </tr>
+                            </div>
                         ))}
-                        
-                        {roles.length === 0 && !loading && (
-                            <tr>
-                                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Aucun rôle trouvé
-                                </td>
-                            </tr>
-                        )}
-                        
-                        {loading && (
-                            <tr>
-                                <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Chargement...
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
             
             <div className="text-sm text-gray-500">
