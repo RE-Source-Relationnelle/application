@@ -21,6 +21,7 @@ interface ResourceDetailsState {
   fetchCategory: (categoryId: string) => Promise<void>;
   addComment: (resourceId: string, content: string) => Promise<Comment | null>;
   addReply: (resourceId: string, parentCommentId: string, content: string) => Promise<Comment | null>;
+  deleteComment: (resourceId: string, commentId: string) => Promise<boolean>;
   resetState: () => void;
 }
 
@@ -344,6 +345,35 @@ const useResourceDetailsStore = create<ResourceDetailsState>((set) => ({
     }
   },
   
+  // Supprimer un commentaire (pour les modérateurs)
+  deleteComment: async (resourceId: string, commentId: string) => {
+    if (!resourceId || !commentId) {
+      set({ commentError: 'ID de ressource ou de commentaire manquant' });
+      return false;
+    }
+    
+    try {
+      console.log(`Suppression du commentaire avec ID: ${commentId} de la ressource: ${resourceId}`);
+      
+      // Appel à l'API pour supprimer le commentaire
+      await api.delete(`/resources/comments/${commentId}`);
+      
+      // Mettre à jour la liste des commentaires localement
+      set((state) => ({
+        comments: state.comments.filter(comment => comment._id !== commentId),
+        commentError: null
+      }));
+      
+      return true;
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression du commentaire:', error);
+      set({ 
+        commentError: error.response?.data?.error || 'Erreur lors de la suppression du commentaire'
+      });
+      return false;
+    }
+  },
+
   // Réinitialiser l'état du store
   resetState: () => {
     set({

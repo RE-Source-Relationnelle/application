@@ -473,76 +473,133 @@ const Profile = () => {
                                     </p>
                                 </div>
                             ) : (
-                                <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ressource</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ajouté le</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {favorites.map((favorite) => (
-                                                <tr key={favorite.favorite_id} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-start space-x-3">
-                                                            <div className="flex-shrink-0">
-                                                                <Heart className="h-5 w-5 text-red-500 fill-current" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                {favorite.resource ? (
-                                                                    <>
-                                                                        <p className="text-sm font-medium text-gray-900 truncate max-w-md">
-                                                                            {favorite.resource.titre}
-                                                                        </p>
-                                                                        <div 
-                                                                            className="text-sm text-gray-500 truncate max-w-md"
-                                                                            dangerouslySetInnerHTML={{ 
-                                                                                __html: favorite.resource.contenu.length > 100 
-                                                                                    ? favorite.resource.contenu.substring(0, 100) + '...' 
-                                                                                    : favorite.resource.contenu 
-                                                                            }}
-                                                                        />
-                                                                    </>
-                                                                ) : (
-                                                                    <p className="text-sm text-gray-500 italic">
-                                                                        Ressource supprimée ou indisponible
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-500">
-                                                            {formatDate(favorite.created_at)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex items-center space-x-2">
-                                                            {favorite.resource && (
-                                                                <button
-                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
-                                                                    className="text-primary hover:text-secondary"
-                                                                    title="Voir la ressource"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={() => handleRemoveFavorite(favorite.resource.id)}
-                                                                className="text-red-600 hover:text-red-800"
-                                                                title="Supprimer des favoris"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                                <>
+                                    {/* Version desktop : tableau */}
+                                    <div className="hidden md:block bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ressource</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ajouté le</th>
+                                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {favorites.map((favorite) => (
+                                                    <tr key={favorite.favorite_id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-start space-x-3">
+                                                                <div className="flex-shrink-0">
+                                                                    <Heart className="h-5 w-5 text-red-500 fill-current" />
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    {favorite.resource ? (
+                                                                        <>
+                                                                            <p className="text-sm font-medium text-gray-900 truncate max-w-md">
+                                                                                {favorite.resource.titre}
+                                                                            </p>
+                                                                            <div 
+                                                                                className="text-sm text-gray-500 truncate max-w-md"
+                                                                                dangerouslySetInnerHTML={{ 
+                                                                                    __html: favorite.resource.contenu.length > 100 
+                                                                                        ? favorite.resource.contenu.substring(0, 100) + '...' 
+                                                                                        : favorite.resource.contenu 
+                                                                                }}
+                                                                            />
+                                                                        </>
+                                                                    ) : (
+                                                                        <p className="text-sm text-gray-500 italic">
+                                                                            Ressource supprimée ou indisponible
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-500">
+                                                                {formatDate(favorite.created_at)}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <div className="flex items-center space-x-2">
+                                                                {favorite.resource && (
+                                                                    <button
+                                                                        onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
+                                                                        className="text-primary hover:text-secondary"
+                                                                        title="Voir la ressource"
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleRemoveFavorite(favorite.resource.id)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                    title="Supprimer des favoris"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Version mobile : cartes */}
+                                    <div className="md:hidden space-y-4">
+                                        {favorites.map((favorite) => (
+                                            <div key={favorite.favorite_id} className="bg-white p-4 rounded-lg ring-1 ring-gray-200">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex items-center space-x-2">
+                                                        <Heart className="h-4 w-4 text-red-500 fill-current" />
+                                                        <span className="text-xs text-gray-500">
+                                                            {formatDate(favorite.created_at)}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex space-x-2">
+                                                        {favorite.resource && (
+                                                            <button
+                                                                onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
+                                                                className="p-1 text-primary hover:text-secondary"
+                                                                title="Voir la ressource"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleRemoveFavorite(favorite.resource.id)}
+                                                            className="p-1 text-red-600 hover:text-red-800"
+                                                            title="Supprimer des favoris"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                {favorite.resource ? (
+                                                    <>
+                                                        <h3 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                                                            {favorite.resource.titre}
+                                                        </h3>
+                                                        <div 
+                                                            className="text-xs text-gray-500 line-clamp-2"
+                                                            dangerouslySetInnerHTML={{ 
+                                                                __html: favorite.resource.contenu.length > 80
+                                                                    ? favorite.resource.contenu.substring(0, 80) + '...' 
+                                                                    : favorite.resource.contenu 
+                                                            }}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <p className="text-sm text-gray-500 italic">
+                                                        Ressource supprimée ou indisponible
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
                             )}
                         </div>
                     )}
