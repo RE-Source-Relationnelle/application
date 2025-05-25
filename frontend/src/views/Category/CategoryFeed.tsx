@@ -82,7 +82,8 @@ const CategoryFeed = () => {
 
   return (
     <MainLayout showSidebars={true} onOpenPostModal={() => setIsResourceModalOpen(true)}>
-      <div className="max-w-4xl mx-auto px-4 pb-6">
+      <div className='container mx-auto px-2 sm:px-0'>
+        <div className="max-w-4xl mx-auto px-2 pb-6">
         {/* En-tête avec bouton retour */}
         <div className="flex items-center mb-6">
           <button
@@ -117,12 +118,6 @@ const CategoryFeed = () => {
                     : `${filteredResources.length} ressource${filteredResources.length > 1 ? 's' : ''} trouvée${filteredResources.length > 1 ? 's' : ''}`
                   }
                 </p>
-                <button
-                  onClick={() => setIsResourceModalOpen(true)}
-                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-sm"
-                >
-                  Ajouter une ressource
-                </button>
               </div>
             </div>
           ) : (
@@ -195,6 +190,7 @@ const CategoryFeed = () => {
           id_categorie: categoryId || '' 
         }}
       />
+    </div>
     </MainLayout>
   );
 };

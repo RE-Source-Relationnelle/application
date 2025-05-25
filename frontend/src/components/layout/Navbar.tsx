@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, User, PlusCircle, Settings, ChevronDown, LogOut } from 'lucide-react';
+import { Search, User, PlusCircle, Settings, ChevronDown, LogOut, ShieldAlert } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import useAuthStore from '../../store/authStore';
 import ResourceModal from '../features/ressources/ResourceModal';
@@ -22,6 +22,7 @@ const Navbar = () => {
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
+  const isModerator = user?.role?.nom_role === "modérateur" || user?.role?.nom_role === "Modérateur";
 
   // Charger les catégories au montage du composant
   useEffect(() => {
@@ -181,6 +182,13 @@ const Navbar = () => {
               </Link>
             )}
 
+            {/* Mobile Moderator Icon (if moderator) */}
+            {isAuthenticated && isModerator && (
+              <Link to="/moderator" className="md:hidden p-2 text-gray-600 hover:text-primary" title="Modération">
+                <ShieldAlert className="h-5 w-5" />
+              </Link>
+            )}
+
             {/* Mobile Search Icon */}
             <button
               onClick={toggleSearch}
@@ -269,6 +277,13 @@ const Navbar = () => {
                 {isAdmin && (
                   <Link to="/admin" className="p-2 text-gray-600 hover:text-primary" title="Administration">
                     <Settings className="h-5 w-5" />
+                  </Link>
+                )}
+                
+                {/* Moderator Link */}
+                {isModerator && (
+                  <Link to="/moderator" className="p-2 text-gray-600 hover:text-primary" title="Modération">
+                    <ShieldAlert className="h-5 w-5" />
                   </Link>
                 )}
                 

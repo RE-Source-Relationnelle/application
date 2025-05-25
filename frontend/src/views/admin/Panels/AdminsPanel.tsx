@@ -131,7 +131,7 @@ const AdminsPanel = () => {
             )}
 
             <div className="bg-white p-4 rounded-lg ring-1 ring-gray-200">
-                <div className="flex mb-4 space-x-2">
+                <div className="flex flex-col md:flex-row gap-2 mb-4">
                     <input
                         type="email"
                         value={newAdmin.email}
@@ -168,64 +168,119 @@ const AdminsPanel = () => {
                     {loading ? (
                         <p className="text-center py-4">Chargement des administrateurs...</p>
                     ) : (
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {adminUsers.length > 0 ? (
-                                    adminUsers.map((admin: AdminUser) => {
-                                        const userRole = admin.role_info?.nom_role || "";
-                                        const isCurrentUser = admin._id === currentUser?.id;
-                                        const canManage = canManageUser(userRole) && !isCurrentUser;
-                                        
-                                        return (
-                                            <tr key={admin._id}>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-medium text-gray-900">
-                                                        {admin.prenom} {admin.nom}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">{admin.mail}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">
-                                                        {admin.role_info?.nom_role || "Rôle inconnu"}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {canManage ? (
-                                                        <button
-                                                            onClick={() => handleDeleteAdmin(admin._id, userRole)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                            disabled={loading}
-                                                        >
-                                                            Rétrograder
-                                                        </button>
-                                                    ) : (
-                                                        <span className="text-gray-400">
-                                                            {isCurrentUser ? "Vous-même" : "Non modifiable"}
-                                                        </span>
-                                                    )}
+                        <>
+                            {/* Version desktop : tableau */}
+                            <div className="hidden md:block">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {adminUsers.length > 0 ? (
+                                            adminUsers.map((admin: AdminUser) => {
+                                                const userRole = admin.role_info?.nom_role || "";
+                                                const isCurrentUser = admin._id === currentUser?.id;
+                                                const canManage = canManageUser(userRole) && !isCurrentUser;
+                                                
+                                                return (
+                                                    <tr key={admin._id}>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {admin.prenom} {admin.nom}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-500">{admin.mail}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-500">
+                                                                {admin.role_info?.nom_role || "Rôle inconnu"}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {canManage ? (
+                                                                <button
+                                                                    onClick={() => handleDeleteAdmin(admin._id, userRole)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                    disabled={loading}
+                                                                >
+                                                                    Rétrograder
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-400">
+                                                                    {isCurrentUser ? "Vous-même" : "Non modifiable"}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                                                    Aucun administrateur trouvé
                                                 </td>
                                             </tr>
-                                        );
-                                    })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            {/* Version mobile : cartes */}
+                            <div className="md:hidden">
+                                {adminUsers.length === 0 ? (
+                                    <div className="px-4 py-6 text-center text-sm text-gray-500">
+                                        Aucun administrateur trouvé
+                                    </div>
                                 ) : (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                                            Aucun administrateur trouvé
-                                        </td>
-                                    </tr>
+                                    <div className="divide-y divide-gray-200">
+                                        {adminUsers.map((admin: AdminUser) => {
+                                            const userRole = admin.role_info?.nom_role || "";
+                                            const isCurrentUser = admin._id === currentUser?.id;
+                                            const canManage = canManageUser(userRole) && !isCurrentUser;
+                                            
+                                            return (
+                                                <div key={admin._id} className="p-4 space-y-3">
+                                                    <div>
+                                                        <h3 className="text-base font-medium text-gray-900">
+                                                            {admin.prenom} {admin.nom}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-500 mt-1">
+                                                            {admin.mail}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="bg-blue-50 text-blue-700 px-2 py-1 text-xs rounded-full">
+                                                            {admin.role_info?.nom_role || "Rôle inconnu"}
+                                                        </div>
+                                                        
+                                                        {canManage ? (
+                                                            <button
+                                                                onClick={() => handleDeleteAdmin(admin._id, userRole)}
+                                                                className="px-3 py-1 bg-red-50 text-red-700 rounded hover:bg-red-100 text-xs"
+                                                                disabled={loading}
+                                                            >
+                                                                Rétrograder
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400 italic">
+                                                                {isCurrentUser ? "Vous-même" : "Non modifiable"}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>

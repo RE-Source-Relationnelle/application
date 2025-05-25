@@ -146,143 +146,266 @@ const UsersPanel = () => {
             <h2 className="text-xl font-semibold">Gestion des utilisateurs (Citoyens et Modérateurs)</h2>
 
             <div className="bg-white rounded-lg ring-1 ring-gray-200 overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredUsers.length === 0 ? (
+                {/* Version desktop : tableau */}
+                <div className="hidden md:block">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                                    Aucun utilisateur trouvé
-                                </td>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
-                        ) : (
-                            filteredUsers.map((user) => (
-                                <tr key={user._id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {editingUserId === user._id ? (
-                                            <div className="flex space-x-2">
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredUsers.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        Aucun utilisateur trouvé
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredUsers.map((user) => (
+                                    <tr key={user._id}>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {editingUserId === user._id ? (
+                                                <div className="flex space-x-2">
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.prenom}
+                                                        onChange={(e) => setEditForm({ ...editForm, prenom: e.target.value })}
+                                                        placeholder="Prénom"
+                                                        className="w-1/2 px-2 py-1 border border-gray-300 rounded-md"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.nom}
+                                                        onChange={(e) => setEditForm({ ...editForm, nom: e.target.value })}
+                                                        placeholder="Nom"
+                                                        className="w-1/2 px-2 py-1 border border-gray-300 rounded-md"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {user.prenom} {user.nom}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {editingUserId === user._id ? (
+                                                <input
+                                                    type="email"
+                                                    value={editForm.mail}
+                                                    onChange={(e) => setEditForm({ ...editForm, mail: e.target.value })}
+                                                    placeholder="Email"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                                                />
+                                            ) : (
+                                                <div className="text-sm text-gray-500">{user.mail}</div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {editingUserId === user._id ? (
+                                                <select
+                                                    value={editForm.role_id}
+                                                    onChange={(e) => setEditForm({ ...editForm, role_id: e.target.value })}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                                                >
+                                                    <option value="">Sélectionner un rôle</option>
+                                                    {allowedRoles.map(role => (
+                                                        <option key={role._id} value={role._id}>
+                                                            {role.nom_role}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <div className="text-sm text-gray-500">
+                                                    {user.role_info ? user.role_info.nom_role : getRoleName(user.role_id)}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {editingUserId === user._id ? (
+                                                <select
+                                                    value={editForm.is_active ? 'active' : 'inactive'}
+                                                    onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'active' })}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                                                >
+                                                    <option value="active">Actif</option>
+                                                    <option value="inactive">Inactif</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                    {user.is_active !== false ? 'Actif' : 'Inactif'}
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {editingUserId === user._id ? (
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => handleSaveUser(user._id)}
+                                                        className="text-green-600 hover:text-green-800"
+                                                    >
+                                                        Enregistrer
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelEdit}
+                                                        className="text-gray-600 hover:text-gray-800"
+                                                    >
+                                                        Annuler
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex space-x-2">
+                                                    <button
+                                                        onClick={() => handleEditUser(user)}
+                                                        className="text-primary hover:text-secondary"
+                                                    >
+                                                        Modifier
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(user._id, user.is_active !== false)}
+                                                        className={`${user.is_active !== false ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+                                                    >
+                                                        {user.is_active !== false ? 'Désactiver' : 'Activer'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleConfirmDelete(user._id, `${user.prenom} ${user.nom}`)}
+                                                        className="text-red-600 hover:text-red-800"
+                                                    >
+                                                        Supprimer
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {/* Version mobile : cartes */}
+                <div className="md:hidden">
+                    {filteredUsers.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-sm text-gray-500">
+                            Aucun utilisateur trouvé
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-gray-200">
+                            {filteredUsers.map((user) => (
+                                <div key={user._id} className="p-4 space-y-3">
+                                    {editingUserId === user._id ? (
+                                        <div className="space-y-3">
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-medium text-gray-500">Prénom</label>
                                                 <input
                                                     type="text"
                                                     value={editForm.prenom}
                                                     onChange={(e) => setEditForm({ ...editForm, prenom: e.target.value })}
                                                     placeholder="Prénom"
-                                                    className="w-1/2 px-2 py-1 border border-gray-300 rounded-md"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
                                                 />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-medium text-gray-500">Nom</label>
                                                 <input
                                                     type="text"
                                                     value={editForm.nom}
                                                     onChange={(e) => setEditForm({ ...editForm, nom: e.target.value })}
                                                     placeholder="Nom"
-                                                    className="w-1/2 px-2 py-1 border border-gray-300 rounded-md"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
                                                 />
                                             </div>
-                                        ) : (
-                                            <div className="text-sm font-medium text-gray-900">
-                                                {user.prenom} {user.nom}
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-medium text-gray-500">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={editForm.mail}
+                                                    onChange={(e) => setEditForm({ ...editForm, mail: e.target.value })}
+                                                    placeholder="Email"
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
+                                                />
                                             </div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {editingUserId === user._id ? (
-                                            <input
-                                                type="email"
-                                                value={editForm.mail}
-                                                onChange={(e) => setEditForm({ ...editForm, mail: e.target.value })}
-                                                placeholder="Email"
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                                            />
-                                        ) : (
-                                            <div className="text-sm text-gray-500">{user.mail}</div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {editingUserId === user._id ? (
-                                            <select
-                                                value={editForm.role_id}
-                                                onChange={(e) => setEditForm({ ...editForm, role_id: e.target.value })}
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                                            >
-                                                <option value="">Sélectionner un rôle</option>
-                                                {allowedRoles.map(role => (
-                                                    <option key={role._id} value={role._id}>
-                                                        {role.nom_role}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <div className="text-sm text-gray-500">
-                                                {user.role_info ? user.role_info.nom_role : getRoleName(user.role_id)}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {editingUserId === user._id ? (
-                                            <select
-                                                value={editForm.is_active ? 'active' : 'inactive'}
-                                                onChange={(e) => setEditForm({ ...editForm, is_active: e.target.value === 'active' })}
-                                                className="w-full px-2 py-1 border border-gray-300 rounded-md"
-                                            >
-                                                <option value="active">Actif</option>
-                                                <option value="inactive">Inactif</option>
-                                            </select>
-                                        ) : (
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                {user.is_active !== false ? 'Actif' : 'Inactif'}
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {editingUserId === user._id ? (
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => handleSaveUser(user._id)}
-                                                    className="text-green-600 hover:text-green-800"
+                                            <div className="space-y-1">
+                                                <label className="block text-xs font-medium text-gray-500">Rôle</label>
+                                                <select
+                                                    value={editForm.role_id}
+                                                    onChange={(e) => setEditForm({ ...editForm, role_id: e.target.value })}
+                                                    className="w-full px-2 py-1 border border-gray-300 rounded-md"
                                                 >
-                                                    Enregistrer
-                                                </button>
+                                                    <option value="">Sélectionner un rôle</option>
+                                                    {allowedRoles.map(role => (
+                                                        <option key={role._id} value={role._id}>{role.nom_role}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="flex justify-end space-x-2 pt-2">
                                                 <button
                                                     onClick={handleCancelEdit}
-                                                    className="text-gray-600 hover:text-gray-800"
+                                                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                                                 >
                                                     Annuler
                                                 </button>
-                                            </div>
-                                        ) : (
-                                            <div className="flex space-x-2">
                                                 <button
-                                                    onClick={() => handleEditUser(user)}
-                                                    className="text-primary hover:text-secondary"
+                                                    onClick={() => handleSaveUser(user._id)}
+                                                    className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary/90"
                                                 >
-                                                    Modifier
+                                                    Enregistrer
                                                 </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {user.prenom} {user.nom}
+                                                </div>
+                                                <div className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                                                    user.is_active !== false 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {user.is_active !== false ? 'Actif' : 'Inactif'}
+                                                </div>
+                                            </div>
+                                            <div className="text-sm text-gray-500">{user.mail}</div>
+                                            <div className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded inline-block">
+                                                {user.role_info?.nom_role || getRoleName(user.role_id)}
+                                            </div>
+                                            <div className="flex justify-end space-x-2 pt-2">
                                                 <button
                                                     onClick={() => handleToggleStatus(user._id, user.is_active !== false)}
-                                                    className={`${user.is_active !== false ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}`}
+                                                    className={`px-2 py-1 text-xs rounded ${
+                                                        user.is_active !== false 
+                                                            ? 'bg-red-50 text-red-700 hover:bg-red-100' 
+                                                            : 'bg-green-50 text-green-700 hover:bg-green-100'
+                                                    }`}
                                                 >
                                                     {user.is_active !== false ? 'Désactiver' : 'Activer'}
                                                 </button>
                                                 <button
+                                                    onClick={() => handleEditUser(user)}
+                                                    className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100"
+                                                >
+                                                    Modifier
+                                                </button>
+                                                <button
                                                     onClick={() => handleConfirmDelete(user._id, `${user.prenom} ${user.nom}`)}
-                                                    className="text-red-600 hover:text-red-800"
+                                                    className="px-2 py-1 text-xs bg-red-50 text-red-700 rounded hover:bg-red-100"
                                                 >
                                                     Supprimer
                                                 </button>
                                             </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Modal de confirmation de suppression */}

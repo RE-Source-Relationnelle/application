@@ -194,7 +194,7 @@ const ResourceDetail = () => {
     // Affichage du post
     return (
         <MainLayout showSidebars={true} onOpenPostModal={() => {}}>
-            <div className="max-w-4xl mx-auto px-4 pb-4">
+            <div className="max-w-4xl mx-auto">
                 <div className="bg-white rounded-lg ring-gray-200 ring-1 sm:rounded-lg w-full">
                     {/* En-tête du post */}
                     <div className="p-3 px-4 sm:p-4">
@@ -250,7 +250,7 @@ const ResourceDetail = () => {
                     {/* Actions sur le post */}
                     <div className="px-4 py-1 flex justify-between border-t border-gray-200">
                         <button 
-                            className={`flex-1 flex items-center justify-center space-x-1 py-2 ${
+                            className={`flex-1 flex flex-col md:flex-row items-center justify-center space-x-1 py-2 ${
                                 id && isFavorite(id) ? 'text-red-500' : 'text-gray-500'
                             } hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105`}
                             onClick={handleFavoriteClick}
@@ -264,18 +264,18 @@ const ResourceDetail = () => {
                             <span className="text-sm transition-all duration-300">
                                 {loading 
                                     ? 'Chargement...' 
-                                    : (id && isFavorite(id) ? 'Favori' : 'Ajouter aux favoris')
+                                    : (id && isFavorite(id) ? 'Favoris' : 'Favoris')
                                 }
                             </span>
                         </button>
                         <button 
-                            className="flex-1 flex items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105"
+                            className="flex-1 flex flex-col md:flex-row items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105"
                         >
                             <MessageSquareText className="h-5 w-5 transition-all duration-300 hover:scale-110" />
                             <span className="text-sm transition-all duration-300">Commenter</span>
                         </button>
                         <button 
-                            className="flex-1 flex items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105"
+                            className="flex-1 flex flex-col md:flex-row items-center justify-center space-x-1 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-all duration-300 ease-in-out transform hover:scale-105"
                             onClick={handleShareClick}
                         >
                             <Share2 className="h-5 w-5 transition-all duration-300 hover:scale-110" />
