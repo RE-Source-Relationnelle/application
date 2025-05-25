@@ -5,21 +5,21 @@ import { Trash2, Eye } from 'lucide-react';
 import { useToast } from '../../../contexts/ToastContext';
 
 const ModeratorPanel = () => {
-    const { pendingResources, loadingPending, error, fetchPendingResources, deleteResource, approveResource } = useResourcesStore();
+    const { resources, loading, error, fetchResources, deleteResource, approveResource } = useResourcesStore();
     const [viewingResource, setViewingResource] = useState<Resource | null>(null);
     const { showToast } = useToast();
 
-    // Charger les ressources en attente au montage du composant
     useEffect(() => {
-        fetchPendingResources();
-    }, [fetchPendingResources]);
+        fetchResources();
+    }, [fetchResources]);
 
+    // Supprimer une ressource
     const handleDeleteResource = async (id: string) => {
         if (confirm('Êtes-vous sûr de vouloir supprimer cette ressource ?')) {
             try {
                 await deleteResource(id);
                 showToast('La ressource a été supprimée avec succès !', 'success');
-                fetchPendingResources(); // Rafraîchir la liste des ressources en attente
+                fetchResources();
             } catch (error) {
                 console.error('Erreur lors de la suppression:', error);
                 showToast('Une erreur est survenue lors de la suppression de la ressource.', 'error');
@@ -27,19 +27,18 @@ const ModeratorPanel = () => {
         }
     };
 
+    // Approuver une ressource
     const handleApproveResource = async (id: string) => {
         try {
             const comment = prompt('Commentaire d\'approbation (optionnel):');
             
-            // Confirmer l'action
             if (!confirm('Êtes-vous sûr de vouloir approuver cette ressource ?')) {
                 return;
             }
             
             await approveResource(id, comment || undefined);
             
-            // Rafraîchir la liste des ressources en attente
-            fetchPendingResources();
+            fetchResources();
             
             showToast('La ressource a été approuvée avec succès !', 'success');
         } catch (error) {
@@ -48,16 +47,26 @@ const ModeratorPanel = () => {
         }
     };
 
+    // Afficher une ressource
     const handleViewResource = (resource: Resource) => {
         setViewingResource(resource);
     };
 
+    // Fermer la vue de la ressource
     const closeResourceView = () => {
         setViewingResource(null);
     };
 
-    if (loadingPending) {
-        return <div className="flex justify-center p-8"><p>Chargement des ressources en attente...</p></div>;
+    // Fonction pour déterminer si une ressource est en attente d'approbation
+    const isResourcePending = (resource: Resource) => {
+        return resource.approved === false || (!resource.date_validation && !resource.approved);
+    };
+
+    // Filtrer uniquement les ressources en attente
+    const pendingResources = resources.filter(isResourcePending);
+
+    if (loading) {
+        return <div className="flex justify-center p-8"><p>Chargement des ressources...</p></div>;
     }
 
     if (error) {
@@ -66,7 +75,7 @@ const ModeratorPanel = () => {
                 <p className="text-red-700">Erreur: {error}</p>
                 <button
                     className="mt-2 text-sm text-primary hover:text-secondary"
-                    onClick={() => fetchPendingResources()}
+                    onClick={() => fetchResources()}
                 >
                     Réessayer
                 </button>
