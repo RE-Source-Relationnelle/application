@@ -36,13 +36,16 @@ const ModeratorRoute = ({ children }: ProtectedRouteProps) => {
   }
   
   // Vérifier si l'utilisateur a un rôle de modérateur, administrateur ou super-administrateur
+  // Utilisation de toLowerCase() pour rendre la comparaison insensible à la casse
+  const roleName = user?.role?.nom_role?.toLowerCase() || '';
   const isModerator = 
-    user?.role?.nom_role === "modérateur" || 
-    user?.role?.nom_role === "administrateur" || 
-    user?.role?.nom_role === "super-administrateur";
+    roleName === "modérateur" || 
+    roleName === "moderateur" || // Alternative sans accent
+    roleName === "administrateur" || 
+    roleName === "super-administrateur";
   
   if (!isModerator) {
-    console.log(`Accès refusé : l'utilisateur a le rôle '${user?.role?.nom_role || "inconnu"}', redirection vers le feed`);
+    console.log(`Accès refusé : l'utilisateur a le rôle '${user?.role?.nom_role || "inconnu"}' (${roleName}), redirection vers le feed`);
     return <Navigate to="/feed" />;
   }
   

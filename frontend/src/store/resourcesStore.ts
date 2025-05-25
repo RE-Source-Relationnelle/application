@@ -10,12 +10,9 @@ interface ResourcesState {
   error: string | null;
   categories: Category[];
   loadingCategories: boolean;
-  pendingResources: Resource[];
-  loadingPending: boolean;
 
   // Actions
   fetchResources: () => Promise<void>;
-  fetchPendingResources: () => Promise<void>;
   fetchCategories: () => Promise<void>;
   deleteResource: (id: string) => Promise<void>;
   approveResource: (id: string, comment?: string) => Promise<any>;
@@ -35,8 +32,6 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
   error: null,
   categories: [],
   loadingCategories: false,
-  pendingResources: [],
-  loadingPending: false,
 
   // Récupérer les ressources
   fetchResources: async () => {
@@ -49,22 +44,6 @@ const useResourcesStore = create<ResourcesState>((set, get) => ({
       set({ 
         error: err.response?.data?.error || 'Erreur lors de la récupération des ressources', 
         loading: false 
-      });
-    }
-  },
-
-  // Récupérer les ressources en attente
-  fetchPendingResources: async () => {
-    set({ loadingPending: true });
-    try {
-      const response = await api.get('/resources/pending');
-      set({ pendingResources: response.data, loadingPending: false });
-      console.log("Ressources en attente récupérées:", response.data);
-    } catch (err: any) {
-      console.error('Erreur lors de la récupération des ressources en attente:', err);
-      set({ 
-        error: err.response?.data?.error || 'Erreur lors de la récupération des ressources en attente', 
-        loadingPending: false 
       });
     }
   },
