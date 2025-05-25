@@ -10,6 +10,8 @@ import AdminDashboard from './views/admin/AdminDashboard'
 import AdminRoute from './components/features/auth/AdminRoute'
 import ResourceDetail from './views/ResourceDetail'
 import SearchResults from './views/SearchResults'
+import CategoryFeed from './views/Category/CategoryFeed'
+import AllCategories from './views/Category/AllCategories'
 import { ToastProvider } from './contexts/ToastContext'
 import ToastTester from './components/ui/ToastTester'
 import './styles/content-styles.css'
@@ -28,6 +30,8 @@ function App() {
             <Route path="/feed" element={<Feed />} />
             <Route path="/feed/ressource/:id" element={<ResourceDetail />} />
             <Route path="/search" element={<SearchResults />} />
+            <Route path="/categories/:categoryId" element={<ProtectedRoute><CategoryFeed /></ProtectedRoute>} />
+            <Route path="/categories" element={<ProtectedRoute><AllCategories /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           </Routes>

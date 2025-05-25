@@ -484,7 +484,7 @@ const Profile = () => {
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {favorites.map((favorite) => (
-                                                <tr key={favorite.favorite_id} className="hover:bg-gray-50">
+                                                <tr key={favorite._id} className="hover:bg-gray-50">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-start space-x-3">
                                                             <div className="flex-shrink-0">
@@ -522,7 +522,7 @@ const Profile = () => {
                                                         <div className="flex items-center space-x-2">
                                                             {favorite.resource && (
                                                                 <button
-                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource.id}`, '_blank')}
+                                                                    onClick={() => window.open(`/feed/ressource/${favorite.resource_id}`, '_blank')}
                                                                     className="text-primary hover:text-secondary"
                                                                     title="Voir la ressource"
                                                                 >
@@ -530,7 +530,7 @@ const Profile = () => {
                                                                 </button>
                                                             )}
                                                             <button
-                                                                onClick={() => handleRemoveFavorite(favorite.resource.id)}
+                                                                onClick={() => handleRemoveFavorite(favorite.resource_id)}
                                                                 className="text-red-600 hover:text-red-800"
                                                                 title="Supprimer des favoris"
                                                             >

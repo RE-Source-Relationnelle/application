@@ -3,7 +3,7 @@ import { Resource, User, Category } from '../types/types';
 import { api } from './authStore';
 import useCategoryStore from './categoryStore';
 
-interface ResourceRandomState {
+interface CategoryResourcesState {
   resources: (Resource & { 
     author?: User | null;
     category?: Category | null;
@@ -15,74 +15,63 @@ interface ResourceRandomState {
   selectedCategoryId: string | null;
   loading: boolean;
   error: string | null;
-  hasMore: boolean;
-  isFetching: boolean;
   
   // Actions
-  fetchRandomResources: (callback?: () => void) => Promise<void>;
-  loadInitialResources: (count: number) => void;
+  fetchAllResources: () => Promise<void>;
+  setSelectedCategory: (categoryId: string | null) => void;
+  filterResourcesByCategory: () => void;
   resetResources: () => void;
   fetchResourceAuthor: (resourceId: string, publisherId: string) => Promise<void>;
   fetchResourceCategory: (resourceId: string, categoryId: string) => Promise<void>;
-  setSelectedCategory: (categoryId: string | null) => void;
-  filterResourcesByCategory: () => void;
 }
 
-const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
+const useCategoryResourcesStore = create<CategoryResourcesState>((set, get) => ({
   resources: [],
   filteredResources: [],
   selectedCategoryId: null,
   loading: false,
   error: null,
-  hasMore: true,
-  isFetching: false,
   
-  fetchRandomResources: async (callback?: () => void) => {
-    const { hasMore, isFetching } = get();
+  fetchAllResources: async () => {
+    const { loading } = get();
     
-    if (!hasMore || isFetching) return;
+    // Éviter les appels multiples
+    if (loading) return;
     
-    set({ loading: true, isFetching: true });
+    set({ loading: true });
     
     try {
-      const response = await api.get('/resources/randomressource');
+      const response = await api.get('/resources/');
       
-      const newResources = Array.isArray(response.data) ? response.data : [response.data];
-      
-      if (newResources.length > 0 && !newResources[0].message) {
-        // Filtrer les ressources pour éviter les doublons
-        const currentResources = get().resources;
-        const currentIds = new Set(currentResources.map(r => r._id));
+      if (response.data && Array.isArray(response.data)) {
+        // Filtrer seulement les ressources validées
+        const validatedResources = response.data.filter(resource => 
+          resource.date_validation !== null && resource.date_validation !== undefined
+        );
         
-        // Ne garder que les ressources qui ne sont pas déjà dans la liste
-        const uniqueNewResources = newResources.filter(resource => !currentIds.has(resource._id));
+        // Trier par date de publication (plus récent en premier)
+        validatedResources.sort((a, b) => {
+          const dateA = new Date(a.createdAt || a.date_publication?.date || 0);
+          const dateB = new Date(b.createdAt || b.date_publication?.date || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
         
-        if (uniqueNewResources.length === 0) {
-          // Si toutes les ressources sont des doublons, on considère qu'il n'y a plus de ressources à charger
-          set({ hasMore: false });
-          set({ loading: false, isFetching: false });
-          if (callback) callback();
-          return;
-        }
-        
-        // Ajouter les nouvelles ressources avec des champs author et category initialisés à null
-        const resourcesWithExtra = uniqueNewResources.map(resource => ({
+        // Ajouter les champs author et category initialisés à null
+        const resourcesWithExtra = validatedResources.map(resource => ({
           ...resource,
           author: null,
           category: null
         }));
         
-        const updatedResources = [...currentResources, ...resourcesWithExtra];
-        
-        set(state => ({ 
-          resources: updatedResources,
+        set({ 
+          resources: resourcesWithExtra,
           error: null
-        }));
+        });
         
         // Appliquer le filtre de catégorie si nécessaire
         get().filterResourcesByCategory();
         
-        // Récupérer les informations des auteurs et des catégories pour chaque nouvelle ressource
+        // Récupérer les informations des auteurs et des catégories pour chaque ressource
         for (const resource of resourcesWithExtra) {
           if (resource.id_publieur) {
             get().fetchResourceAuthor(resource._id, resource.id_publieur);
@@ -92,7 +81,7 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           }
         }
       } else {
-        set({ hasMore: false });
+        set({ error: 'Aucune ressource trouvée' });
       }
     } catch (err: any) {
       console.error('Erreur lors de la récupération des ressources:', err);
@@ -106,8 +95,7 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
       
       set({ error: errorMessage });
     } finally {
-      set({ loading: false, isFetching: false });
-      if (callback) callback();
+      set({ loading: false });
     }
   },
   
@@ -136,8 +124,7 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
   
   fetchResourceAuthor: async (resourceId: string, publisherId: string) => {
     try {
-      // Vérifier si nous sommes en mode développement
-      const isDev = process.env.NODE_ENV === 'development';
+      const isDev = window.location.hostname === 'localhost';
       
       if (isDev) {
         console.log(`Tentative de récupération de l'auteur pour la ressource ${resourceId} (id_publieur: ${publisherId})`);
@@ -145,7 +132,6 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
       
       try {
         // Utiliser la route admin pour récupérer les utilisateurs si l'utilisateur est admin
-        // Sinon, utiliser un auteur par défaut
         const currentUser = localStorage.getItem('auth-store');
         let isAdmin = false;
         
@@ -164,10 +150,8 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
         // Si l'utilisateur est admin, on peut essayer d'utiliser la route admin
         if (isAdmin) {
           try {
-            // Utiliser la route admin qui liste tous les utilisateurs
             const response = await api.get('/admin/get_users');
             if (response.data && Array.isArray(response.data)) {
-              // Trouver l'utilisateur correspondant à l'ID du publieur
               const authorData = response.data.find(user => user._id === publisherId);
               
               if (authorData) {
@@ -179,7 +163,6 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
                   )
                 }));
                 
-                // Réappliquer le filtre de catégorie
                 get().filterResourcesByCategory();
                 return;
               }
@@ -205,17 +188,13 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           )
         }));
         
-        // Réappliquer le filtre de catégorie
         get().filterResourcesByCategory();
         
       } catch (apiError: any) {
-        // Si l'erreur est liée à CORS ou à un problème réseau, on ne fait rien
-        // mais on évite de spammer la console avec des erreurs
         if (isDev) {
           console.warn(`Impossible de récupérer l'auteur pour la ressource ${resourceId}. L'API n'est peut-être pas disponible.`);
         }
         
-        // Mettre à jour la ressource avec un auteur par défaut pour éviter de réessayer
         set(state => ({
           resources: state.resources.map(resource => 
             resource._id === resourceId 
@@ -232,7 +211,6 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           )
         }));
         
-        // Réappliquer le filtre de catégorie
         get().filterResourcesByCategory();
       }
     } catch (error) {
@@ -242,15 +220,12 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
   
   fetchResourceCategory: async (resourceId: string, categoryId: string) => {
     try {
-      // Récupérer les catégories depuis le store
       const categoryStore = useCategoryStore.getState();
       
-      // Si les catégories ne sont pas encore chargées, les récupérer
       if (categoryStore.categories.length === 0) {
         await categoryStore.fetchCategories();
       }
       
-      // Chercher la catégorie correspondante
       const category = categoryStore.categories.find(cat => cat._id === categoryId);
       
       if (category) {
@@ -262,7 +237,6 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
           )
         }));
       } else {
-        // Si la catégorie n'est pas trouvée dans le store, essayer de la récupérer directement
         try {
           const response = await api.get(`/categories/category/${categoryId}`);
           if (response.data) {
@@ -279,27 +253,10 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
         }
       }
       
-      // Réappliquer le filtre de catégorie
       get().filterResourcesByCategory();
     } catch (error) {
       console.error(`Erreur lors de la récupération de la catégorie pour la ressource ${resourceId}:`, error);
     }
-  },
-  
-  loadInitialResources: (count: number) => {
-    let loaded = 0;
-    const { fetchRandomResources } = get();
-    
-    const loadNext = () => {
-      if (loaded < count) {
-        fetchRandomResources(() => {
-          loaded++;
-          loadNext();
-        });
-      }
-    };
-    
-    loadNext();
   },
   
   resetResources: () => {
@@ -308,11 +265,9 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
       filteredResources: [],
       selectedCategoryId: null,
       loading: false,
-      error: null,
-      hasMore: true,
-      isFetching: false
+      error: null
     });
   }
 }));
 
-export default useResourceRandomStore;
+export default useCategoryResourcesStore; 

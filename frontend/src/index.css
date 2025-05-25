@@ -16,3 +16,36 @@ body {
   margin: 0;
   font-family: 'Marianne', sans-serif;
 }
+
+/* Custom Scrollbar Styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(99 102 241 / 0.2) rgb(243 244 246);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgb(243 244 246);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(99 102 241 / 0.2);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgb(99 102 241 / 0.4);
+}
+
+.scrollbar-thumb-primary\/20::-webkit-scrollbar-thumb {
+  background: rgb(99 102 241 / 0.2);
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+  background: rgb(243 244 246);
+}

@@ -6,6 +6,7 @@ import ResourceModal from '../features/ressources/ResourceModal';
 import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import useSearchStore from '../../store/searchStore';
+import useCategoryStore from '../../store/categoryStore';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -15,10 +16,46 @@ const Navbar = () => {
   const { createResource } = useResourcesStore();
   const { showToast } = useToast();
   const { query, setQuery } = useSearchStore();
+  const { categories, fetchCategories } = useCategoryStore();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const categoryMenuRef = useRef<HTMLDivElement>(null);
 
   const isAdmin = user?.role?.nom_role === "administrateur" || user?.role?.nom_role === "super-administrateur";
+
+  // Charger les catégories au montage du composant
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated, fetchCategories]);
+
+  // Fermer le menu des catégories quand on clique en dehors ou appuie sur Escape
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+
+    if (isCategoryMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isCategoryMenuOpen]);
 
   // Gestion de la barre de recherche
   const toggleSearch = () => {
@@ -164,25 +201,66 @@ const Navbar = () => {
                 </button>
                 
                 {/* Menu des catégories */}
-                <div className="relative">
+                <div className="relative" ref={categoryMenuRef}>
                   <button 
                     onClick={toggleCategoryMenu}
-                    className="p-2 text-gray-600 hover:text-primary flex items-center"
+                    className="relative px-3 py-2 text-gray-600 hover:text-primary hover:bg-primary/5 rounded-lg flex items-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     aria-expanded={isCategoryMenuOpen}
                     aria-haspopup="true"
                   >
-                    <span className="mr-1">Catégories</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
+                    <span className="mr-2 font-medium">Catégories</span>
+                    <ChevronDown className={`h-4 w-4 transition-all duration-200 ${isCategoryMenuOpen ? 'rotate-180 text-primary' : ''}`} />
                   </button>
                   
                   {/* Dropdown Menu */}
                   {isCategoryMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-50">
-                      <Link to="/categories/1" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 1</Link>
-                      <Link to="/categories/2" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 2</Link>
-                      <Link to="/categories/3" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Catégorie 3</Link>
-                      <div className="border-t border-gray-100 my-1"></div>
-                      <Link to="/categories" className="block px-4 py-2 text-sm text-primary hover:bg-gray-100">Toutes les catégories</Link>
+                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 backdrop-blur-sm">
+                      {/* Triangle pointer */}
+                      <div className="absolute -top-2 right-4 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45"></div>
+                      
+                      {/* Categories list */}
+                      <div className="py-1 max-h-80 overflow-y-auto">
+                        {categories.length > 0 ? (
+                          categories.map((category) => (
+                            <Link 
+                              key={category._id} 
+                              to={`/categories/${category._id}`} 
+                              className="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-all duration-200"
+                              onClick={() => setIsCategoryMenuOpen(false)}
+                            >
+                              <div className="flex-1">
+                                <div className="font-medium group-hover:text-primary transition-colors">
+                                  {category.nom}
+                                </div>
+                                {category.description && (
+                                  <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                                    {category.description.slice(0, 50)}{category.description.length > 50 ? '...' : ''}
+                                  </div>
+                                )}
+                              </div>
+                            </Link>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-sm text-gray-500 italic">
+                            Aucune catégorie disponible
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Footer */}
+                      {categories.length > 0 && (
+                        <>
+                          <div className="border-t border-gray-100 my-1"></div>
+                          <Link 
+                            to="/categories" 
+                            className="flex items-center justify-center px-4 py-3 text-sm font-medium text-primary hover:bg-primary/5 transition-all duration-200"
+                            onClick={() => setIsCategoryMenuOpen(false)}
+                          >
+                            <span>Voir toutes les catégories</span>
+                            <ChevronDown className="h-4 w-4 ml-1 -rotate-90" />
+                          </Link>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

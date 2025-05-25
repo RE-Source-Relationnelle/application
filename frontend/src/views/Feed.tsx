@@ -5,11 +5,13 @@ import useAuthStore from '../store/authStore'
 import useResourceRandomStore from '../store/resourceRandomStore'
 import ResourceCard from '../components/features/ressources/ResourceCard'
 import useResourcesStore from '../store/resourcesStore'
+import useFavoritesStore from '../store/favoritesStore'
 
 const Feed = () => {
     const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
-    const { user, fetchUserRole } = useAuthStore();
+    const { user, fetchUserRole, isAuthenticated } = useAuthStore();
     const { createResource } = useResourcesStore();
+    const { fetchFavorites } = useFavoritesStore();
     
     // Utiliser le store pour les ressources aléatoires
     const { 
@@ -25,13 +27,19 @@ const Feed = () => {
         if (!user?.role) {
             fetchUserRole();
         }
+        
+        // Charger les favoris si l'utilisateur est connecté
+        if (isAuthenticated) {
+            fetchFavorites();
+        }
+        
         loadInitialResources(5);
         
         // Nettoyage lors du démontage du composant
         return () => {
             useResourceRandomStore.getState().resetResources();
         };
-    }, []);
+    }, [isAuthenticated, fetchFavorites]);
 
     // Gestion du scroll infini
     useEffect(() => {
@@ -82,8 +90,6 @@ const Feed = () => {
                     </div>
 
                     <div className="space-y-4">
-                        {/* Logs de débogage */}
-
                         {loading && resources.length === 0 ? (
                             <div className="flex justify-center items-center py-12">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -92,6 +98,17 @@ const Feed = () => {
                             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
                                 <strong className="font-bold">Erreur ! </strong>
                                 <span className="block sm:inline">{error}</span>
+                            </div>
+                        ) : resources.length === 0 && !loading ? (
+                            <div className="text-center py-6 px-6 bg-white rounded-lg ring-gray-200 ring-1">
+                                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm">
+                                    <h3 className="text-lg font-medium text-gray-700 mb-2">
+                                        Aucune ressource disponible
+                                    </h3>
+                                    <p className="text-gray-500 mb-4">
+                                        Revenez plus tard pour découvrir de nouveaux contenus.
+                                    </p>
+                                </div>
                             </div>
                         ) : (
                             resources.map((resource, index) => (
@@ -110,11 +127,11 @@ const Feed = () => {
                             </div>
                         )}
 
-                        {!loading && (!hasMore || resources.length === 0) && (
+                        {!loading && !hasMore && resources.length > 0 && (
                             <div className="text-center py-6 px-6 bg-white rounded-lg ring-gray-200 ring-1">
                                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 shadow-sm">
                                     <h3 className="text-lg font-medium text-gray-700 mb-2">Vous avez consulté toutes les dernières ressources</h3>
-                                    <p className="text-gray-500 mb-4">Revenez plus tard pour découvrir de nouveaux contenus ou explorez d'autres catégories</p>
+                                    <p className="text-gray-500 mb-4">Revenez plus tard pour découvrir de nouveaux contenus</p>
                                 </div>
                             </div>
                         )}
@@ -127,6 +144,11 @@ const Feed = () => {
                 onClose={closeResourceModal}
                 onSubmit={handleResourceSubmit}
                 mode="create"
+                initialData={{ 
+                    titre: '', 
+                    contenu: '', 
+                    id_categorie: '' 
+                }}
             />
         </>
     );

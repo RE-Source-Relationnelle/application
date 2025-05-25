@@ -3,12 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import ResourceCard from '../components/features/ressources/ResourceCard';
 import useSearchStore from '../store/searchStore';
+import useFavoritesStore from '../store/favoritesStore';
+import useAuthStore from '../store/authStore';
 import { Search, Filter, X } from 'lucide-react';
 
 const SearchResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+  const { fetchFavorites } = useFavoritesStore();
   const { 
     query, 
     results, 
@@ -22,6 +26,13 @@ const SearchResults = () => {
     setCategoryFilter,
     getFilteredResults
   } = useSearchStore();
+
+  // Charger les favoris si l'utilisateur est connecté
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchFavorites();
+    }
+  }, [isAuthenticated, fetchFavorites]);
 
   // Récupérer la requête de recherche depuis l'URL
   useEffect(() => {
