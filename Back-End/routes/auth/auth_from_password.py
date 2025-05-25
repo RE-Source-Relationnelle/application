@@ -32,7 +32,6 @@ def auth_from_password():
             print("❌ ERREUR: Champs requis manquants")
             return jsonify({'error': 'Email et mot de passe requis'}), 400
     
-        bcrypt.checkpw(mot_de_passe_saisi, mot_de_passe_hache)
         # Recherche de l'utilisateur
         user = db.users.find_one({'mail': data['mail']})
         
@@ -40,9 +39,41 @@ def auth_from_password():
             print(f"❌ ERREUR: Aucun utilisateur trouvé avec l'email: {data['mail']}")
             return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
             
-        if bcrypt.checkpw(data['password'],user['password']):
-            print(f"❌ ERREUR: Mot de passe incorrect pour l'utilisateur: {data['mail']}")
-            return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
+        try:
+            # Encode les deux mots de passe en bytes pour la comparaison
+            password_input = data['password'].encode('utf-8')
+            stored_password = user['password']
+            
+            # Si le mot de passe stocké est une chaîne, le convertir en bytes
+            if isinstance(stored_password, str):
+                stored_password = stored_password.encode('utf-8')
+            
+            # Vérification principale avec bcrypt    
+            password_correct = False
+            try:
+                password_correct = bcrypt.checkpw(password_input, stored_password)
+            except Exception as e:
+                print(f"Erreur bcrypt, possible ancien format de mot de passe: {str(e)}")
+                # Si l'erreur est due à un format incompatible, vérifier si le mot de passe est stocké en clair
+                # (mesure temporaire pour la transition)
+                if data['password'] == user.get('password'):
+                    password_correct = True
+                    
+                    # Mettre à jour le mot de passe avec un hachage bcrypt
+                    print("Mise à jour du mot de passe vers le format bcrypt")
+                    hashed_password = bcrypt.hashpw(password_input, bcrypt.gensalt())
+                    db.users.update_one(
+                        {'_id': user['_id']},
+                        {'$set': {'password': hashed_password}}
+                    )
+            
+            if not password_correct:
+                print(f"❌ ERREUR: Mot de passe incorrect pour l'utilisateur: {data['mail']}")
+                return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
+                
+        except Exception as e:
+            print(f"❌ ERREUR lors de la vérification du mot de passe: {str(e)}")
+            return jsonify({'error': 'Erreur lors de la vérification du mot de passe'}), 500
 
         # 1. Génération des timestamps avec timezone
         current_time = datetime.now(timezone.utc)

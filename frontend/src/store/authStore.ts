@@ -55,11 +55,9 @@ let refreshingPromise: Promise<boolean> | null = null;
 // Intercepteur pour ajouter le token à chaque requête
 api.interceptors.request.use(
   async (config) => {
-    // Récupérer le token depuis les cookies
     const token = getCookie('access_token');
     
     if (token && config.headers) {
-      // Ajouter le token aux en-têtes de la requête
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     
@@ -74,15 +72,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Si l'erreur est 401 (non autorisé) et que la requête n'a pas déjà été retentée
     if (error.response?.status === 401 && !originalRequest._retry) {
       console.log('Erreur 401 interceptée, tentative de rafraîchissement du token...', originalRequest.url);
       
-      // Marquer la requête comme étant retentée
       originalRequest._retry = true;
       
       try {
-        // Si un rafraîchissement est déjà en cours, attendre qu'il se termine
         if (refreshingPromise) {
           console.log('Rafraîchissement déjà en cours, attente...');
           const result = await refreshingPromise;
@@ -90,10 +85,8 @@ api.interceptors.response.use(
           if (result) {
             console.log('Token rafraîchi avec succès par un autre processus, nouvelle tentative de la requête originale');
             
-            // Récupérer le nouveau token depuis les cookies
             const newToken = getCookie('access_token');
             if (newToken && originalRequest.headers) {
-              // Mettre à jour le token dans la requête originale
               originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
             }
             
@@ -104,16 +97,13 @@ api.interceptors.response.use(
           }
         }
         
-        // Sinon, lancer un nouveau rafraîchissement
         const result = await useAuthStore.getState().refreshToken();
         
         if (result) {
           console.log('Token rafraîchi avec succès, nouvelle tentative de la requête originale');
           
-          // Récupérer le nouveau token depuis les cookies
           const newToken = getCookie('access_token');
           if (newToken && originalRequest.headers) {
-            // Mettre à jour le token dans la requête originale
             originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
           }
           
@@ -125,12 +115,10 @@ api.interceptors.response.use(
       } catch (refreshError) {
         console.error('Erreur lors du rafraîchissement du token:', refreshError);
         
-        // Si le rafraîchissement échoue, propager l'erreur
         return Promise.reject(error);
       }
     }
     
-    // Si ce n'est pas une erreur 401 ou si la requête a déjà été retentée, propager l'erreur
     return Promise.reject(error);
   }
 );
@@ -162,16 +150,13 @@ const useAuthStore = create<AuthState>()(
       loading: false,
       error: null,
 
-      // Vérifier l'état d'authentification actuel
       checkAuth: async () => {
         if (get().loading) return;
         
         const token = getCookie('access_token');
         if (!token) {
-          // Si pas de token, essayer de le rafraîchir
           const refreshSuccess = await get().refreshToken();
           if (!refreshSuccess && get().isAuthenticated) {
-            // Si le rafraîchissement échoue et que l'utilisateur était authentifié, le déconnecter
             set({ user: null, isAuthenticated: false });
           }
           return;
@@ -193,7 +178,6 @@ const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Erreur lors de la vérification de l\'authentification:', error);
           
-          // Si l'erreur est 401, essayer de rafraîchir le token
           if (axios.isAxiosError(error) && error.response?.status === 401) {
             const refreshSuccess = await get().refreshToken();
             if (!refreshSuccess) {
@@ -204,7 +188,6 @@ const useAuthStore = create<AuthState>()(
                 error: 'Session expirée, veuillez vous reconnecter'
               });
             } else {
-              // Si le rafraîchissement réussit, réessayer de vérifier l'authentification
               return get().checkAuth();
             }
           } else {
@@ -224,8 +207,6 @@ const useAuthStore = create<AuthState>()(
           console.log('Tentative de connexion...');
           const response = await api.post('/auth/auth_from_password', { mail, password });
           console.log('Réponse de auth_from_password:', response.data);
-          
-          // Les cookies sont automatiquement définis par le backend
           
           set({ 
             user: response.data,
@@ -262,7 +243,6 @@ const useAuthStore = create<AuthState>()(
           const response = await api.post('/auth/register', formData);
           console.log('Réponse de register:', response.data);
           
-          // Connexion automatique après inscription
           return get().login(formData.mail, formData.password);
         } catch (error) {
           console.error('Erreur lors de l\'inscription:', error);
@@ -287,16 +267,13 @@ const useAuthStore = create<AuthState>()(
         try {
           console.log('Déconnexion...');
           
-          // Supprimer les cookies
           deleteCookie('access_token');
           deleteCookie('refresh_token');
           
-          // Optionnel : appeler le backend pour invalider les tokens
           try {
             await api.post('/auth/logout');
           } catch (error) {
             console.warn('Erreur lors de la déconnexion côté serveur:', error);
-            // Continuer même si l'appel au backend échoue
           }
           
           set({ 
@@ -306,14 +283,12 @@ const useAuthStore = create<AuthState>()(
             error: null
           });
           
-          // Redirection gérée par le composant qui appelle cette fonction
         } catch (error) {
           console.error('Erreur lors de la déconnexion:', error);
           set({ error: 'Erreur lors de la déconnexion' });
         }
       },
 
-      // Effacer les erreurs
       clearError: () => {
         set({ error: null });
       },
@@ -327,8 +302,6 @@ const useAuthStore = create<AuthState>()(
           const response = await api.put('/users/update_profile', userData);
           console.log('Réponse de update_profile:', response.data);
           
-          // Utiliser les données retournées par le serveur pour mettre à jour l'état
-          // Si le serveur ne renvoie pas l'utilisateur complet, fusionner avec l'état actuel
           const updatedUser = response.data.user || response.data;
           
           set({ 
@@ -340,7 +313,6 @@ const useAuthStore = create<AuthState>()(
             error: null
           });
           
-          // Afficher un message de confirmation dans la console
           console.log('Profil mis à jour avec succès');
           
           return updatedUser;
@@ -374,11 +346,9 @@ const useAuthStore = create<AuthState>()(
           const response = await api.get('/users/role');
           console.log('Réponse de get_role:', response.data);
           
-          // Extraire les données du rôle
           const roleData = response.data.role || response.data;
           console.log('Données du rôle structurées:', roleData);
           
-          // Mettre à jour l'utilisateur avec son rôle
           set({ 
             user: { 
               ...get().user, 
@@ -393,47 +363,36 @@ const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Erreur lors de la récupération du rôle:', error);
           
-          // Ne pas définir d'erreur dans le state pour ne pas perturber l'UI
-          
           return null;
         }
       },
 
       // Rafraîchir le token
       refreshToken: async () => {
-        // Si un rafraîchissement est déjà en cours, retourner la promesse existante
         if (refreshingPromise) {
           console.log('Rafraîchissement déjà en cours, réutilisation de la promesse existante');
           return refreshingPromise;
         }
         
-        // Créer une nouvelle promesse de rafraîchissement
         refreshingPromise = (async () => {
           try {
             console.log('Tentative de rafraîchissement du token...');
             
-            // Appeler l'endpoint de rafraîchissement
-            // Le refresh_token est envoyé automatiquement via les cookies
             const response = await axios.post(
               `${API_URL}/auth/refresh_token`,
-              {}, // Corps vide
+              {}, 
               { 
-                withCredentials: true // Important pour envoyer et recevoir les cookies
+                withCredentials: true
               }
             );
             
             console.log('Rafraîchissement réussi');
             
-            // Les nouveaux tokens sont automatiquement définis comme cookies par le backend
-            // Pas besoin de les extraire ou de les définir manuellement
-            
             return true;
           } catch (error) {
             console.error('Erreur lors du rafraîchissement du token:', error);
             
-            // En cas d'échec, vérifier si l'utilisateur est toujours considéré comme authentifié
             if (get().isAuthenticated) {
-              // Déconnecter l'utilisateur si le rafraîchissement échoue
               set({ 
                 user: null, 
                 isAuthenticated: false,
@@ -444,10 +403,9 @@ const useAuthStore = create<AuthState>()(
             
             return false;
           } finally {
-            // Réinitialiser la promesse de rafraîchissement après un délai
             setTimeout(() => {
               refreshingPromise = null;
-            }, 1000); // Attendre 1 seconde avant de permettre un nouveau rafraîchissement
+            }, 1000); 
           }
         })();
         
@@ -458,10 +416,8 @@ const useAuthStore = create<AuthState>()(
       name: 'auth-store', 
       storage: createJSONStorage(() => localStorage), 
       partialize: (state) => ({ 
-        // Ne persister que ces propriétés
         user: state.user,
         isAuthenticated: state.isAuthenticated
-        // Ne pas persister loading ou error
       }),
     }
   )

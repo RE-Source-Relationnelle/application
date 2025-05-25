@@ -44,7 +44,20 @@ def register():
             }
             db.role.insert_one(citoyen_role)
             print(f"Rôle 'citoyen' créé avec l'ID: {citoyen_role['_id']}")
-        data['password'] = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+
+        # Hashage du mot de passe
+        try:
+            # Encode le mot de passe en utf-8 et le hache avec bcrypt
+            password_bytes = data['password'].encode('utf-8')
+            hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+            
+            # Le mot de passe haché est stocké directement comme bytes dans MongoDB
+            data['password'] = hashed_password
+            print("Mot de passe haché avec succès")
+        except Exception as e:
+            print(f"Erreur lors du hashage du mot de passe: {str(e)}")
+            return jsonify({'error': 'Erreur lors de la création du compte'}), 500
+            
         # Création de l'utilisateur
         user = {
             '_id': ObjectId(),
