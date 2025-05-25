@@ -6,6 +6,7 @@ from config.database import get_db
 from . import auth_bp
 from flask_cors import cross_origin
 from bson import ObjectId
+import bcrypt
 
 # Clé secrète pour JWT
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
@@ -30,7 +31,8 @@ def auth_from_password():
         if not all(k in data for k in ('mail', 'password')):
             print("❌ ERREUR: Champs requis manquants")
             return jsonify({'error': 'Email et mot de passe requis'}), 400
-
+    
+        bcrypt.checkpw(mot_de_passe_saisi, mot_de_passe_hache)
         # Recherche de l'utilisateur
         user = db.users.find_one({'mail': data['mail']})
         
@@ -38,7 +40,7 @@ def auth_from_password():
             print(f"❌ ERREUR: Aucun utilisateur trouvé avec l'email: {data['mail']}")
             return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
             
-        if user['password'] != data['password']:
+        if bcrypt.checkpw(data['password'],user['password']):
             print(f"❌ ERREUR: Mot de passe incorrect pour l'utilisateur: {data['mail']}")
             return jsonify({'error': 'Email ou mot de passe incorrect'}), 401
 
