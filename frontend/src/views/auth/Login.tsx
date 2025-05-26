@@ -122,7 +122,7 @@ const Login = () => {
                             <div className='mt-6 flex flex-col items-end justify-center gap-2'>
                                 <button
                                     type="submit"
-                                    className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary"
+                                    className="py-2 px-6 text-sm text-white bg-primary hover:bg-secondary rounded-md"
                                     disabled={loading}
                                 >
                                     {loading ? 'Connexion en cours...' : 'Se connecter'}

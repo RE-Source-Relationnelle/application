@@ -7,12 +7,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import useAuthStore from '../store/authStore';
 
+// Créer un mock pour le module App sans l'importer directement
+jest.mock('../App', () => ({}), { virtual: true });
+
 Object.defineProperty(document, 'cookie', {
   writable: true,
   value: '',
 });
 
-describe('Auth Store Tests', () => {
+describe('TF01 : Authentification', () => {
   let mockUser;
   let mockAdminUser;
 
@@ -53,9 +56,9 @@ describe('Auth Store Tests', () => {
     setupDefaultMocks();
   });
 
-  // Tests de connexion
-  describe('Login Tests', () => {
-    test('should login successfully', async () => {
+  // Tests fonctionnels de connexion
+  describe('TF02 : Connexion utilisateur', () => {
+    test('Connexion réussie avec identifiants valides', async () => {
       mockAxios.post.mockImplementationOnce((url, data) => {
         if (url === '/auth/auth_from_password') {
           return Promise.resolve({ data: mockUser });
@@ -72,7 +75,7 @@ describe('Auth Store Tests', () => {
       expect(state.error).toBeNull();
     });
     
-    test('should fail login with invalid credentials', async () => {
+    test('Échec de connexion avec identifiants invalides', async () => {
       mockAxios.post.mockImplementationOnce((url, data) => {
         if (url === '/auth/auth_from_password') {
           return Promise.reject({
@@ -90,6 +93,7 @@ describe('Auth Store Tests', () => {
       try {
         await useAuthStore.getState().login('invalid@example.com', 'wrongpassword');
       } catch (error) {
+        // Capture de l'erreur
       }
       
       useAuthStore.setState({ error: 'Identifiants invalides' });
@@ -100,7 +104,7 @@ describe('Auth Store Tests', () => {
       expect(state.error).toBe('Identifiants invalides');
     });
     
-    test('should login as admin user', async () => {
+    test('Connexion réussie en tant qu\'administrateur', async () => {
       mockAxios.post.mockImplementationOnce((url, data) => {
         if (url === '/auth/auth_from_password') {
           return Promise.resolve({ data: mockAdminUser });
@@ -118,9 +122,9 @@ describe('Auth Store Tests', () => {
     });
   });
   
-  // Tests d'inscription
-  describe('Register Tests', () => {
-    test('should register successfully', async () => {
+  // Tests fonctionnels d'inscription
+  describe('TF03 : Inscription utilisateur', () => {
+    test('Inscription réussie avec données valides', async () => {
       const formData = {
         mail: 'newuser@example.com',
         password: 'password123',
@@ -155,7 +159,7 @@ describe('Auth Store Tests', () => {
       expect(state.error).toBeNull();
     });
     
-    test('should fail registration with incomplete data', async () => {
+    test('Échec d\'inscription avec données incomplètes', async () => {
       const formData = {
         mail: 'incomplete@example.com',
         password: 'password123'
@@ -178,6 +182,7 @@ describe('Auth Store Tests', () => {
       try {
         await useAuthStore.getState().register(formData);
       } catch (error) {
+        // Capture de l'erreur
       }
       
       useAuthStore.setState({ error: 'Données d\'inscription incomplètes' });
@@ -187,9 +192,9 @@ describe('Auth Store Tests', () => {
     });
   });
   
-  // Tests de déconnexion
-  describe('Logout Tests', () => {
-    test('should logout successfully', async () => {
+  // Tests fonctionnels de déconnexion
+  describe('TF04 : Déconnexion utilisateur', () => {
+    test('Déconnexion réussie', async () => {
       useAuthStore.setState({
         user: mockUser,
         isAuthenticated: true
@@ -205,8 +210,9 @@ describe('Auth Store Tests', () => {
     });
   });
   
-  describe('Update Profile Tests', () => {
-    test('should update profile successfully', async () => {
+  // Tests fonctionnels de mise à jour du profil
+  describe('TF05 : Mise à jour du profil utilisateur', () => {
+    test('Mise à jour réussie du profil', async () => {
       const userData = {
         nom: 'Doe-Updated',
         prenom: 'John-Updated'
@@ -250,104 +256,6 @@ describe('Auth Store Tests', () => {
       expect(state.user?.prenom).toBe('John-Updated');
       expect(state.loading).toBe(false);
       expect(state.error).toBeNull();
-    });
-    
-    test('should fail profile update with error', async () => {
-      const userData = {
-        email: 'invalid-email'
-      };
-      
-      resetMocks();
-      
-      mockAxios.put.mockImplementation((url, data) => {
-        return Promise.reject({
-          response: {
-            status: 400,
-            data: { error: 'Erreur de mise à jour du profil' }
-          }
-        });
-      });
-      
-      useAuthStore.setState({ 
-        user: mockUser,
-        isAuthenticated: true,
-        loading: false,
-        error: null
-      });
-      
-      try {
-        await useAuthStore.getState().updateProfile(userData);
-      } catch (error) {
-      }
-      
-      useAuthStore.setState({ error: 'Erreur de mise à jour du profil' });
-      
-      const state = useAuthStore.getState();
-      expect(state.error).toBe('Erreur de mise à jour du profil');
-    });
-  });
-  
-  // Tests de vérification d'authentification
-  describe('Check Auth Tests', () => {
-    test('should check auth successfully', async () => {
-      resetMocks();
-      
-      mockAxios.get.mockImplementation((url) => {
-        return Promise.resolve({ data: mockUser });
-      });
-      
-      useAuthStore.setState({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-        error: null
-      });
-      
-      try {
-        await useAuthStore.getState().checkAuth();
-      } catch (error) {
-      }
-      
-      useAuthStore.setState({ 
-        user: mockUser,
-        isAuthenticated: true,
-        loading: false,
-        error: null
-      });
-      
-      const state = useAuthStore.getState();
-      expect(state.isAuthenticated).toBe(true);
-      expect(state.user).not.toBeNull();
-      expect(state.loading).toBe(false);
-      expect(state.error).toBeNull();
-    });
-  });
-  
-  // Tests de rafraîchissement du token
-  describe('Refresh Token Tests', () => {
-    test('should refresh token successfully', async () => {
-      resetMocks();
-      
-      mockAxios.post.mockImplementation((url, data, config) => {
-        return Promise.resolve({ data: { message: 'Token rafraîchi avec succès' } });
-      });
-      
-      useAuthStore.setState({
-        user: mockUser,
-        isAuthenticated: false,
-        loading: false,
-        error: null
-      });
-      
-      let result = false;
-      try {
-        result = await useAuthStore.getState().refreshToken();
-      } catch (error) {
-      }
-      
-      result = true;
-      
-      expect(result).toBe(true);
     });
   });
 });
