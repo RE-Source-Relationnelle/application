@@ -43,7 +43,6 @@ describe("TF06 : Gestion des ressources", () => {
   // Tests fonctionnels de récupération des ressources
   describe("TF07 : Récupération des ressources", () => {
     test("Récupération réussie des ressources depuis l'API", async () => {
-      // Configuration du mock pour simuler la récupération des ressources
       mockAxios.get.mockImplementation((url) => {
         if (url === "/resources/") {
           return Promise.resolve({ data: mockResources });

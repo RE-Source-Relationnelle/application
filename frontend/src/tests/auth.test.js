@@ -7,7 +7,6 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import useAuthStore from '../store/authStore';
 
-// Créer un mock pour le module App sans l'importer directement
 jest.mock('../App', () => ({}), { virtual: true });
 
 Object.defineProperty(document, 'cookie', {
@@ -15,6 +14,7 @@ Object.defineProperty(document, 'cookie', {
   value: '',
 });
 
+// Tests fonctionnels d'authentification
 describe('TF01 : Authentification', () => {
   let mockUser;
   let mockAdminUser;
