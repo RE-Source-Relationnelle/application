@@ -7,6 +7,7 @@ import useResourcesStore from '../../store/resourcesStore';
 import { useToast } from '../../contexts/ToastContext';
 import useSearchStore from '../../store/searchStore';
 import useCategoryStore from '../../store/categoryStore';
+import PWAInstallButton from '../ui/PWAInstallButton';
 
 const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -286,6 +287,9 @@ const Navbar = () => {
                     <ShieldAlert className="h-5 w-5" />
                   </Link>
                 )}
+                
+                {/* PWA Install Button */}
+                <PWAInstallButton />
                 
                 {/* User Menu */}
                 <div className="relative ml-3">

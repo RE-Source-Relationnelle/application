@@ -16,6 +16,7 @@ import CategoryFeed from './views/Category/CategoryFeed'
 import AllCategories from './views/Category/AllCategories'
 import { ToastProvider } from './contexts/ToastContext'
 import ToastTester from './components/ui/ToastTester'
+import PWAUpdateNotification from './components/ui/PWAUpdateNotification'
 import './styles/content-styles.css'
 
 const SHOW_TOAST_TESTER = false;
@@ -41,6 +42,9 @@ function App() {
           
           {/* Testeur de toasts - à supprimer en production */}
           {SHOW_TOAST_TESTER && <ToastTester />}
+          
+          {/* Composants PWA */}
+          <PWAUpdateNotification />
         </BaseLayout>
       </ToastProvider>
     </Router>
