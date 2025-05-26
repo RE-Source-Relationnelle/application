@@ -25,7 +25,7 @@ jest.mock('../store/categoryStore', () => ({
   }
 }));
 
-describe('Resources Store Tests', () => {
+describe('FT- : Resources Store Tests', () => {
   beforeEach(() => {
     useResourcesStore.setState({
       resources: [],
