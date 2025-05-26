@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import useAuthStore from '../../store/authStore';
+import useAuthStore from '../../../store/authStore';
 
 interface Comment {
     _id: string;

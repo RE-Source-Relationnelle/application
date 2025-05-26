@@ -143,100 +143,121 @@ const useResourceRandomStore = create<ResourceRandomState>((set, get) => ({
         console.log(`Tentative de récupération de l'auteur pour la ressource ${resourceId} (id_publieur: ${publisherId})`);
       }
       
+      // Essayer d'abord la nouvelle route accessible à tous les utilisateurs
       try {
-        // Utiliser la route admin pour récupérer les utilisateurs si l'utilisateur est admin
-        // Sinon, utiliser un auteur par défaut
-        const currentUser = localStorage.getItem('auth-store');
-        let isAdmin = false;
-        
-        if (currentUser) {
-          try {
-            const userData = JSON.parse(currentUser);
-            if (userData.state?.user?.role?.nom_role === 'administrateur' || 
-                userData.state?.user?.role?.nom_role === 'super-administrateur') {
-              isAdmin = true;
-            }
-          } catch (e) {
-            console.warn('Impossible de parser les données utilisateur du localStorage');
-          }
+        const response = await api.get(`/users/public_info/${publisherId}`);
+        if (response.data) {
+          console.log("Informations de l'auteur récupérées avec succès:", response.data);
+          
+          // Adapter la structure pour correspondre à l'interface User
+          const authorData = {
+            id: response.data._id,
+            email: response.data.email || '',
+            nom: response.data.nom || '',
+            prenom: response.data.prenom || ''
+          };
+          
+          set(state => ({
+            resources: state.resources.map(resource => 
+              resource._id === resourceId 
+                ? { ...resource, author: authorData } 
+                : resource
+            )
+          }));
+          
+          // Réappliquer le filtre de catégorie
+          get().filterResourcesByCategory();
+          return;
         }
+      } catch (publicInfoError) {
+        console.warn("Impossible d'utiliser la route public_info pour récupérer les informations de l'utilisateur:", publicInfoError);
         
-        // Si l'utilisateur est admin, on peut essayer d'utiliser la route admin
-        if (isAdmin) {
-          try {
-            // Utiliser la route admin qui liste tous les utilisateurs
-            const response = await api.get('/admin/get_users');
-            if (response.data && Array.isArray(response.data)) {
-              // Trouver l'utilisateur correspondant à l'ID du publieur
-              const authorData = response.data.find(user => user._id === publisherId);
-              
-              if (authorData) {
-                set(state => ({
-                  resources: state.resources.map(resource => 
-                    resource._id === resourceId 
-                      ? { ...resource, author: authorData } 
-                      : resource
-                  )
-                }));
-                
-                // Réappliquer le filtre de catégorie
-                get().filterResourcesByCategory();
-                return;
+        // Fallback pour les administrateurs (utilisation de la route admin existante)
+        try {
+          // Utiliser la route admin pour récupérer les utilisateurs si l'utilisateur est admin
+          // Sinon, utiliser un auteur par défaut
+          const currentUser = localStorage.getItem('auth-store');
+          let isAdmin = false;
+          
+          if (currentUser) {
+            try {
+              const userData = JSON.parse(currentUser);
+              if (userData.state?.user?.role?.nom_role === 'administrateur' || 
+                  userData.state?.user?.role?.nom_role === 'super-administrateur') {
+                isAdmin = true;
               }
+            } catch (e) {
+              console.warn('Impossible de parser les données utilisateur du localStorage');
             }
-          } catch (adminError) {
-            console.warn('Impossible d\'utiliser la route admin pour récupérer les utilisateurs:', adminError);
           }
+          
+          // Si l'utilisateur est admin, on peut essayer d'utiliser la route admin
+          if (isAdmin) {
+            try {
+              // Utiliser la route admin qui liste tous les utilisateurs
+              const response = await api.get('/admin/get_users');
+              if (response.data && Array.isArray(response.data)) {
+                // Trouver l'utilisateur correspondant à l'ID du publieur
+                const authorData = response.data.find(user => user._id === publisherId);
+                
+                if (authorData) {
+                  set(state => ({
+                    resources: state.resources.map(resource => 
+                      resource._id === resourceId 
+                        ? { ...resource, author: authorData } 
+                        : resource
+                    )
+                  }));
+                  
+                  // Réappliquer le filtre de catégorie
+                  get().filterResourcesByCategory();
+                  return;
+                }
+              }
+            } catch (adminError) {
+              console.warn('Impossible d\'utiliser la route admin pour récupérer les utilisateurs:', adminError);
+            }
+          }
+        } catch (error) {
+          console.error("Erreur lors de la vérification du rôle admin:", error);
         }
-        
-        set(state => ({
-          resources: state.resources.map(resource => 
-            resource._id === resourceId 
-              ? { 
-                  ...resource, 
-                  author: {
-                    id: publisherId,
-                    email: '',
-                    nom: 'Utilisateur',
-                    prenom: '',
-                  } 
-                } 
-              : resource
-          )
-        }));
-        
-        // Réappliquer le filtre de catégorie
-        get().filterResourcesByCategory();
-        
-      } catch (apiError: any) {
-        // Si l'erreur est liée à CORS ou à un problème réseau, on ne fait rien
-        // mais on évite de spammer la console avec des erreurs
-        if (isDev) {
-          console.warn(`Impossible de récupérer l'auteur pour la ressource ${resourceId}. L'API n'est peut-être pas disponible.`);
-        }
-        
-        // Mettre à jour la ressource avec un auteur par défaut pour éviter de réessayer
-        set(state => ({
-          resources: state.resources.map(resource => 
-            resource._id === resourceId 
-              ? { 
-                  ...resource, 
-                  author: {
-                    id: publisherId,
-                    email: '',
-                    nom: 'Utilisateur',
-                    prenom: '',
-                  } 
-                } 
-              : resource
-          )
-        }));
-        
-        // Réappliquer le filtre de catégorie
-        get().filterResourcesByCategory();
       }
+      
+      // Fallback si aucune des méthodes précédentes n'a fonctionné
+      set(state => ({
+        resources: state.resources.map(resource => 
+          resource._id === resourceId 
+            ? { 
+                ...resource, 
+                author: {
+                  id: publisherId,
+                  email: '',
+                  nom: 'Utilisateur',
+                  prenom: '',
+                } 
+              } 
+            : resource
+        )
+      }));
+      
     } catch (error) {
-      console.error(`Erreur lors de la récupération de l'auteur pour la ressource ${resourceId}:`, error);
+      console.error(`Erreur lors de la récupération de l'auteur:`, error);
+      
+      set(state => ({
+        resources: state.resources.map(resource => 
+          resource._id === resourceId 
+            ? { 
+                ...resource, 
+                author: {
+                  id: publisherId,
+                  email: '',
+                  nom: 'Utilisateur',
+                  prenom: '',
+                } 
+              } 
+            : resource
+        )
+      }));
     }
   },
   
