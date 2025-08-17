@@ -47,9 +47,41 @@ jobs:
       - name: Run frontend tests
         run: cd frontend && pnpm test
 
+  version:
+    name: Version
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install semantic-release and plugins
+        run: |
+          npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/commit-analyzer @semantic-release/release-notes-generator
+          
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx semantic-release
+          
+      - name: Get new version
+        id: get-version
+        run: |
+          VERSION=$(cat package.json | jq -r '.version')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
   build:
     name: Build
-    needs: test
+    needs: [test, version]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
@@ -70,14 +102,18 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-backend:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-backend:${{ env.VERSION || github.sha }}
       
       - name: Build and push frontend
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-frontend:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/cesizen-frontend:${{ env.VERSION || github.sha }}
 
   deploy-dev:
     name: Deploy to Development
