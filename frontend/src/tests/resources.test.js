@@ -26,7 +26,7 @@ jest.mock("../store/categoryStore", () => ({
 }));
 
 // Tests fonctionnels de gestion des ressources
-describe("TF06 : Gestion des ressources", () => {
+describe("Gestion des ressources", () => {
   beforeEach(() => {
     useResourcesStore.setState({
       resources: [],
@@ -41,7 +41,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels de récupération des ressources
-  describe("TF07 : Récupération des ressources", () => {
+  describe("TF06 : Récupération des ressources", () => {
     test("Récupération réussie des ressources depuis l'API", async () => {
       mockAxios.get.mockImplementation((url) => {
         if (url === "/resources/") {
@@ -78,7 +78,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels de récupération des catégories
-  describe("TF08 : Gestion des catégories", () => {
+  describe("TF07 : Gestion des catégories", () => {
     test("Récupération réussie des catégories depuis l'API", async () => {
       await useResourcesStore.getState().fetchCategories();
 
@@ -94,7 +94,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels de création de ressource
-  describe("TF09 : Création de ressource", () => {
+  describe("TF08 : Création de ressource", () => {
     test("Création réussie d'une ressource", async () => {
       const resourceData = {
         titre: "Nouvelle ressource",
@@ -170,7 +170,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels d'approbation de ressource
-  describe("TF10 : Approbation de ressource", () => {
+  describe("TF09 : Approbation de ressource", () => {
     test("Approbation réussie d'une ressource par un administrateur", async () => {
       const resourceId = "resource123";
       const comment = "Ressource approuvée après vérification";
@@ -215,7 +215,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels de suppression de ressource
-  describe("TF11 : Suppression de ressource", () => {
+  describe("TF10 : Suppression de ressource", () => {
     test("Suppression réussie d'une ressource", async () => {
       const resourceId = "resource123";
 
@@ -251,7 +251,7 @@ describe("TF06 : Gestion des ressources", () => {
   });
 
   // Tests fonctionnels de gestion des favoris
-  describe("TF12 : Gestion des favoris", () => {
+  describe("TF11 : Gestion des favoris", () => {
     test("Ajout réussi d'une ressource aux favoris", async () => {
       const resourceId = "resource123";
 

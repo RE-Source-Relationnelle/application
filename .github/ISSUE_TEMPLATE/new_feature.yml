@@ -1,0 +1,75 @@
+name: 💡 Demande de fonctionnalité
+description: Suggérer une idée ou une amélioration pour CESIZen
+title: "[FEATURE] "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour votre suggestion ! Nous apprécions votre contribution à l'amélioration de CESIZen.
+  
+  - type: dropdown
+    id: feature_type
+    attributes:
+      label: Type de fonctionnalité
+      description: Quel type de fonctionnalité souhaitez-vous proposer ?
+      options:
+        - Nouvelle fonctionnalité
+        - Amélioration d'une fonctionnalité existante
+        - Changement d'interface utilisateur
+        - Optimisation de performance
+        - Autre
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: area
+    attributes:
+      label: Zone concernée
+      description: Quelle partie de l'application est concernée ?
+      options:
+        - Frontend
+        - Backend
+        - Base de données
+        - Authentification
+        - Exercices de respiration
+        - Articles/Informations
+        - Navigation
+        - Autre
+    validations:
+      required: true
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problème actuel
+      description: Décrivez le problème ou la limitation que cette fonctionnalité résoudrait
+      placeholder: "Actuellement, les utilisateurs ne peuvent pas..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution proposée
+      description: Décrivez la solution que vous aimeriez voir implémentée
+      placeholder: "Il serait utile d'avoir..."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives envisagées
+      description: Avez-vous envisagé d'autres solutions ou approches ?
+      placeholder: "J'ai aussi pensé à..."
+    validations:
+      required: false
+      
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Contexte supplémentaire
+      description: Ajoutez tout autre contexte, captures d'écran, ou exemples qui pourraient aider à comprendre votre demande
+    validations:
+      required: false
