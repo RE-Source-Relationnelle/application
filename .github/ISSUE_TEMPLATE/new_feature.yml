@@ -1,12 +1,12 @@
 name: 💡 Demande de fonctionnalité
-description: Suggérer une idée ou une amélioration pour CESIZen
+description: Suggérer une idée ou une amélioration pour RE-Source-Relationnelle
 title: "[FEATURE] "
 labels: ["enhancement", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Merci pour votre suggestion ! Nous apprécions votre contribution à l'amélioration de CESIZen.
+        Merci pour votre suggestion ! Nous apprécions votre contribution à l'amélioration de RE-Source-Relationnelle.
   
   - type: dropdown
     id: feature_type
@@ -28,14 +28,32 @@ body:
       label: Zone concernée
       description: Quelle partie de l'application est concernée ?
       options:
-        - Frontend
-        - Backend
-        - Base de données
-        - Authentification
-        - Exercices de respiration
-        - Articles/Informations
-        - Navigation
+        - Feed des ressources
+        - Création/édition de ressources
+        - Système de commentaires
+        - Gestion des catégories
+        - Système d'authentification
+        - Backoffice administrateur
+        - Recherche de ressources
+        - Gestion des favoris
+        - Gestion des utilisateurs
+        - Statistiques d'utilisation
+        - Interface utilisateur/UX
         - Autre
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: user_role
+    attributes:
+      label: Rôle utilisateur concerné
+      description: Quel type d'utilisateur bénéficierait de cette fonctionnalité ?
+      options:
+        - Tous les utilisateurs
+        - Utilisateurs non connectés
+        - Utilisateurs standards (Citoyens)
+        - Administrateurs
+        - Super-administrateurs
     validations:
       required: true
   

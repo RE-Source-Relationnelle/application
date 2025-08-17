@@ -1,18 +1,31 @@
 name: 🐛 Rapport de Bug
-description: Signaler un bug ou un problème
+description: Signaler un bug ou un problème dans RE-Source-Relationnelle
 title: "[BUG] "
 labels: ["bug", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Merci de prendre le temps de remplir ce rapport de bug !
-  - type: input
-    id: version
+        Merci de prendre le temps de remplir ce rapport de bug pour RE-Source-Relationnelle !
+  - type: dropdown
+    id: component
     attributes:
-      label: Version
-      description: Quelle version de l'application utilisez-vous ?
-      placeholder: ex. v1.0.0
+      label: Composant concerné
+      description: Quelle partie de l'application est affectée par ce bug ?
+      options:
+        - Frontend - Authentification
+        - Frontend - Feed des ressources
+        - Frontend - Création/édition de ressources
+        - Frontend - Commentaires
+        - Frontend - Catégories
+        - Frontend - Recherche
+        - Frontend - Backoffice admin
+        - Backend - API Ressources
+        - Backend - API Authentification
+        - Backend - API Catégories
+        - Backend - API Utilisateurs
+        - Backend - API Commentaires
+        - Autre
     validations:
       required: true
   - type: dropdown
@@ -24,6 +37,18 @@ body:
         - Développement
         - Test
         - Production
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Rôle utilisateur
+      description: Avec quel type de compte avez-vous rencontré ce problème ?
+      options:
+        - Utilisateur non connecté
+        - Utilisateur standard (Citoyen)
+        - Administrateur
+        - Super-administrateur
     validations:
       required: true
   - type: textarea
@@ -50,10 +75,10 @@ body:
     id: logs
     attributes:
       label: Logs pertinents
-      description: Copiez et collez les logs pertinents si disponibles.
+      description: Copiez et collez les logs pertinents si disponibles (console navigateur, logs backend, etc.)
       render: shell
   - type: textarea
     id: additional
     attributes:
       label: Informations supplémentaires
-      description: Tout contexte supplémentaire sur le problème.
+      description: Tout contexte supplémentaire sur le problème (navigateur utilisé, appareil, etc.)
