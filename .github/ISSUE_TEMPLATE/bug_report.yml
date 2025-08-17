@@ -47,6 +47,7 @@ body:
       options:
         - Utilisateur non connecté
         - Utilisateur standard (Citoyen)
+        - Modérateur
         - Administrateur
         - Super-administrateur
     validations:

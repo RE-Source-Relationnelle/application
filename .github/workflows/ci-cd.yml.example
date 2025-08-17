@@ -1,4 +1,4 @@
-name: CESIZen CI/CD Pipeline
+name: RE-Source-Relationnelle CI/CD Pipeline
 
 on:
   push:
