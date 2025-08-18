@@ -53,7 +53,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
-            const response = await axios.get('http://localhost:5001/resources/favorites', {
+            const response = await axios.get('http://guillaume-lechevallier.freeboxos.fr:5001/resources/favorites', {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
-            const response = await axios.post(`http://localhost:5001/resources/favorite/${resourceId}`, {}, {
+            const response = await axios.post(`http://guillaume-lechevallier.freeboxos.fr:5001/resources/favorite/${resourceId}`, {}, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
         set({ loading: true, error: null });
         
         try {
-            const response = await axios.delete(`http://localhost:5001/resources/favorite/${resourceId}`, {
+            const response = await axios.delete(`http://guillaume-lechevallier.freeboxos.fr:5001/resources/favorite/${resourceId}`, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ const useFavoritesStore = create<FavoritesState>((set, get) => ({
     // Vérifier si une ressource est en favoris (avec appel API)
     checkIfFavorite: async (resourceId: string) => {
         try {
-            const response = await axios.get('http://localhost:5001/resources/favorites', {
+            const response = await axios.get('http://guillaume-lechevallier.freeboxos.fr:5001/resources/favorites', {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
