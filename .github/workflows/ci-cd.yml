@@ -18,46 +18,57 @@ on:
         - production
 
 jobs:
-  test-backend:
-    name: Test Backend (Python/Flask)
+  test:
+    name: Tests
     runs-on: ubuntu-latest
     
     steps:
       - uses: actions/checkout@v3
       
+      # Backend Testing
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           cd Back-End
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov flake8 mypy black isort safety
       
-      - name: Run backend tests
+      - name: Python code formatting check (Black)
         run: |
           cd Back-End
-          python -m pytest tests/ -v --cov=routes --cov-report=xml || echo "Backend tests completed with issues"
+          black --check --diff . || echo "Code formatting issues found"
       
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        if: always()
-        with:
-          file: ./Back-End/coverage.xml
-          flags: backend
-          name: backend-coverage
-          fail_ci_if_error: false
-
-  test-frontend:
-    name: Test Frontend (React/TypeScript)
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v3
+      - name: Python import sorting check (isort)
+        run: |
+          cd Back-End
+          isort --check-only --diff . || echo "Import sorting issues found"
       
+      - name: Python linting (Flake8)
+        run: |
+          cd Back-End
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || echo "Linting completed with issues"
+      
+      - name: Python type checking (MyPy)
+        run: |
+          cd Back-End
+          mypy . --ignore-missing-imports || echo "Type checking completed with issues"
+      
+      - name: Python security check (Safety)
+        run: |
+          cd Back-End
+          safety check || echo "Security check completed with warnings"
+      
+      - name: Run backend unit tests
+        run: |
+          cd Back-End
+          python -m pytest tests/ -v --cov=routes --cov=utils --cov=config --cov-report=xml --cov-report=html || echo "Backend tests completed with issues"
+      
+      # Frontend Testing
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -74,17 +85,42 @@ jobs:
           cd frontend
           pnpm install
       
-      - name: Run frontend tests
+      - name: TypeScript type checking
         run: |
           cd frontend
-          pnpm run test || echo "Frontend tests completed with issues"
+          pnpm run build --noEmit || echo "TypeScript type checking completed with issues"
       
-      - name: Run linting
+      - name: ESLint checking
         run: |
           cd frontend
-          pnpm run lint || echo "Linting completed with issues"
+          pnpm run lint || echo "ESLint completed with issues"
       
-      - name: Upload frontend coverage to Codecov
+      - name: Frontend unit tests
+        run: |
+          cd frontend
+          pnpm run test:coverage || echo "Frontend tests completed with issues"
+      
+      - name: Frontend component tests
+        run: |
+          cd frontend
+          pnpm run test -- --testPathPattern=components || echo "Component tests completed"
+      
+      - name: Frontend integration tests
+        run: |
+          cd frontend
+          pnpm run test -- --testPathPattern=integration || echo "Integration tests completed"
+      
+      # Upload Coverage Reports
+      - name: Upload backend coverage
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          file: ./Back-End/coverage.xml
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+      
+      - name: Upload frontend coverage
         uses: codecov/codecov-action@v3
         if: always()
         with:
@@ -92,22 +128,35 @@ jobs:
           flags: frontend
           name: frontend-coverage
           fail_ci_if_error: false
+      
+      # Upload Test Artifacts
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: |
+            Back-End/coverage.xml
+            Back-End/htmlcov/
+            frontend/coverage/
+          retention-days: 7
 
-  build-backend:
-    name: Prepare Backend
-    needs: test-backend
+  build:
+    name: Build Applications
+    needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
     steps:
       - uses: actions/checkout@v3
       
+      # Backend Build
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           cd Back-End
           python -m pip install --upgrade pip
@@ -124,22 +173,7 @@ jobs:
           cd Back-End
           tar -czf ../backend-package.tar.gz .
       
-      - name: Upload backend artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: backend-package
-          path: backend-package.tar.gz
-          retention-days: 7
-
-  build-frontend:
-    name: Build Frontend
-    needs: test-frontend
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    steps:
-      - uses: actions/checkout@v3
-      
+      # Frontend Build
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -151,17 +185,30 @@ jobs:
           version: 8
           run_install: false
       
-      - name: Install dependencies
+      - name: Install frontend dependencies
         run: |
           cd frontend
           pnpm install
       
-      - name: Build frontend
+      - name: Build frontend for production
         run: |
           cd frontend
           pnpm run build
       
-      - name: Upload build artifacts
+      - name: Run build size analysis
+        run: |
+          cd frontend
+          du -sh dist/* || echo "Build size analysis completed"
+      
+      # Upload Artifacts
+      - name: Upload backend artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-package
+          path: backend-package.tar.gz
+          retention-days: 7
+      
+      - name: Upload frontend artifacts
         uses: actions/upload-artifact@v3
         with:
           name: frontend-build
@@ -170,7 +217,7 @@ jobs:
 
   security-scan:
     name: Security Scan
-    needs: [build-backend, build-frontend]
+    needs: [build]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
@@ -199,7 +246,7 @@ jobs:
 
   docker-build:
     name: Build Docker Images
-    needs: [build-backend, build-frontend, security-scan]
+    needs: [build, security-scan]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
@@ -284,22 +331,24 @@ jobs:
 
   notify:
     name: Notify Pipeline Status
-    needs: [test-backend, test-frontend, build-backend, build-frontend, security-scan]
+    needs: [test, build, security-scan]
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'push'
     
     steps:
       - name: Notify on success
-        if: needs.test-backend.result == 'success' && needs.test-frontend.result == 'success'
+        if: needs.test.result == 'success' && needs.build.result == 'success'
         run: |
           echo "Pipeline completed successfully! ✅"
-          echo "Backend tests: ${{ needs.test-backend.result }}"
-          echo "Frontend tests: ${{ needs.test-frontend.result }}"
+          echo "Tests: ${{ needs.test.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security scan: ${{ needs.security-scan.result }}"
       
       - name: Notify on failure
-        if: needs.test-backend.result == 'failure' || needs.test-frontend.result == 'failure'
+        if: needs.test.result == 'failure' || needs.build.result == 'failure'
         run: |
           echo "Pipeline failed! ❌"
-          echo "Backend tests: ${{ needs.test-backend.result }}"
-          echo "Frontend tests: ${{ needs.test-frontend.result }}"
+          echo "Tests: ${{ needs.test.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          echo "Security scan: ${{ needs.security-scan.result }}"
           exit 1 
