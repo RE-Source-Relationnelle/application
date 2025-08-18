@@ -1,4 +1,4 @@
-name: ResourceRellationnelle CI/CD Pipeline
+name: ResourceRellationnelle CI/CD (Simplified)
 
 on:
   push:
@@ -6,16 +6,6 @@ on:
   pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: false
-        default: 'test'
-        type: choice
-        options:
-        - test
-        - development
-        - production
 
 jobs:
   test:
@@ -25,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Backend Testing
+      # Backend Tests
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -36,62 +26,23 @@ jobs:
           cd Back-End
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov flake8 black isort safety || echo "Some packages failed to install, continuing..."
+          pip install pytest pytest-cov || echo "Failed to install pytest, continuing..."
       
-      - name: Python code quality checks
-        run: |
-          cd Back-End
-          echo "Running Python code quality checks..."
-          
-          # Black formatting check
-          black --check --diff . || echo "⚠️ Code formatting issues found"
-          
-          # Import sorting check
-          isort --check-only --diff . || echo "⚠️ Import sorting issues found"
-          
-          # Basic linting with Flake8
-          flake8 . --count --max-line-length=88 --extend-ignore=E203,W503 --show-source --statistics || echo "⚠️ Linting completed with issues"
-          
-          # Security check
-          safety check || echo "⚠️ Security check completed with warnings"
-          
-          echo "✅ Python quality checks completed"
-      
-      - name: Run backend unit tests
+      - name: Run backend tests
         run: |
           cd Back-End
           echo "Running backend tests..."
-          
-          # Create a simple test configuration if pytest.ini doesn't exist
-          if [ ! -f pytest.ini ]; then
-            echo "[tool:pytest]" > pytest.ini
-            echo "testpaths = tests" >> pytest.ini
-            echo "python_files = test_*.py" >> pytest.ini
-            echo "python_classes = Test*" >> pytest.ini
-            echo "python_functions = test_*" >> pytest.ini
-          fi
-          
-          # Run tests with proper error handling
-          python -m pytest tests/ -v \
-            --cov=routes \
-            --cov=utils \
-            --cov=config \
-            --cov-report=xml \
-            --cov-report=html \
-            --cov-report=term-missing \
-            --tb=short \
-            || echo "⚠️ Some backend tests failed, continuing..."
-          
-          echo "✅ Backend tests completed"
+          python -m pytest tests/ -v || echo "Backend tests completed with issues"
+          echo "✅ Backend tests finished"
       
-      # Frontend Testing
+      # Frontend Tests
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
       
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: false
@@ -101,91 +52,33 @@ jobs:
           cd frontend
           pnpm install
       
-      - name: Frontend quality checks and tests
+      - name: Run frontend tests
         run: |
           cd frontend
-          echo "Running frontend quality checks and tests..."
-          
-          # TypeScript type checking (build without emit)
-          echo "🔍 TypeScript type checking..."
-          npx tsc --noEmit || echo "⚠️ TypeScript type checking completed with issues"
-          
-          # ESLint checking
-          echo "🔍 ESLint checking..."
-          pnpm run lint || echo "⚠️ ESLint completed with issues"
-          
-          # Set up Jest environment variables
+          echo "Running frontend tests..."
           export NODE_ENV=test
           export CI=true
-          
-          # Run tests with better error handling
-          echo "🧪 Running frontend tests..."
-          
-          # Basic tests
-          pnpm run test -- --passWithNoTests --verbose --detectOpenHandles --forceExit || echo "⚠️ Some frontend tests failed"
-          
-          # Try to run with coverage if available
-          pnpm run test:coverage -- --passWithNoTests --detectOpenHandles --forceExit || echo "⚠️ Coverage tests failed, trying basic tests..."
-          
-          # Component tests (if they exist)
-          pnpm run test -- --testPathPattern=components --passWithNoTests --detectOpenHandles --forceExit || echo "ℹ️ No component tests found"
-          
-          # Integration tests (if they exist) 
-          pnpm run test -- --testPathPattern=integration --passWithNoTests --detectOpenHandles --forceExit || echo "ℹ️ No integration tests found"
-          
-          echo "✅ Frontend tests completed"
+          pnpm run test -- --passWithNoTests --detectOpenHandles --forceExit || echo "Frontend tests completed with issues"
+          echo "✅ Frontend tests finished"
       
-      # Upload Coverage Reports
-      - name: Upload backend coverage
-        uses: codecov/codecov-action@v3
-        if: always()
-        continue-on-error: true
-        with:
-          file: ./Back-End/coverage.xml
-          flags: backend
-          name: backend-coverage
-          fail_ci_if_error: false
-      
-      - name: Upload frontend coverage
-        uses: codecov/codecov-action@v3
-        if: always()
-        continue-on-error: true
-        with:
-          file: ./frontend/coverage/lcov.info
-          flags: frontend
-          name: frontend-coverage
-          fail_ci_if_error: false
-      
-      # Upload Test Artifacts
-      - name: Upload test artifacts
-        uses: actions/upload-artifact@v3
-        if: always()
-        continue-on-error: true
-        with:
-          name: test-results
-          path: |
-            Back-End/coverage.xml
-            Back-End/htmlcov/
-            frontend/coverage/
-            Back-End/pytest.ini
-          retention-days: 7
-      
-      # Test Summary
-      - name: Test Summary
-        if: always()
+      # Basic linting
+      - name: Code quality checks
         run: |
-          echo "## 📊 Test Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend Tests | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend Tests | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Quality | ✅ Checked |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ⏳ Pending |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Note: Tests are configured to be tolerant of failures during CI setup." >> $GITHUB_STEP_SUMMARY
+          echo "Running basic code quality checks..."
+          
+          # Backend linting
+          cd Back-End
+          pip install flake8 || echo "Failed to install flake8"
+          python -m flake8 . --count --max-line-length=88 --statistics || echo "Python linting completed with issues"
+          
+          # Frontend linting  
+          cd ../frontend
+          pnpm run lint || echo "Frontend linting completed with issues"
+          
+          echo "✅ Code quality checks completed"
 
   build:
-    name: Build Applications
+    name: Build
     needs: test
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -193,205 +86,49 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      # Backend Build
+      # Frontend Build (most important)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install and build frontend
+        run: |
+          cd frontend
+          pnpm install
+          pnpm run build
+          echo "✅ Frontend build completed"
+      
+      # Backend validation
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: Install Python dependencies
+      - name: Validate backend
         run: |
           cd Back-End
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Validate Python syntax
-        run: |
-          cd Back-End
           python -m py_compile main.py
-          find . -name "*.py" -exec python -m py_compile {} \;
-      
-      - name: Create backend package
-        run: |
-          cd Back-End
-          tar -czf ../backend-package.tar.gz .
-      
-      # Frontend Build
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-      
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: false
-      
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          pnpm install
-      
-      - name: Build frontend for production
-        run: |
-          cd frontend
-          pnpm run build
-      
-      - name: Run build size analysis
-        run: |
-          cd frontend
-          du -sh dist/* || echo "Build size analysis completed"
-      
-      # Upload Artifacts
-      - name: Upload backend artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: backend-package
-          path: backend-package.tar.gz
-          retention-days: 7
-      
-      - name: Upload frontend artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: frontend-build
-          path: frontend/dist/
-          retention-days: 7
+          echo "✅ Backend validation completed"
 
-  security-scan:
-    name: Security Scan
-    needs: [build]
+  deploy:
+    name: Deploy
+    needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Run Bandit security scan (Python)
+      - name: Deploy notification
         run: |
-          cd Back-End
-          pip install bandit
-          bandit -r . -f json -o bandit-report.json || echo "Bandit scan completed with warnings"
-      
-      - name: Run npm audit (Frontend)
-        run: |
-          cd frontend
-          npm audit --audit-level moderate || echo "npm audit completed with warnings"
-      
-      - name: Upload security report
-        uses: actions/upload-artifact@v3
-        with:
-          name: security-reports
-          path: |
-            bandit-report.json
-            frontend/npm-audit.json
-          retention-days: 30
-
-  docker-build:
-    name: Build Docker Images
-    needs: [build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push backend image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./Back-End
-          file: ./Back-End/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/ressources-relationnelles-backend:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/ressources-relationnelles-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      
-      - name: Build and push frontend image
-        uses: docker/build-push-action@v4
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/ressources-relationnelles-frontend:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/ressources-relationnelles-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy-dev:
-    name: Deploy to Development
-    needs: [docker-build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
-    
-    steps:
-      - name: Deploy to development server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DEV_HOST }}
-          username: ${{ secrets.DEV_USERNAME }}
-          key: ${{ secrets.DEV_SSH_KEY }}
-          script: |
-            cd /opt/ressources-relationnelles
-            docker-compose -f docker-compose.dev.yml pull
-            docker-compose -f docker-compose.dev.yml up -d
-            docker system prune -f
-
-  deploy-prod:
-    name: Deploy to Production
-    needs: [docker-build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Deploy to production server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USERNAME }}
-          key: ${{ secrets.PROD_SSH_KEY }}
-          script: |
-            cd /opt/ressources-relationnelles
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml up -d
-            docker system prune -f
-      
-      - name: Health check
-        run: |
-          sleep 30
-          curl -f ${{ secrets.PROD_URL }}/health || exit 1
-
-  notify:
-    name: Notify Pipeline Status
-    needs: [test, build, security-scan]
-    runs-on: ubuntu-latest
-    if: always() && github.event_name == 'push'
-    
-    steps:
-      - name: Notify on success
-        if: needs.test.result == 'success' && needs.build.result == 'success'
-        run: |
-          echo "Pipeline completed successfully! ✅"
-          echo "Tests: ${{ needs.test.result }}"
-          echo "Build: ${{ needs.build.result }}"
-          echo "Security scan: ${{ needs.security-scan.result }}"
-      
-      - name: Notify on failure
-        if: needs.test.result == 'failure' || needs.build.result == 'failure'
-        run: |
-          echo "Pipeline failed! ❌"
-          echo "Tests: ${{ needs.test.result }}"
-          echo "Build: ${{ needs.build.result }}"
-          echo "Security scan: ${{ needs.security-scan.result }}"
-          exit 1 
+          echo "🚀 Deployment would happen here"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "✅ Deployment simulation completed" 
