@@ -93,6 +93,44 @@ jobs:
           name: frontend-coverage
           fail_ci_if_error: false
 
+  build-backend:
+    name: Prepare Backend
+    needs: test-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          cd Back-End
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Validate Python syntax
+        run: |
+          cd Back-End
+          python -m py_compile main.py
+          find . -name "*.py" -exec python -m py_compile {} \;
+      
+      - name: Create backend package
+        run: |
+          cd Back-End
+          tar -czf ../backend-package.tar.gz .
+      
+      - name: Upload backend artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-package
+          path: backend-package.tar.gz
+          retention-days: 7
+
   build-frontend:
     name: Build Frontend
     needs: test-frontend
@@ -132,7 +170,7 @@ jobs:
 
   security-scan:
     name: Security Scan
-    needs: [test-backend, test-frontend]
+    needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
@@ -161,7 +199,7 @@ jobs:
 
   docker-build:
     name: Build Docker Images
-    needs: [test-backend, test-frontend, build-frontend]
+    needs: [build-backend, build-frontend, security-scan]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
@@ -246,7 +284,7 @@ jobs:
 
   notify:
     name: Notify Pipeline Status
-    needs: [test-backend, test-frontend, build-frontend, security-scan]
+    needs: [test-backend, test-frontend, build-backend, build-frontend, security-scan]
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'push'
     
