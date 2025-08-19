@@ -188,11 +188,24 @@ jobs:
           python -m py_compile main.py
           echo "✅ Backend validation completed"
 
-  deploy:
-    name: 🚀 Déploiement
+  deploy_dev:
+    name: Environnement de dev
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/develop')
+    
+    steps:
+      - name: 🚀 Notification de déploiement
+        run: |
+          echo "🚀 Deployment would happen here"
+          echo "Branch: ${{ github.ref }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "✅ Deployment simulation completed" 
+  deploy_prod:
+    name: Environnement de prod
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main')
     
     steps:
       - name: 🚀 Notification de déploiement
