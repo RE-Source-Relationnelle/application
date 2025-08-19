@@ -3,14 +3,15 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import axios from 'axios';
 import { User, RegisterFormData } from '../types/types';
 
-const API_URL = 'http://guillaume-lechevallier.freeboxos.fr:5001/';
+const API_URL = 'https://guillaume-lechevallier.freeboxos.fr:5001/';
 
 // Créer et exporter l'instance API pour qu'elle puisse être utilisée ailleurs
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },     
+  withCredentials: true
 });
 
 // Fonction pour extraire un cookie spécifique

@@ -138,8 +138,8 @@ def auth_from_password():
             max_age=900,  # 15 minutes
             path='/',
             httponly=False,  # Accessible par JavaScript pour les en-têtes
-            secure=False,    # À mettre à True en production avec HTTPS
-            samesite='Lax'
+            secure=True,    # À mettre à True en production avec HTTPS
+            samesite='None'
         )
         
         # Refresh token - httponly=True pour la sécurité
@@ -148,9 +148,9 @@ def auth_from_password():
             refresh_token, 
             max_age=604800,  # 7 jours
             path='/',
-            httponly=True,   # Non accessible par JavaScript
-            secure=False,    # À mettre à True en production avec HTTPS
-            samesite='Lax'
+            httponly=False,   # Non accessible par JavaScript
+            secure=True,    # À mettre à True en production avec HTTPS
+            samesite='None'
         )
 
         print("✅ Authentification réussie")

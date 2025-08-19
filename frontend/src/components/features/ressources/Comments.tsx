@@ -24,7 +24,7 @@ const Comments = ({ resourceId }: CommentsProps) => {
     const fetchComments = async () => {
         try {
             setLoading(true);
-            const response = await axios.get(`http://guillaume-lechevallier.freeboxos.fr:5001/resources/${resourceId}/comments`, {
+            const response = await axios.get(`https://guillaume-lechevallier.freeboxos.fr:5001/resources/${resourceId}/comments`, {
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ const Comments = ({ resourceId }: CommentsProps) => {
         try {
             setLoading(true);
             const response = await axios.post(
-                `http://guillaume-lechevallier.freeboxos.fr:5001/resources/${resourceId}/comments`,
+                `https://guillaume-lechevallier.freeboxos.fr:5001/resources/${resourceId}/comments`,
                 { contenu: newComment },
                 {
                     withCredentials: true,

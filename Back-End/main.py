@@ -15,7 +15,7 @@ from routes.admin_center import admin_bp
 app = Flask(__name__)
 
 
-FRONT_HTTP  = "http://guillaume-lechevallier.freeboxos.fr"
+FRONT_HTTP  = "https://guillaume-lechevallier.freeboxos.fr"
 
 ALLOWED = [FRONT_HTTP]
 
