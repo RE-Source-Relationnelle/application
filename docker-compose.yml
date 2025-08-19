@@ -2,30 +2,24 @@ version: "3.9"
 
 services:
   backend:
+    network_mode: "host"
+
     build:
       context: ./Back-End
       dockerfile: Dockerfile
     image: app-back:latest
     container_name: app-back
-<<<<<<< HEAD
-    environment:
-      - FLASK_ENV=production
-      # Ajoute ici tes variables (ex: DB_URI, SECRET_KEY, etc.)
-      # - SECRET_KEY=change_me
-      # - DB_URI=mysql://user:pass@host/dbname
     ports:
-      - "8000:5000"
-=======
-    ports:
-      - "8000:5000"
+      - "5001:5001"
     environment:
       - FLASK_ENV=production
       - MONGO_URI=mongodb+srv://nicolombe:admin@cluster.btoi0.mongodb.net/ressource_relationnelle
 
->>>>>>> 4de2cf4a3725c1d99bf8b912ea2f0e6f368451b7
     restart: unless-stopped
 
   frontend:
+    network_mode: "host"
+
     build:
       context: ./frontend
       dockerfile: Dockerfile

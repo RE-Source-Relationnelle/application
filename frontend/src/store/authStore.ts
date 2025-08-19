@@ -8,7 +8,6 @@ const API_URL = 'http://guillaume-lechevallier.freeboxos.fr:5001/';
 // Créer et exporter l'instance API pour qu'elle puisse être utilisée ailleurs
 export const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
