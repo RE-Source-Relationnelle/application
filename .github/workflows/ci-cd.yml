@@ -8,46 +8,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: Tests
+  tests:
+    name: 🧪 Tests Backend & Frontend
     runs-on: ubuntu-latest
     
     steps:
       - uses: actions/checkout@v3
       
-      # Backend Tests
-      - name: Set up Python
+      # 🐍 Backend Tests
+      - name: 🐍 Configuration Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: Install Python dependencies
+      - name: 📦 Installation dépendances Python
         run: |
           cd Back-End
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov || echo "Failed to install pytest, continuing..."
       
-      - name: Run backend tests
+      - name: 🧪 Exécution tests backend
         run: |
           cd Back-End
           echo "Running backend tests..."
           python -m pytest tests/ -v || echo "Backend tests completed with issues"
           echo "✅ Backend tests finished"
       
-      # Frontend Tests
-      - name: Setup Node.js
+      # ⚛️ Frontend Tests
+      - name: ⚛️ Configuration Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
       
-      - name: Install pnpm
+      - name: 📦 Installation pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: false
       
-      - name: Setup pnpm cache
+      - name: 💾 Configuration cache pnpm
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
@@ -55,7 +55,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
       
-      - name: Install frontend dependencies
+      - name: 📦 Installation dépendances frontend
         run: |
           cd frontend
           echo "Installing frontend dependencies with retry logic..."
@@ -83,7 +83,7 @@ jobs:
             fi
           done
       
-      - name: Run frontend tests
+      - name: 🧪 Exécution tests frontend
         run: |
           cd frontend
           echo "Running frontend tests..."
@@ -92,8 +92,8 @@ jobs:
           pnpm run test -- --passWithNoTests --detectOpenHandles --forceExit || echo "Frontend tests completed with issues"
           echo "✅ Frontend tests finished"
       
-      # Basic linting
-      - name: Code quality checks
+      # 🔍 Code Quality
+      - name: 🔍 Vérifications qualité du code
         run: |
           echo "Running basic code quality checks..."
           
@@ -109,27 +109,27 @@ jobs:
           echo "✅ Code quality checks completed"
 
   build:
-    name: Build
-    needs: test
+    name: 🏗️ Build Applications
+    needs: tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
     steps:
       - uses: actions/checkout@v3
       
-      # Frontend Build (most important)
-      - name: Setup Node.js
+      # ⚛️ Frontend Build
+      - name: ⚛️ Configuration Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
       
-      - name: Install pnpm
+      - name: 📦 Installation pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 8
           run_install: false
       
-      - name: Setup pnpm cache
+      - name: 💾 Configuration cache pnpm
         uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
@@ -137,7 +137,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
       
-      - name: Install and build frontend
+      - name: 🏗️ Build application frontend
         run: |
           cd frontend
           echo "Installing and building frontend with retry logic..."
@@ -174,13 +174,13 @@ jobs:
           pnpm run build || npm run build || echo "Build failed, but continuing..."
           echo "✅ Frontend build completed"
       
-      # Backend validation
-      - name: Set up Python
+      # 🐍 Backend Validation
+      - name: 🐍 Configuration Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
       
-      - name: Validate backend
+      - name: ✅ Validation backend
         run: |
           cd Back-End
           python -m pip install --upgrade pip
@@ -189,13 +189,13 @@ jobs:
           echo "✅ Backend validation completed"
 
   deploy:
-    name: Deploy
+    name: 🚀 Déploiement
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     steps:
-      - name: Deploy notification
+      - name: 🚀 Notification de déploiement
         run: |
           echo "🚀 Deployment would happen here"
           echo "Branch: ${{ github.ref }}"
