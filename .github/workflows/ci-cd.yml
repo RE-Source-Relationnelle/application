@@ -208,7 +208,7 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main')
     
     steps:
-      - name: 🚀 Notification de déploiement
+      - name: 🚀 notification de déploiement
         run: |
           echo "🚀 Deployment would happen here"
           echo "Branch: ${{ github.ref }}"
